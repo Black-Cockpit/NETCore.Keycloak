@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NETCore.Keycloak", "NETCore.Keycloak\NETCore.Keycloak.csproj", "{497CADC5-935D-4CC1-A60A-ED327FC872E8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NETCore.Keycloak.Client", "NETCore.Keycloak.Client\NETCore.Keycloak.Client.csproj", "{497CADC5-935D-4CC1-A60A-ED327FC872E8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
