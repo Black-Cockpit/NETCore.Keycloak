@@ -81,78 +81,78 @@ public class KcUserFilter : KcFilter
         var builder = new StringBuilder($"?max={Max}");
 
         // Add brief representation filter
-        if (BriefRepresentation != null)
+        if ( BriefRepresentation != null )
         {
             _ = builder.Append(CultureInfo.CurrentCulture,
                 $"&briefRepresentation={BriefRepresentation.ToString().ToLower(CultureInfo.CurrentCulture)}");
         }
 
         // Add email filter
-        if (!string.IsNullOrWhiteSpace(Email))
+        if ( !string.IsNullOrWhiteSpace(Email) )
         {
             _ = builder.Append(CultureInfo.CurrentCulture, $"&email={Email}");
         }
 
         // Add email verification filter
-        if (EmailVerified != null)
+        if ( EmailVerified != null )
         {
             _ = builder.Append(CultureInfo.CurrentCulture,
                 $"&emailVerified={EmailVerified.ToString().ToLower(CultureInfo.CurrentCulture)}");
         }
 
         // Add enabled status filter
-        if (Enabled != null)
+        if ( Enabled != null )
         {
             _ = builder.Append(CultureInfo.CurrentCulture,
                 $"&enabled={Enabled.ToString().ToLower(CultureInfo.CurrentCulture)}");
         }
 
         // Add exact match filter
-        if (Exact != null)
+        if ( Exact != null )
         {
             _ = builder.Append(CultureInfo.CurrentCulture,
                 $"&exact={Exact.ToString().ToLower(CultureInfo.CurrentCulture)}");
         }
 
         // Add pagination offset
-        if (First != null)
+        if ( First != null )
         {
             _ = builder.Append(CultureInfo.CurrentCulture,
                 $"&first={string.Create(CultureInfo.CurrentCulture, $"{First}").ToLower(CultureInfo.CurrentCulture)}");
         }
 
         // Add first name filter
-        if (!string.IsNullOrWhiteSpace(FirstName))
+        if ( !string.IsNullOrWhiteSpace(FirstName) )
         {
             _ = builder.Append(CultureInfo.CurrentCulture, $"&firstName={FirstName}");
         }
 
         // Add identity provider alias filter
-        if (!string.IsNullOrWhiteSpace(IdpAlias))
+        if ( !string.IsNullOrWhiteSpace(IdpAlias) )
         {
             _ = builder.Append(CultureInfo.CurrentCulture, $"&idpAlias={IdpAlias}");
         }
 
         // Add identity provider user ID filter
-        if (!string.IsNullOrWhiteSpace(IdpUserId))
+        if ( !string.IsNullOrWhiteSpace(IdpUserId) )
         {
             _ = builder.Append(CultureInfo.CurrentCulture, $"&idpUserId={IdpUserId}");
         }
 
         // Add last name filter
-        if (!string.IsNullOrWhiteSpace(LastName))
+        if ( !string.IsNullOrWhiteSpace(LastName) )
         {
             _ = builder.Append(CultureInfo.CurrentCulture, $"&lastName={LastName}");
         }
 
         // Add custom attribute query
-        if (!string.IsNullOrWhiteSpace(Q))
+        if ( !string.IsNullOrWhiteSpace(Q) )
         {
             _ = builder.Append(CultureInfo.CurrentCulture, $"&q={Q}");
         }
 
         // Add general search filter
-        if (!string.IsNullOrWhiteSpace(Search))
+        if ( !string.IsNullOrWhiteSpace(Search) )
         {
             _ = builder.Append(CultureInfo.CurrentCulture, $"&search={Search}");
         }
