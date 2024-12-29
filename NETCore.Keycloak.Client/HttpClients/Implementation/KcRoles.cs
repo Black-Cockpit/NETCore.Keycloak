@@ -5,176 +5,117 @@ using NETCore.Keycloak.Client.Models.Common;
 using NETCore.Keycloak.Client.Models.Groups;
 using NETCore.Keycloak.Client.Models.Roles;
 using NETCore.Keycloak.Client.Models.Users;
-using NETCore.Keycloak.Client.Requests;
-using NETCore.Keycloak.Client.Utils;
 
 namespace NETCore.Keycloak.Client.HttpClients.Implementation;
 
 /// <inheritdoc cref="IKcRoles"/>
-public class KcRoles : KcClientValidator, IKcRoles
+internal sealed class KcRoles(string baseUrl,
+    ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcRoles
 {
-    /// <summary>
-    /// Logger <see cref="ILogger"/>
-    /// </summary>
-    private readonly ILogger _logger;
-
-    /// <summary>
-    /// Keycloak base URL
-    /// </summary>
-    private readonly string _baseUrl;
-
-    /// <summary>
-    /// Roles client constructor
-    /// </summary>
-    /// <param name="baseUrl">Keycloak server base url.
-    /// <see href="https://www.keycloak.org/docs-api/20.0.3/rest-api/index.html#_uri_scheme"/></param>
-    /// <param name="logger">Logger <see cref="ILogger"/></param>
-    public KcRoles(string baseUrl, ILogger logger = null)
-    {
-        if ( string.IsNullOrWhiteSpace(baseUrl) )
-        {
-            throw new KcException($"{nameof(baseUrl)} is required");
-        }
-
-        // Remove last "/" from base url
-        _baseUrl = baseUrl.EndsWith("/", StringComparison.Ordinal)
-            ? baseUrl.Remove(baseUrl.Length - 1, 1)
-            : baseUrl;
-
-        _logger = logger;
-    }
-
     /// <inheritdoc cref="IKcRoles.CreateAsync"/>
-    public async Task<KcResponse<object>> CreateAsync(string realm, string accessToken, KcRole role,
+    public async Task<KcResponse<object>> CreateAsync(
+        string realm,
+        string accessToken,
+        KcRole role,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( role == null )
-        {
-            throw new KcException($"{nameof(role)} is required");
-        }
+        // Ensure the role object is not null.
+        ValidateNotNull(nameof(role), role);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/roles", accessToken, KcRequestHandler.GetBody(role));
+        // Construct the URL for creating the role.
+        var url = $"{BaseUrl}/{realm}/roles";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to create realm role", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to create the realm role.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to create realm role",
+            role,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.ListAsync"/>
-    public async Task<KcResponse<IEnumerable<KcRole>>> ListAsync(string realm, string accessToken,
-        KcFilter filter = null, CancellationToken cancellationToken = default)
+    public async Task<KcResponse<IEnumerable<KcRole>>> ListAsync(
+        string realm,
+        string accessToken,
+        KcFilter filter = null,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
+        // Initialize the filter if not provided.
         filter ??= new KcFilter();
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/roles{filter.BuildQuery()}", accessToken);
+        // Construct the URL with the optional query parameters from the filter.
+        var url = $"{BaseUrl}/{realm}/roles{filter.BuildQuery()}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcRole>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to list realm roles", e);
-            }
-
-            return new KcResponse<IEnumerable<KcRole>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the realm roles.
+        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to list realm roles",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.GetAsync"/>
-    public async Task<KcResponse<KcRole>> GetAsync(string realm, string accessToken, string name,
-        CancellationToken cancellationToken = default)
-    {
-        ValidateAccess(realm, accessToken);
-
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
-
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/roles/{name}", accessToken);
-
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcRole>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get realm role", e);
-            }
-
-            return new KcResponse<KcRole>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
-    }
-
-    /// <inheritdoc cref="IKcRoles.IsRolesExistsAsync"/>
-    public async Task<KcResponse<bool>> IsRolesExistsAsync(string realm, string accessToken,
+    public async Task<KcResponse<KcRole>> GetAsync(
+        string realm,
+        string accessToken,
         string name,
         CancellationToken cancellationToken = default)
     {
-        var roleResponse = await GetAsync(realm, accessToken, name, cancellationToken)
-            .ConfigureAwait(false);
+        // Validate the realm and access token inputs.
+        ValidateAccess(realm, accessToken);
 
+        // Ensure the role name is provided.
+        ValidateRequiredString(nameof(name), name);
+
+        // Construct the URL to retrieve the role by its name.
+        var url = $"{BaseUrl}/{realm}/roles/{name}";
+
+        // Process the request to retrieve the realm role by name.
+        return await ProcessRequestAsync<KcRole>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm role",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc cref="IKcRoles.IsRolesExistsAsync"/>
+    public async Task<KcResponse<bool>> IsRolesExistsAsync(
+        string realm,
+        string accessToken,
+        string name,
+        CancellationToken cancellationToken = default)
+    {
+        // Retrieve the role using its name.
+        var roleResponse = await GetAsync(realm, accessToken, name, cancellationToken).ConfigureAwait(false);
+
+        // Determine the existence of the role based on the response.
         return roleResponse.IsError switch
         {
-            true when roleResponse.ErrorMessage.Contains("Could not find role",
-                StringComparison.OrdinalIgnoreCase) => new
-                KcResponse<bool>
+            // If an error indicates the role was not found, return false.
+            true when roleResponse.ErrorMessage.Contains("Could not find role", StringComparison.OrdinalIgnoreCase) =>
+                new KcResponse<bool>
                 {
                     Response = false
                 },
+            // If the response contains a valid role ID, return true.
             false when !string.IsNullOrWhiteSpace(roleResponse.Response?.Id) => new KcResponse<bool>
             {
                 Response = true
             },
+            // Otherwise, propagate the error details.
             _ => new KcResponse<bool>
             {
                 IsError = roleResponse.IsError,
@@ -185,1034 +126,728 @@ public class KcRoles : KcClientValidator, IKcRoles
     }
 
     /// <inheritdoc cref="IKcRoles.GetByIdAsync"/>
-    public async Task<KcResponse<KcRole>> GetByIdAsync(string realm, string accessToken, string id,
+    public async Task<KcResponse<KcRole>> GetByIdAsync(
+        string realm,
+        string accessToken,
+        string id,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the role ID is provided and not empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/roles-by-id/{id}", accessToken);
+        // Construct the URL for retrieving the role by its ID.
+        var url = $"{BaseUrl}/{realm}/roles-by-id/{id}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcRole>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get realm role by id", e);
-            }
-
-            return new KcResponse<KcRole>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the realm role by ID.
+        return await ProcessRequestAsync<KcRole>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm role by id",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.UpdateAsync"/>
-    public async Task<KcResponse<object>> UpdateAsync(string realm, string accessToken, string name,
+    public async Task<KcResponse<object>> UpdateAsync(
+        string realm,
+        string accessToken,
+        string name,
         KcRole role,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the role name is provided and not empty.
+        ValidateRequiredString(nameof(name), name);
 
-        if ( role == null )
-        {
-            throw new KcException($"{nameof(role)} is required");
-        }
+        // Validate that the role object is not null.
+        ValidateNotNull(nameof(role), role);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/roles/{name}", accessToken, KcRequestHandler.GetBody(role));
+        // Construct the URL for updating the realm role.
+        var url = $"{BaseUrl}/{realm}/roles/{name}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to update realm role", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to update the realm role by name.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            "Unable to update realm role",
+            role,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.UpdateByIdAsync"/>
-    public async Task<KcResponse<KcRole>> UpdateByIdAsync(string realm, string accessToken,
-        string id, KcRole role,
+    public async Task<KcResponse<KcRole>> UpdateByIdAsync(
+        string realm,
+        string accessToken,
+        string id,
+        KcRole role,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the role ID is provided and not empty.
+        ValidateRequiredString(nameof(id), id);
 
-        if ( role == null )
-        {
-            throw new KcException($"{nameof(role)} is required");
-        }
+        // Validate that the role object is not null.
+        ValidateNotNull(nameof(role), role);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/roles-by-id/{id}", accessToken,
-                KcRequestHandler.GetBody(role));
+        // Construct the URL for updating the realm role by ID.
+        var url = $"{BaseUrl}/{realm}/roles-by-id/{id}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcRole>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to update realm role by id", e);
-            }
-
-            return new KcResponse<KcRole>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to update the realm role by ID.
+        return await ProcessRequestAsync<KcRole>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            "Unable to update realm role by id",
+            role,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.DeleteAsync"/>
-    public async Task<KcResponse<object>> DeleteAsync(string realm, string accessToken, string name,
+    public async Task<KcResponse<object>> DeleteAsync(
+        string realm,
+        string accessToken,
+        string name,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the role name is provided and not empty.
+        ValidateRequiredString(nameof(name), name);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/roles/{name}", accessToken);
+        // Construct the URL for deleting the realm role by name.
+        var url = $"{BaseUrl}/{realm}/roles/{name}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to delete realm role", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to delete the realm role by name.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            "Unable to delete realm role by name",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.DeleteByIdAsync"/>
-    public async Task<KcResponse<object>> DeleteByIdAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> DeleteByIdAsync(
+        string realm,
+        string accessToken,
         string id,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the role ID is provided and not empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/roles-by-id/{id}", accessToken);
+        // Construct the URL for deleting the realm role by ID.
+        var url = $"{BaseUrl}/{realm}/roles-by-id/{id}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to delete realm role by id", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to delete the realm role by ID.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            "Unable to delete realm role by id",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.AddCompositeAsync"/>
-    public async Task<KcResponse<object>> AddCompositeAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> AddCompositeAsync(
+        string realm,
+        string accessToken,
         string name,
-        IEnumerable<KcRole> roles, CancellationToken cancellationToken = default)
+        IEnumerable<KcRole> roles,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the role name is provided and not empty.
+        ValidateRequiredString(nameof(name), name);
 
-        if ( roles == null )
-        {
-            throw new KcException($"{nameof(roles)} is required");
-        }
+        // Validate that the role collection is not null.
+        ValidateNotNull(nameof(roles), roles);
 
+        // If the role collection is empty, return a response indicating no operation was performed.
         if ( !roles.Any() )
         {
             return new KcResponse<object>();
         }
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/roles/{name}/composites", accessToken,
-                KcRequestHandler.GetBody(roles));
+        // Construct the URL for adding composite roles to the specified realm role.
+        var url = $"{BaseUrl}/{realm}/roles/{name}/composites";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to add realm role composites", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to add composite roles.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to add realm role composites",
+            roles,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.AddCompositeByIdAsync"/>
-    public async Task<KcResponse<object>> AddCompositeByIdAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> AddCompositeByIdAsync(
+        string realm,
+        string accessToken,
         string id,
-        IEnumerable<KcRole> roles, CancellationToken cancellationToken = default)
+        IEnumerable<KcRole> roles,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the role ID is provided and not empty.
+        ValidateRequiredString(nameof(id), id);
 
-        if ( roles == null )
-        {
-            throw new KcException($"{nameof(roles)} is required");
-        }
+        // Validate that the role collection is not null.
+        ValidateNotNull(nameof(roles), roles);
 
+        // If the role collection is empty, return a response indicating no operation was performed.
         if ( !roles.Any() )
         {
             return new KcResponse<object>();
         }
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/roles-by-id/{id}/composites", accessToken,
-                KcRequestHandler.GetBody(roles));
+        // Construct the URL for adding composite roles to the specified realm role by ID.
+        var url = $"{BaseUrl}/{realm}/roles-by-id/{id}/composites";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to add realm role composites by role id", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to add composite roles.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to add realm role composites by role id",
+            roles,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.ListCompositeAsync"/>
-    public async Task<KcResponse<IEnumerable<KcRole>>> ListCompositeAsync(string realm,
-        string accessToken, string name,
-        CancellationToken cancellationToken = default)
-    {
-        ValidateAccess(realm, accessToken);
-
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
-
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/roles/{name}/composites", accessToken);
-
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcRole>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to list realm role composites", e);
-            }
-
-            return new KcResponse<IEnumerable<KcRole>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
-    }
-
-    /// <inheritdoc cref="IKcRoles.ListCompositeByIdAsync"/>
-    public async Task<KcResponse<IEnumerable<KcRole>>> ListCompositeByIdAsync(string realm,
+    public async Task<KcResponse<IEnumerable<KcRole>>> ListCompositeAsync(
+        string realm,
         string accessToken,
-        string id, CancellationToken cancellationToken = default)
-    {
-        ValidateAccess(realm, accessToken);
-
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
-
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/roles-by-id/{id}/composites", accessToken);
-
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcRole>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to list realm role composites by role id", e);
-            }
-
-            return new KcResponse<IEnumerable<KcRole>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
-    }
-
-    /// <inheritdoc cref="IKcRoles.DeleteCompositeAsync"/>
-    public async Task<KcResponse<object>> DeleteCompositeAsync(string realm, string accessToken,
         string name,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the role name is provided and not empty.
+        ValidateRequiredString(nameof(name), name);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/roles/{name}/composites", accessToken);
+        // Construct the URL to retrieve the composite roles for the specified realm role.
+        var url = $"{BaseUrl}/{realm}/roles/{name}/composites";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to delete realm composite role", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the list of the realm composite roles.
+        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to list realm role composites",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
-    /// <inheritdoc cref="IKcRoles.DeleteCompositeByIdAsync"/>
-    public async Task<KcResponse<object>> DeleteCompositeByIdAsync(string realm, string accessToken,
+    /// <inheritdoc cref="IKcRoles.ListCompositeByIdAsync"/>
+    public async Task<KcResponse<IEnumerable<KcRole>>> ListCompositeByIdAsync(
+        string realm,
+        string accessToken,
         string id,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the role ID is provided and not empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/roles-by-id/{id}/composites", accessToken);
+        // Construct the URL to retrieve the composite roles for the specified role ID.
+        var url = $"{BaseUrl}/{realm}/roles-by-id/{id}/composites";
 
-            using var client = new HttpClient();
+        // Process the request to retrieve the list of composite roles by role ID.
+        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to list realm role composites by role id",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
+    }
 
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+    /// <inheritdoc cref="IKcRoles.DeleteCompositeAsync"/>
+    public async Task<KcResponse<object>> DeleteCompositeAsync(
+        string realm,
+        string accessToken,
+        string name,
+        CancellationToken cancellationToken = default)
+    {
+        // Validate the realm and access token inputs.
+        ValidateAccess(realm, accessToken);
 
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to delete realm composite role by role id", e);
-            }
+        // Validate that the role name is provided and not empty.
+        ValidateRequiredString(nameof(name), name);
 
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Construct the URL to delete the composite roles for the specified role name.
+        var url = $"{BaseUrl}/{realm}/roles/{name}/composites";
+
+        // Process the request to delete the composite roles associated with the specified role name.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            "Unable to delete realm composite role",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc cref="IKcRoles.DeleteCompositeByIdAsync"/>
+    public async Task<KcResponse<object>> DeleteCompositeByIdAsync(
+        string realm,
+        string accessToken,
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        // Validate the realm and access token inputs.
+        ValidateAccess(realm, accessToken);
+
+        // Validate that the role ID is provided and not empty.
+        ValidateRequiredString(nameof(id), id);
+
+        // Construct the URL to delete the composite roles for the specified role ID.
+        var url = $"{BaseUrl}/{realm}/roles-by-id/{id}/composites";
+
+        // Process the request to delete the composite roles associated with the specified role ID.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            "Unable to delete realm composite role by role id",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.GetClientLevelCompositesAsync"/>
-    public async Task<KcResponse<IEnumerable<KcRole>>> GetClientLevelCompositesAsync(string realm,
+    public async Task<KcResponse<IEnumerable<KcRole>>> GetClientLevelCompositesAsync(
+        string realm,
         string accessToken,
-        string name, string clientId, CancellationToken cancellationToken = default)
+        string name,
+        string clientId,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the role name is provided and not empty.
+        ValidateRequiredString(nameof(name), name);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the client ID is provided and not empty.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/roles/{name}/composites/clients/{clientId}", accessToken);
+        // Construct the URL to retrieve the client-level composites for the specified role.
+        var url = $"{BaseUrl}/{realm}/roles/{name}/composites/clients/{clientId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcRole>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get role client level composites", e);
-            }
-
-            return new KcResponse<IEnumerable<KcRole>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the client-level composite roles.
+        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get role client level composites",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.GetClientLevelCompositesByIdAsync"/>
     public async Task<KcResponse<IEnumerable<KcRole>>> GetClientLevelCompositesByIdAsync(
         string realm,
-        string accessToken, string id, string clientId,
+        string accessToken,
+        string id,
+        string clientId,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the role ID is provided and not empty.
+        ValidateRequiredString(nameof(id), id);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the client ID is provided and not empty.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/roles-by-id/{id}/composites/clients/{clientId}", accessToken);
+        // Construct the URL to retrieve the client-level composites for the specified role by ID.
+        var url = $"{BaseUrl}/{realm}/roles-by-id/{id}/composites/clients/{clientId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcRole>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get role client level composites by role id", e);
-            }
-
-            return new KcResponse<IEnumerable<KcRole>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the client-level composite roles by role ID.
+        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get role client level composites by role id",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.GetRealmLevelCompositesAsync"/>
-    public async Task<KcResponse<IEnumerable<KcRole>>> GetRealmLevelCompositesAsync(string realm,
+    public async Task<KcResponse<IEnumerable<KcRole>>> GetRealmLevelCompositesAsync(
+        string realm,
         string accessToken,
-        string name, CancellationToken cancellationToken = default)
+        string name,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the role name is provided and not empty.
+        ValidateRequiredString(nameof(name), name);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/roles/{name}/composites/realm", accessToken);
+        // Construct the URL to retrieve the realm-level composites for the specified role.
+        var url = $"{BaseUrl}/{realm}/roles/{name}/composites/realm";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcRole>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get role realm level composites", e);
-            }
-
-            return new KcResponse<IEnumerable<KcRole>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the realm-level composite roles.
+        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get role realm level composites",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.GetRealmLevelCompositesByIdAsync"/>
     public async Task<KcResponse<IEnumerable<KcRole>>> GetRealmLevelCompositesByIdAsync(
         string realm,
-        string accessToken, string id, CancellationToken cancellationToken = default)
+        string accessToken,
+        string id,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the role ID is provided and not empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/roles-by-id/{id}/composites/realm", accessToken);
+        // Construct the URL to retrieve the realm-level composites for the specified role by its ID.
+        var url = $"{BaseUrl}/{realm}/roles-by-id/{id}/composites/realm";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcRole>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get role realm level composites by role id", e);
-            }
-
-            return new KcResponse<IEnumerable<KcRole>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the realm-level composite roles.
+        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get role realm level composites by role id",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.GetGroupsAsync"/>
-    public async Task<KcResponse<IEnumerable<KcGroup>>> GetGroupsAsync(string realm,
-        string accessToken, string name,
-        KcFilter filter = null, CancellationToken cancellationToken = default)
+    public async Task<KcResponse<IEnumerable<KcGroup>>> GetGroupsAsync(
+        string realm,
+        string accessToken,
+        string name,
+        KcFilter filter = null,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the role name is provided and not empty.
+        ValidateRequiredString(nameof(name), name);
 
+        // Initialize the filter if it is null.
         filter ??= new KcFilter();
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/roles/{name}/groups{filter.BuildQuery()}", accessToken);
+        // Construct the URL to retrieve the groups associated with the specified role.
+        var url = $"{BaseUrl}/{realm}/roles/{name}/groups{filter.BuildQuery()}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcGroup>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to list realm role groups", e);
-            }
-
-            return new KcResponse<IEnumerable<KcGroup>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the groups associated with the role.
+        return await ProcessRequestAsync<IEnumerable<KcGroup>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to list realm role groups",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.GetAuthorizationPermissionsAsync"/>
     public async Task<KcResponse<KcPermissionManagement>> GetAuthorizationPermissionsAsync(
         string realm,
-        string accessToken, string name, CancellationToken cancellationToken = default)
+        string accessToken,
+        string name,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the role name is provided and not empty.
+        ValidateRequiredString(nameof(name), name);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/roles/{name}/management/permissions", accessToken);
+        // Construct the URL to retrieve the authorization permissions for the specified role.
+        var url = $"{BaseUrl}/{realm}/roles/{name}/management/permissions";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcPermissionManagement>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get realm role management permission", e);
-            }
-
-            return new KcResponse<KcPermissionManagement>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the authorization permissions for the role.
+        return await ProcessRequestAsync<KcPermissionManagement>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm role management permission",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.GetAuthorizationPermissionsByIdAsync"/>
     public async Task<KcResponse<KcPermissionManagement>> GetAuthorizationPermissionsByIdAsync(
         string realm,
-        string accessToken, string id, CancellationToken cancellationToken = default)
+        string accessToken,
+        string id,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the role ID is provided and not empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/roles-by-id/{id}/management/permissions", accessToken);
+        // Construct the URL to retrieve the authorization permissions for the specified role by ID.
+        var url = $"{BaseUrl}/{realm}/roles-by-id/{id}/management/permissions";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcPermissionManagement>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get realm role management permission by role id", e);
-            }
-
-            return new KcResponse<KcPermissionManagement>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the authorization permissions for the role by ID.
+        return await ProcessRequestAsync<KcPermissionManagement>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm role management permission by role id",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.SetAuthorizationPermissionsAsync"/>
     public async Task<KcResponse<KcPermissionManagement>> SetAuthorizationPermissionsAsync(
         string realm,
-        string accessToken, string name, KcPermissionManagement permissionManagement,
+        string accessToken,
+        string name,
+        KcPermissionManagement permissionManagement,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the role name is provided and not empty.
+        ValidateRequiredString(nameof(name), name);
 
-        if ( permissionManagement == null )
-        {
-            throw new KcException($"{nameof(permissionManagement)} is required");
-        }
+        // Validate that the permission management object is not null.
+        ValidateNotNull(nameof(permissionManagement), permissionManagement);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/roles/{name}/management/permissions", accessToken,
-                KcRequestHandler.GetBody(permissionManagement));
+        // Construct the URL to set the authorization permissions for the specified role by name.
+        var url = $"{BaseUrl}/{realm}/roles/{name}/management/permissions";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcPermissionManagement>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to set realm role management permission", e);
-            }
-
-            return new KcResponse<KcPermissionManagement>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to set the authorization permissions for the role by name.
+        return await ProcessRequestAsync<KcPermissionManagement>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            "Unable to set realm role management permission",
+            permissionManagement,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.SetAuthorizationPermissionsByIdAsync"/>
     public async Task<KcResponse<KcPermissionManagement>> SetAuthorizationPermissionsByIdAsync(
         string realm,
-        string accessToken, string id, KcPermissionManagement permissionManagement,
+        string accessToken,
+        string id,
+        KcPermissionManagement permissionManagement,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the role ID is provided and not empty.
+        ValidateRequiredString(nameof(id), id);
 
-        if ( permissionManagement == null )
-        {
-            throw new KcException($"{nameof(permissionManagement)} is required");
-        }
+        // Validate that the permission management object is not null.
+        ValidateNotNull(nameof(permissionManagement), permissionManagement);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/roles-by-id/{id}/management/permissions", accessToken,
-                KcRequestHandler.GetBody(permissionManagement));
+        // Construct the URL to set the authorization permissions for the specified role by ID.
+        var url = $"{BaseUrl}/{realm}/roles-by-id/{id}/management/permissions";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcPermissionManagement>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to set realm role management permission by role id", e);
-            }
-
-            return new KcResponse<KcPermissionManagement>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to set the authorization permissions for the role by ID.
+        return await ProcessRequestAsync<KcPermissionManagement>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            "Unable to set realm role management permission by role id",
+            permissionManagement,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
-    /// <inheritdoc cref="IKcRoles.CreateClientRoleAsync"/>
-    public async Task<KcResponse<IEnumerable<KcUser>>> GetUserInRoleAsync(string realm,
-        string accessToken, string name,
-        KcFilter filter = null, CancellationToken cancellationToken = default)
+    /// <inheritdoc cref="IKcRoles.GetUserInRoleAsync"/>
+    public async Task<KcResponse<IEnumerable<KcUser>>> GetUserInRoleAsync(
+        string realm,
+        string accessToken,
+        string name,
+        KcFilter filter = null,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the role name is provided and not empty.
+        ValidateRequiredString(nameof(name), name);
 
+        // Initialize the filter if not provided.
         filter ??= new KcFilter();
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/roles/{name}/users{filter.BuildQuery()}", accessToken);
+        // Construct the URL to retrieve users associated with the specified role.
+        var url = $"{BaseUrl}/{realm}/roles/{name}/users{filter.BuildQuery()}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcUser>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to list realm role users", e);
-            }
-
-            return new KcResponse<IEnumerable<KcUser>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the users associated with the specified role.
+        return await ProcessRequestAsync<IEnumerable<KcUser>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to list realm role users",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.CreateClientRoleAsync"/>
-    public async Task<KcResponse<object>> CreateClientRoleAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> CreateClientRoleAsync(
+        string realm,
+        string accessToken,
         string clientId,
-        KcRole role, CancellationToken cancellationToken = default)
+        KcRole role,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Ensure the client ID is provided and not empty.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        if ( role == null )
-        {
-            throw new KcException($"{nameof(role)} is required");
-        }
+        // Ensure the role object is provided and not null.
+        ValidateNotNull(nameof(role), role);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/clients/{clientId}/roles", accessToken,
-                KcRequestHandler.GetBody(role));
+        // Construct the URL to create a new role for the specified client.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to create client role", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to create the client role.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to create client role",
+            role,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.ListClientRoleAsync"/>
-    public async Task<KcResponse<IEnumerable<KcRole>>> ListClientRoleAsync(string realm,
+    public async Task<KcResponse<IEnumerable<KcRole>>> ListClientRoleAsync(
+        string realm,
         string accessToken,
-        string clientId, KcFilter filter = null, CancellationToken cancellationToken = default)
+        string clientId,
+        KcFilter filter = null,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Ensure the client ID is provided and not empty.
+        ValidateRequiredString(nameof(clientId), clientId);
 
+        // Apply the provided filter or use the default filter.
         filter ??= new KcFilter();
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{clientId}/roles{filter.BuildQuery()}", accessToken);
+        // Construct the URL to list roles for the specified client, including any query filters.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles{filter.BuildQuery()}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcRole>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to list client roles", e);
-            }
-
-            return new KcResponse<IEnumerable<KcRole>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the list of client roles.
+        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to list client roles",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.GetClientRolesAsync"/>
-    public async Task<KcResponse<KcRole>> GetClientRolesAsync(string realm, string accessToken,
+    public async Task<KcResponse<KcRole>> GetClientRolesAsync(
+        string realm,
+        string accessToken,
         string clientId,
-        string name, CancellationToken cancellationToken = default)
+        string name,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the client ID is provided and not empty.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the role name is provided and not empty.
+        ValidateRequiredString(nameof(name), name);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{clientId}/roles/{name}", accessToken);
+        // Construct the URL to get the specified role for the client.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcRole>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get client role", e);
-            }
-
-            return new KcResponse<KcRole>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the client role details.
+        return await ProcessRequestAsync<KcRole>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get client role",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.IsClientRoleExistsAsync"/>
-    public async Task<KcResponse<bool>> IsClientRoleExistsAsync(string realm, string accessToken,
+    public async Task<KcResponse<bool>> IsClientRoleExistsAsync(
+        string realm,
+        string accessToken,
         string clientId,
-        string name, CancellationToken cancellationToken = default)
+        string name,
+        CancellationToken cancellationToken = default)
     {
-        var roleResponse =
-            await GetClientRolesAsync(realm, accessToken, clientId, name, cancellationToken)
-                .ConfigureAwait(false);
+        // Retrieve the client role details using the provided parameters.
+        var roleResponse = await GetClientRolesAsync(realm, accessToken, clientId, name, cancellationToken)
+            .ConfigureAwait(false);
 
+        // Determine the existence of the role based on the response.
         return roleResponse.IsError switch
         {
+            // Role does not exist if the error message indicates it could not be found.
             true when roleResponse.ErrorMessage.Contains("Could not find role", StringComparison.OrdinalIgnoreCase) =>
                 new KcResponse<bool>
                 {
                     Response = false
                 },
-            false when !string.IsNullOrWhiteSpace(roleResponse.Response?.Id) => new KcResponse<bool>
-            {
-                Response = true
-            },
+            // Role exists if the response contains a valid role ID.
+            false when !string.IsNullOrWhiteSpace(roleResponse.Response?.Id) =>
+                new KcResponse<bool>
+                {
+                    Response = true
+                },
+            // Return the error details if an unexpected error occurred.
             _ => new KcResponse<bool>
             {
                 IsError = roleResponse.IsError,
@@ -1223,435 +858,301 @@ public class KcRoles : KcClientValidator, IKcRoles
     }
 
     /// <inheritdoc cref="IKcRoles.UpdateClientRoleAsync"/>
-    public async Task<KcResponse<object>> UpdateClientRoleAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> UpdateClientRoleAsync(
+        string realm,
+        string accessToken,
         string clientId,
-        string name, KcRole role, CancellationToken cancellationToken = default)
+        string name,
+        KcRole role,
+        CancellationToken cancellationToken = default)
     {
+        // Validate that the provided realm and access token are valid and accessible.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the clientId parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the name parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(name), name);
 
-        if ( role == null )
-        {
-            throw new KcException($"{nameof(role)} is required");
-        }
+        // Validate that the role object is not null.
+        ValidateNotNull(nameof(role), role);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/clients/{clientId}/roles/{name}", accessToken,
-                KcRequestHandler.GetBody(role));
+        // Construct the URL for updating the specified client role.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to update client role", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to update the client role and return the response.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            "Unable to update client role",
+            role,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.DeleteClientRoleAsync"/>
-    public async Task<KcResponse<object>> DeleteClientRoleAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> DeleteClientRoleAsync(
+        string realm,
+        string accessToken,
         string clientId,
-        string name, CancellationToken cancellationToken = default)
+        string name,
+        CancellationToken cancellationToken = default)
     {
+        // Validate that the provided realm and access token are valid and accessible.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the clientId parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the name parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(name), name);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/clients/{clientId}/roles/{name}", accessToken);
+        // Construct the URL for deleting the specified client role.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to delete client role", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to delete the client role and return the response.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            "Unable to delete client role",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.AddClientRoleToCompositeAsync"/>
-    public async Task<KcResponse<object>> AddClientRoleToCompositeAsync(string realm,
+    public async Task<KcResponse<object>> AddClientRoleToCompositeAsync(
+        string realm,
         string accessToken,
-        string clientId, string name, IEnumerable<KcRole> roles,
+        string clientId,
+        string name,
+        IEnumerable<KcRole> roles,
         CancellationToken cancellationToken = default)
     {
+        // Validate that the realm and access token inputs are valid.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the clientId parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the name parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(name), name);
 
-        if ( roles == null )
-        {
-            throw new KcException($"{nameof(roles)} is required");
-        }
+        // Validate that the role collection parameter is not null.
+        ValidateNotNull(nameof(roles), roles);
 
+        // Return early if the role collection is empty.
         if ( !roles.Any() )
         {
             return new KcResponse<object>();
         }
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/clients/{clientId}/roles/{name}/composites", accessToken,
-                KcRequestHandler.GetBody(roles));
+        // Construct the URL for adding roles to the composite role.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}/composites";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to add composite to the client roles", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to add the roles to the composite.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to add composite to the client roles",
+            roles,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.GetClientCompositeRolesAsync"/>
-    public async Task<KcResponse<IEnumerable<KcRole>>> GetClientCompositeRolesAsync(string realm,
+    public async Task<KcResponse<IEnumerable<KcRole>>> GetClientCompositeRolesAsync(
+        string realm,
         string accessToken,
-        string clientId, string name, CancellationToken cancellationToken = default)
+        string clientId,
+        string name,
+        CancellationToken cancellationToken = default)
     {
+        // Validate that the realm and access token inputs are valid.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the clientId parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the name parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(name), name);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{clientId}/roles/{name}/composites", accessToken);
+        // Construct the URL for retrieving the composite roles.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}/composites";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcRole>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get client composite roles", e);
-            }
-
-            return new KcResponse<IEnumerable<KcRole>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the composite roles.
+        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get client composite roles",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.RemoveClientRoleFromCompositeAsync"/>
-    public async Task<KcResponse<object>> RemoveClientRoleFromCompositeAsync(string realm,
+    public async Task<KcResponse<object>> RemoveClientRoleFromCompositeAsync(
+        string realm,
         string accessToken,
-        string clientId, string name, CancellationToken cancellationToken = default)
+        string clientId,
+        string name,
+        CancellationToken cancellationToken = default)
     {
+        // Validate that the realm and access token inputs are valid.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the clientId parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the name parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(name), name);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/clients/{clientId}/roles/{name}/composites", accessToken);
+        // Construct the URL for removing composite roles.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}/composites";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable remove composite from the client roles", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to remove the composite roles.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            "Unable to remove composite from the client roles",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.GetGroupsInClientRoleAsync"/>
-    public async Task<KcResponse<IEnumerable<KcGroup>>> GetGroupsInClientRoleAsync(string realm,
+    public async Task<KcResponse<IEnumerable<KcGroup>>> GetGroupsInClientRoleAsync(
+        string realm,
         string accessToken,
-        string clientId, string name, KcFilter filter = null,
+        string clientId,
+        string name,
+        KcFilter filter = null,
         CancellationToken cancellationToken = default)
     {
+        // Validate that the realm and access token inputs are valid.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the name parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(name), name);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the clientId parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(clientId), clientId);
 
+        // Initialize the filter if it is null.
         filter ??= new KcFilter();
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{clientId}/roles/{name}/groups{filter.BuildQuery()}",
-                accessToken);
+        // Construct the URL to retrieve the groups associated with the client role.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}/groups{filter.BuildQuery()}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcGroup>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to list client role groups", e);
-            }
-
-            return new KcResponse<IEnumerable<KcGroup>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the list of groups.
+        return await ProcessRequestAsync<IEnumerable<KcGroup>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to list client role groups",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.GetClientRoleAuthorizationPermissionsAsync"/>
-    public async Task<KcResponse<KcPermissionManagement>>
-        GetClientRoleAuthorizationPermissionsAsync(string realm,
-        string accessToken, string clientId, string name,
+    public async Task<KcResponse<KcPermissionManagement>> GetClientRoleAuthorizationPermissionsAsync(
+        string realm,
+        string accessToken,
+        string clientId,
+        string name,
         CancellationToken cancellationToken = default)
     {
+        // Validate that the realm and access token inputs are valid.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the name parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(name), name);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the clientId parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{clientId}/roles/{name}/management/permissions",
-                accessToken);
+        // Construct the URL to retrieve the management permissions for the client role.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}/management/permissions";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcPermissionManagement>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get client role management permission", e);
-            }
-
-            return new KcResponse<KcPermissionManagement>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the management permissions.
+        return await ProcessRequestAsync<KcPermissionManagement>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get client role management permission",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.SetClientRoleAuthorizationPermissionsAsync"/>
-    public async Task<KcResponse<KcPermissionManagement>>
-        SetClientRoleAuthorizationPermissionsAsync(string realm,
-        string accessToken, string clientId, string name,
+    public async Task<KcResponse<KcPermissionManagement>> SetClientRoleAuthorizationPermissionsAsync(
+        string realm,
+        string accessToken,
+        string clientId,
+        string name,
         KcPermissionManagement permissionManagement,
         CancellationToken cancellationToken = default)
     {
+        // Validate that the realm and access token inputs are valid.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the name parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(name), name);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the clientId parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        if ( permissionManagement == null )
-        {
-            throw new KcException($"{nameof(permissionManagement)} is required");
-        }
+        // Validate that the permission management object is not null.
+        ValidateNotNull(nameof(permissionManagement), permissionManagement);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/clients/{clientId}/roles/{name}/management/permissions",
-                accessToken,
-                KcRequestHandler.GetBody(permissionManagement));
+        // Construct the URL to update the management permissions for the client role.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}/management/permissions";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcPermissionManagement>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to set client role management permission", e);
-            }
-
-            return new KcResponse<KcPermissionManagement>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to update the management permissions.
+        return await ProcessRequestAsync<KcPermissionManagement>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            "Unable to set client role management permission",
+            permissionManagement,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.GetUsersInClientRoleAsync"/>
-    public async Task<KcResponse<IEnumerable<KcUser>>> GetUsersInClientRoleAsync(string realm,
+    public async Task<KcResponse<IEnumerable<KcUser>>> GetUsersInClientRoleAsync(
+        string realm,
         string accessToken,
-        string clientId, string name, KcFilter filter = null,
+        string clientId,
+        string name,
+        KcFilter filter = null,
         CancellationToken cancellationToken = default)
     {
+        // Validate that the realm and access token inputs are valid.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the name parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(name), name);
 
-        if ( string.IsNullOrWhiteSpace(name) )
-        {
-            throw new KcException($"{nameof(name)} is required");
-        }
+        // Validate that the clientId parameter is not null, empty, or whitespace.
+        ValidateRequiredString(nameof(clientId), clientId);
 
+        // Initialize the filter if not provided.
         filter ??= new KcFilter();
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{clientId}/roles/{name}/users{filter.BuildQuery()}",
-                accessToken);
+        // Construct the URL to retrieve the users in the specified client role.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}/users{filter.BuildQuery()}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcUser>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get client role users", e);
-            }
-
-            return new KcResponse<IEnumerable<KcUser>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the list of users.
+        return await ProcessRequestAsync<IEnumerable<KcUser>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get client role users",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 }

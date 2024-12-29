@@ -8,825 +8,523 @@ using NETCore.Keycloak.Client.Models.ClientScope;
 using NETCore.Keycloak.Client.Models.Common;
 using NETCore.Keycloak.Client.Models.Tokens;
 using NETCore.Keycloak.Client.Models.Users;
-using NETCore.Keycloak.Client.Requests;
-using NETCore.Keycloak.Client.Utils;
 
 namespace NETCore.Keycloak.Client.HttpClients.Implementation;
 
 /// <inheritdoc cref="IKcClients"/>
-public class KcClients : KcClientValidator, IKcClients
+internal sealed class KcClients(string baseUrl,
+    ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcClients
 {
-    /// <summary>
-    /// Logger <see cref="ILogger"/>
-    /// </summary>
-    private readonly ILogger _logger;
-
-    /// <summary>
-    /// Keycloak base URL
-    /// </summary>
-    private readonly string _baseUrl;
-
-    /// <summary>
-    /// Client constructor
-    /// </summary>
-    /// <param name="baseUrl">Keycloak server base url.
-    /// <see href="https://www.keycloak.org/docs-api/20.0.3/rest-api/index.html#_uri_scheme"/></param>
-    /// <param name="logger">Logger <see cref="ILogger"/></param>
-    public KcClients(string baseUrl, ILogger logger = null)
-    {
-        if ( string.IsNullOrWhiteSpace(baseUrl) )
-        {
-            throw new KcException($"{nameof(baseUrl)} is required");
-        }
-
-        // Remove last "/" from base url
-        _baseUrl = baseUrl.EndsWith("/", StringComparison.Ordinal)
-            ? baseUrl.Remove(baseUrl.Length - 1, 1)
-            : baseUrl;
-
-        _logger = logger;
-    }
-
     /// <inheritdoc cref="IKcClients.CreateAsync"/>
-    public async Task<KcResponse<object>> CreateAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> CreateAsync(
+        string realm,
+        string accessToken,
         KcClient kcClient,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( kcClient == null )
-        {
-            throw new KcException($"{nameof(kcClient)} is required");
-        }
+        // Validate that the kcClient object is not null.
+        ValidateNotNull(nameof(kcClient), kcClient);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/clients", accessToken, KcRequestHandler.GetBody(kcClient));
+        // Construct the URL for creating the client in the specified realm.
+        var url = $"{BaseUrl}/{realm}/clients";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to add realm client", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to create the client.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to add realm client",
+            kcClient,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.ListAsync"/>
-    public async Task<KcResponse<IEnumerable<KcClient>>> ListAsync(string realm, string accessToken,
-        KcClientFilter filter = null, CancellationToken cancellationToken = default)
+    public async Task<KcResponse<IEnumerable<KcClient>>> ListAsync(
+        string realm,
+        string accessToken,
+        KcClientFilter filter = null,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
+        // Initialize the filter if it is null.
         filter ??= new KcClientFilter();
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients{filter.BuildQuery()}", accessToken);
+        // Construct the URL for listing the clients, including any filter criteria.
+        var url = $"{BaseUrl}/{realm}/clients{filter.BuildQuery()}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcClient>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to list realm client", e);
-            }
-
-            return new KcResponse<IEnumerable<KcClient>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the list of clients.
+        return await ProcessRequestAsync<IEnumerable<KcClient>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to list realm client",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.GetAsync"/>
-    public async Task<KcResponse<KcClient>> GetAsync(string realm, string accessToken, string id,
+    public async Task<KcResponse<KcClient>> GetAsync(
+        string realm,
+        string accessToken,
+        string id,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{id}", accessToken);
+        // Construct the URL for retrieving the client by its ID.
+        var url = $"{BaseUrl}/{realm}/clients/{id}";
 
-            using var client = new HttpClient();
-
-            var response =
-                await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcClient>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get realm client", e);
-            }
-
-            return new KcResponse<KcClient>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the client.
+        return await ProcessRequestAsync<KcClient>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm client",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.UpdateAsync"/>
-    public async Task<KcResponse<object>> UpdateAsync(string realm, string accessToken, string id,
+    public async Task<KcResponse<object>> UpdateAsync(
+        string realm,
+        string accessToken,
+        string id,
         KcClient kcClient,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        if ( kcClient == null )
-        {
-            throw new KcException($"{nameof(kcClient)} is required");
-        }
+        // Validate that the kcClient object is not null.
+        ValidateNotNull(nameof(kcClient), kcClient);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/clients/{id}", accessToken,
-                KcRequestHandler.GetBody(kcClient));
+        // Construct the URL for updating the client in the specified realm.
+        var url = $"{BaseUrl}/{realm}/clients/{id}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to update realm client", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to update the client.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            "Unable to update realm client",
+            kcClient,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.DeleteAsync"/>
-    public async Task<KcResponse<object>> DeleteAsync(string realm, string accessToken, string id,
+    public async Task<KcResponse<object>> DeleteAsync(
+        string realm,
+        string accessToken,
+        string id,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/clients/{id}", accessToken);
+        // Construct the URL for deleting the client in the specified realm.
+        var url = $"{BaseUrl}/{realm}/clients/{id}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to delete realm client", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to delete the client.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            "Unable to delete realm client",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.GenerateNewSecretAsync"/>
-    public async Task<KcResponse<KcCredentials>> GenerateNewSecretAsync(string realm,
-        string accessToken, string id,
+    public async Task<KcResponse<KcCredentials>> GenerateNewSecretAsync(
+        string realm,
+        string accessToken,
+        string id,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/clients/{id}/client-secret", accessToken);
+        // Construct the URL for generating a new secret for the client.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/client-secret";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcCredentials>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable generate realm client new secret", e);
-            }
-
-            return new KcResponse<KcCredentials>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to generate the new secret.
+        return await ProcessRequestAsync<KcCredentials>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to generate realm client new secret",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.GetSecretAsync"/>
-    public async Task<KcResponse<KcCredentials>> GetSecretAsync(string realm, string accessToken,
+    public async Task<KcResponse<KcCredentials>> GetSecretAsync(
+        string realm,
+        string accessToken,
         string id,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{id}/client-secret", accessToken);
+        // Construct the URL for retrieving the client's secret.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/client-secret";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcCredentials>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable get realm client secret", e);
-            }
-
-            return new KcResponse<KcCredentials>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the client secret.
+        return await ProcessRequestAsync<KcCredentials>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm client secret",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.GetRotatedSecretAsync"/>
-    public async Task<KcResponse<KcCredentials>> GetRotatedSecretAsync(string realm,
-        string accessToken, string id,
+    public async Task<KcResponse<KcCredentials>> GetRotatedSecretAsync(
+        string realm,
+        string accessToken,
+        string id,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{id}/client-secret/rotated", accessToken);
+        // Construct the URL for retrieving the client's rotated secret.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/client-secret/rotated";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcCredentials>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable get realm client rotated secret", e);
-            }
-
-            return new KcResponse<KcCredentials>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the rotated client secret.
+        return await ProcessRequestAsync<KcCredentials>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm client rotated secret",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.InvalidateRotatedSecretAsync"/>
-    public async Task<KcResponse<KcCredentials>> InvalidateRotatedSecretAsync(string realm,
+    public async Task<KcResponse<KcCredentials>> InvalidateRotatedSecretAsync(
+        string realm,
         string accessToken,
         string id,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/clients/{id}/client-secret/rotated", accessToken);
+        // Construct the URL for invalidating the client's rotated secret.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/client-secret/rotated";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcCredentials>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable invalidate realm client rotated secret", e);
-            }
-
-            return new KcResponse<KcCredentials>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to invalidate the rotated client secret.
+        return await ProcessRequestAsync<KcCredentials>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            "Unable to invalidate realm client rotated secret",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.GetDefaultScopesAsync"/>
-    public async Task<KcResponse<IEnumerable<KcClientScope>>> GetDefaultScopesAsync(string realm,
+    public async Task<KcResponse<IEnumerable<KcClientScope>>> GetDefaultScopesAsync(
+        string realm,
         string accessToken,
-        string id, CancellationToken cancellationToken = default)
+        string id,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{id}/default-client-scopes", accessToken);
+        // Construct the URL for retrieving the default client scopes for the specified client.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/default-client-scopes";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcClientScope>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable list realm client default scopes", e);
-            }
-
-            return new KcResponse<IEnumerable<KcClientScope>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the default client scopes.
+        return await ProcessRequestAsync<IEnumerable<KcClientScope>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to list realm client default scopes",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.AddDefaultScopesAsync"/>
-    public async Task<KcResponse<object>> AddDefaultScopesAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> AddDefaultScopesAsync(
+        string realm,
+        string accessToken,
         string id,
-        string scopeId, CancellationToken cancellationToken = default)
+        string scopeId,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        if ( string.IsNullOrWhiteSpace(scopeId) )
-        {
-            throw new KcException($"{nameof(scopeId)} is required");
-        }
+        // Validate that the scope ID is not null or empty.
+        ValidateRequiredString(nameof(scopeId), scopeId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/clients/{id}/default-client-scopes/{scopeId}", accessToken);
+        // Construct the URL for adding the scope to the client's default scopes.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/default-client-scopes/{scopeId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to add scope to realm client default scopes", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to add the default scope.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            "Unable to add scope to realm client default scopes",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.DeleteDefaultScopesAsync"/>
-    public async Task<KcResponse<object>> DeleteDefaultScopesAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> DeleteDefaultScopesAsync(
+        string realm,
+        string accessToken,
         string id,
-        string scopeId, CancellationToken cancellationToken = default)
+        string scopeId,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        if ( string.IsNullOrWhiteSpace(scopeId) )
-        {
-            throw new KcException($"{nameof(scopeId)} is required");
-        }
+        // Validate that the scope ID is not null or empty.
+        ValidateRequiredString(nameof(scopeId), scopeId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/clients/{id}/default-client-scopes/{scopeId}", accessToken);
+        // Construct the URL for deleting the scope from the client's default scopes.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/default-client-scopes/{scopeId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to delete scope from realm client default scopes", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to remove the default scope.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            "Unable to delete scope from realm client default scopes",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.GenerateExampleAccessTokenAsync"/>
-    public async Task<KcResponse<KcAccessToken>> GenerateExampleAccessTokenAsync(string realm,
+    public async Task<KcResponse<KcAccessToken>> GenerateExampleAccessTokenAsync(
+        string realm,
         string accessToken,
-        string id, string scope = null, string userId = null,
+        string id,
+        string scope = null,
+        string userId = null,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
+        // Build the URL for generating the example access token.
         var appendedToUrl = false;
-
         var urlBuilder =
-            new StringBuilder(
-                $"{_baseUrl}/{realm}/clients/{id}/evaluate-scopes/generate-example-access-token");
+            new StringBuilder($"{BaseUrl}/{realm}/clients/{id}/evaluate-scopes/generate-example-access-token");
 
+        // Append the optional scope to the URL if provided.
         if ( !string.IsNullOrWhiteSpace(scope) )
         {
             _ = urlBuilder.Append(CultureInfo.CurrentCulture, $"?scope={scope}");
             appendedToUrl = true;
         }
 
+        // Append the optional user ID to the URL if provided.
         if ( !string.IsNullOrWhiteSpace(userId) )
         {
             _ = urlBuilder.Append(appendedToUrl ? $"&userId={userId}" : $"?userId={userId}");
         }
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                urlBuilder.ToString(), accessToken);
-
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcAccessToken>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to generate realm client example access token", e);
-            }
-
-            return new KcResponse<KcAccessToken>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to generate the example access token.
+        return await ProcessRequestAsync<KcAccessToken>(
+            urlBuilder.ToString(),
+            HttpMethod.Get,
+            accessToken,
+            "Unable to generate realm client example access token",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.GenerateExampleIdTokenAsync"/>
-    public async Task<KcResponse<KcAccessToken>> GenerateExampleIdTokenAsync(string realm,
-        string accessToken, string id, string scope = null, string userId = null,
+    public async Task<KcResponse<KcAccessToken>> GenerateExampleIdTokenAsync(
+        string realm,
+        string accessToken,
+        string id,
+        string scope = null,
+        string userId = null,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
+        // Build the URL for generating the example ID token.
         var appendedToUrl = false;
+        var urlBuilder = new StringBuilder($"{BaseUrl}/{realm}/clients/{id}/evaluate-scopes/generate-example-id-token");
 
-        var urlBuilder =
-            new StringBuilder(
-                $"{_baseUrl}/{realm}/clients/{id}/evaluate-scopes/generate-example-id-token");
-
+        // Append the optional scope to the URL if provided.
         if ( !string.IsNullOrWhiteSpace(scope) )
         {
             _ = urlBuilder.Append(CultureInfo.CurrentCulture, $"?scope={scope}");
             appendedToUrl = true;
         }
 
+        // Append the optional user ID to the URL if provided.
         if ( !string.IsNullOrWhiteSpace(userId) )
         {
             _ = urlBuilder.Append(appendedToUrl ? $"&userId={userId}" : $"?userId={userId}");
         }
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                urlBuilder.ToString(), accessToken);
-
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcAccessToken>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to generate realm client example id token", e);
-            }
-
-            return new KcResponse<KcAccessToken>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to generate the example ID token.
+        return await ProcessRequestAsync<KcAccessToken>(
+            urlBuilder.ToString(),
+            HttpMethod.Get,
+            accessToken,
+            "Unable to generate realm client example ID token",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.GenerateExampleUserInfoAsync"/>
-    public async Task<KcResponse<object>> GenerateExampleUserInfoAsync(string realm,
-        string accessToken, string id,
-        string scope = null, string userId = null,
+    public async Task<KcResponse<object>> GenerateExampleUserInfoAsync(
+        string realm,
+        string accessToken,
+        string id,
+        string scope = null,
+        string userId = null,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
+        // Build the URL for generating the example user info.
         var appendedToUrl = false;
+        var urlBuilder = new StringBuilder($"{BaseUrl}/{realm}/clients/{id}/evaluate-scopes/generate-example-userinfo");
 
-        var urlBuilder =
-            new StringBuilder(
-                $"{_baseUrl}/{realm}/clients/{id}/evaluate-scopes/generate-example-userinfo");
-
+        // Append the optional scope to the URL if provided.
         if ( !string.IsNullOrWhiteSpace(scope) )
         {
             _ = urlBuilder.Append(CultureInfo.CurrentCulture, $"?scope={scope}");
             appendedToUrl = true;
         }
 
+        // Append the optional user ID to the URL if provided.
         if ( !string.IsNullOrWhiteSpace(userId) )
         {
             _ = urlBuilder.Append(appendedToUrl ? $"&userId={userId}" : $"?userId={userId}");
         }
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                urlBuilder.ToString(), accessToken);
-
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to generate realm client example user info", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to generate the example user info.
+        return await ProcessRequestAsync<object>(
+            urlBuilder.ToString(),
+            HttpMethod.Get,
+            accessToken,
+            "Unable to generate realm client example user info",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.GetProtocolMappersAsync"/>
     public async Task<KcResponse<IEnumerable<KcProtocolMapper>>> GetProtocolMappersAsync(
         string realm,
-        string accessToken, string id, string scope = null,
-        CancellationToken cancellationToken = default)
-    {
-        ValidateAccess(realm, accessToken);
-
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
-
-        var url = string.IsNullOrWhiteSpace(scope)
-            ? $"{_baseUrl}/{realm}/clients/{id}/evaluate-scopes/protocol-mappers"
-            : $"{_baseUrl}/{realm}/clients/{id}/evaluate-scopes/protocol-mappers?scope={scope}";
-
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                url, accessToken);
-
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcProtocolMapper>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable get to realm client protocol mappers", e);
-            }
-
-            return new KcResponse<IEnumerable<KcProtocolMapper>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
-    }
-
-    /// <inheritdoc cref="IKcClients.GetScopedProtocolMappersInContainerAsync"/>
-    public async Task<KcResponse<IEnumerable<KcProtocolMapper>>>
-        GetScopedProtocolMappersInContainerAsync(string realm,
-        string accessToken, string id, string roleContainerId, string scope = null,
-        CancellationToken cancellationToken = default)
-    {
-        ValidateAccess(realm, accessToken);
-
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
-
-        var appendedToUrl = false;
-
-        var urlBuilder =
-            new StringBuilder(
-                $"{_baseUrl}/{realm}/clients/{id}/evaluate-scopes/scope-mappings/{roleContainerId}/granted");
-
-        if ( !string.IsNullOrWhiteSpace(scope) )
-        {
-            _ = urlBuilder.Append(CultureInfo.CurrentCulture, $"?scope={scope}");
-            appendedToUrl = true;
-        }
-
-        if ( !string.IsNullOrWhiteSpace(roleContainerId) )
-        {
-            _ = urlBuilder.Append(appendedToUrl
-                ? $"&roleContainerId={roleContainerId}"
-                : $"?roleContainerId={roleContainerId}");
-        }
-
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                urlBuilder.ToString(), accessToken);
-
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcProtocolMapper>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get realm client scoped protocol mappers in role container",
-                    e);
-            }
-
-            return new KcResponse<IEnumerable<KcProtocolMapper>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
-    }
-
-    /// <inheritdoc cref="IKcClients.GetUnScopedProtocolMappersInContainerAsync"/>
-    public async Task<KcResponse<IEnumerable<KcProtocolMapper>>>
-        GetUnScopedProtocolMappersInContainerAsync(
-        string realm, string accessToken, string id, string roleContainerId,
+        string accessToken,
+        string id,
         string scope = null,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
+        // Construct the URL for retrieving the protocol mappers, optionally including a scope filter.
+        var url = string.IsNullOrWhiteSpace(scope)
+            ? $"{BaseUrl}/{realm}/clients/{id}/evaluate-scopes/protocol-mappers"
+            : $"{BaseUrl}/{realm}/clients/{id}/evaluate-scopes/protocol-mappers?scope={scope}";
+
+        // Process the request to retrieve the protocol mappers.
+        return await ProcessRequestAsync<IEnumerable<KcProtocolMapper>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to retrieve protocol mappers for the client",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc cref="IKcClients.GetScopedProtocolMappersInContainerAsync"/>
+    public async Task<KcResponse<IEnumerable<KcProtocolMapper>>> GetScopedProtocolMappersInContainerAsync(
+        string realm,
+        string accessToken,
+        string id,
+        string roleContainerId,
+        string scope = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Validate the realm and access token inputs.
+        ValidateAccess(realm, accessToken);
+
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
+
+        // Build the URL for retrieving the scoped protocol mappers.
         var appendedToUrl = false;
+        var urlBuilder = new StringBuilder(
+            $"{BaseUrl}/{realm}/clients/{id}/evaluate-scopes/scope-mappings/{roleContainerId}/granted");
 
-        var urlBuilder =
-            new StringBuilder(
-                $"{_baseUrl}/{realm}/clients/{id}/evaluate-scopes/scope-mappings/{roleContainerId}/not-granted");
-
+        // Append the optional scope to the URL if provided.
         if ( !string.IsNullOrWhiteSpace(scope) )
         {
             _ = urlBuilder.Append(CultureInfo.CurrentCulture, $"?scope={scope}");
             appendedToUrl = true;
         }
 
+        // Append the role container ID to the URL if provided.
         if ( !string.IsNullOrWhiteSpace(roleContainerId) )
         {
             _ = urlBuilder.Append(appendedToUrl
@@ -834,649 +532,478 @@ public class KcClients : KcClientValidator, IKcClients
                 : $"?roleContainerId={roleContainerId}");
         }
 
-        try
+        // Process the request to retrieve the scoped protocol mappers.
+        return await ProcessRequestAsync<IEnumerable<KcProtocolMapper>>(
+            urlBuilder.ToString(),
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm client scoped protocol mappers in role container",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc cref="IKcClients.GetUnScopedProtocolMappersInContainerAsync"/>
+    public async Task<KcResponse<IEnumerable<KcProtocolMapper>>> GetUnScopedProtocolMappersInContainerAsync(
+        string realm,
+        string accessToken,
+        string id,
+        string roleContainerId,
+        string scope = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Validate the realm and access token inputs.
+        ValidateAccess(realm, accessToken);
+
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
+
+        // Build the URL for retrieving the unscoped protocol mappers.
+        var appendedToUrl = false;
+        var urlBuilder = new StringBuilder(
+            $"{BaseUrl}/{realm}/clients/{id}/evaluate-scopes/scope-mappings/{roleContainerId}/not-granted");
+
+        // Append the optional scope to the URL if provided.
+        if ( !string.IsNullOrWhiteSpace(scope) )
         {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                urlBuilder.ToString(), accessToken);
-
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcProtocolMapper>>(response,
-                cancellationToken).ConfigureAwait(false);
+            _ = urlBuilder.Append(CultureInfo.CurrentCulture, $"?scope={scope}");
+            appendedToUrl = true;
         }
-        catch ( Exception e )
+
+        // Append the role container ID to the URL if provided.
+        if ( !string.IsNullOrWhiteSpace(roleContainerId) )
         {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger,
-                    "Unable to get realm client unscoped protocol mappers in role container", e);
-            }
-
-            return new KcResponse<IEnumerable<KcProtocolMapper>>
-            {
-                IsError = true,
-                Exception = e
-            };
+            _ = urlBuilder.Append(appendedToUrl
+                ? $"&roleContainerId={roleContainerId}"
+                : $"?roleContainerId={roleContainerId}");
         }
+
+        // Process the request to retrieve the unscoped protocol mappers.
+        return await ProcessRequestAsync<IEnumerable<KcProtocolMapper>>(
+            urlBuilder.ToString(),
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm client unscoped protocol mappers in role container",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.GetAuthorizationManagementPermissionAsync"/>
     public async Task<KcResponse<KcPermissionManagement>> GetAuthorizationManagementPermissionAsync(
         string realm,
-        string accessToken, string id, CancellationToken cancellationToken = default)
+        string accessToken,
+        string id,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{id}/management/permissions", accessToken);
+        // Construct the URL for retrieving the client's authorization management permissions.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/management/permissions";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcPermissionManagement>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable get realm client authorization management permission", e);
-            }
-
-            return new KcResponse<KcPermissionManagement>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the authorization management permissions.
+        return await ProcessRequestAsync<KcPermissionManagement>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to retrieve client authorization management permissions",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.SetAuthorizationManagementPermissionAsync"/>
     public async Task<KcResponse<KcPermissionManagement>> SetAuthorizationManagementPermissionAsync(
         string realm,
-        string accessToken, string id, KcPermissionManagement permissionManagement,
+        string accessToken,
+        string id,
+        KcPermissionManagement permissionManagement,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        if ( permissionManagement == null )
-        {
-            throw new KcException($"{nameof(permissionManagement)} is required");
-        }
+        // Validate that the permission management object is not null.
+        ValidateNotNull(nameof(permissionManagement), permissionManagement);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/clients/{id}/management/permissions", accessToken,
-                KcRequestHandler.GetBody(permissionManagement));
+        // Construct the URL for setting the client's authorization management permissions.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/management/permissions";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcPermissionManagement>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to set realm client authorization management permission", e);
-            }
-
-            return new KcResponse<KcPermissionManagement>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to set the authorization management permissions.
+        return await ProcessRequestAsync<KcPermissionManagement>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            "Unable to set client authorization management permissions",
+            permissionManagement,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.RegisterNodeAsync"/>
-    public async Task<KcResponse<object>> RegisterNodeAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> RegisterNodeAsync(
+        string realm,
+        string accessToken,
         string id,
-        IDictionary<string, object> formParams, CancellationToken cancellationToken = default)
+        IDictionary<string, object> formParams,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        if ( formParams == null )
-        {
-            throw new KcException($"{nameof(formParams)} is required");
-        }
+        // Validate that the form parameters are not null.
+        ValidateNotNull(nameof(formParams), formParams);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/clients/{id}/nodes", accessToken,
-                KcRequestHandler.GetBody(formParams));
+        // Construct the URL for registering the new cluster node.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/nodes";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to register realm client new cluster node", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to register the new cluster node.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to register realm client new cluster node",
+            formParams,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.DeleteNodeAsync"/>
-    public async Task<KcResponse<object>> DeleteNodeAsync(string realm, string accessToken,
-        string id, string nodeName,
+    public async Task<KcResponse<object>> DeleteNodeAsync(
+        string realm,
+        string accessToken,
+        string id,
+        string nodeName,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        if ( string.IsNullOrWhiteSpace(nodeName) )
-        {
-            throw new KcException($"{nameof(nodeName)} is required");
-        }
+        // Validate that the node name is not null or empty.
+        ValidateNotNull(nameof(nodeName), nodeName);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/clients/{id}/nodes/{nodeName}", accessToken);
+        // Construct the URL for deleting the cluster node.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/nodes/{nodeName}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to delete realm client cluster node", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to delete the cluster node.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            "Unable to delete realm client cluster node",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.CountOfflineSessionsAsync"/>
-    public async Task<KcResponse<object>> CountOfflineSessionsAsync(string realm,
-        string accessToken, string id,
+    public async Task<KcResponse<object>> CountOfflineSessionsAsync(
+        string realm,
+        string accessToken,
+        string id,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{id}/offline-session-count", accessToken);
+        // Construct the URL for retrieving the offline session count.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/offline-session-count";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get realm client offline sessions count", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the offline session count.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm client offline sessions count",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.GetOfflineSessionsAsync"/>
-    public async Task<KcResponse<IEnumerable<KcSession>>> GetOfflineSessionsAsync(string realm,
+    public async Task<KcResponse<IEnumerable<KcSession>>> GetOfflineSessionsAsync(
+        string realm,
         string accessToken,
-        string id, KcFilter filter = null, CancellationToken cancellationToken = default)
+        string id,
+        KcFilter filter = null,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
+        // Ensure a filter is provided; if not, use an empty filter.
         filter ??= new KcFilter();
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{id}/offline-sessions{filter.BuildQuery()}",
-                accessToken);
+        // Construct the URL for retrieving the offline sessions with optional query parameters from the filter.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/offline-sessions{filter.BuildQuery()}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcSession>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get realm client offline sessions", e);
-            }
-
-            return new KcResponse<IEnumerable<KcSession>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the offline sessions.
+        return await ProcessRequestAsync<IEnumerable<KcSession>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm client offline sessions",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.GetOptionalScopesAsync"/>
-    public async Task<KcResponse<IEnumerable<KcClientScope>>> GetOptionalScopesAsync(string realm,
+    public async Task<KcResponse<IEnumerable<KcClientScope>>> GetOptionalScopesAsync(
+        string realm,
         string accessToken,
-        string id, CancellationToken cancellationToken = default)
+        string id,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{id}/optional-client-scopes", accessToken);
+        // Construct the URL for retrieving the optional client scopes.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/optional-client-scopes";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcClientScope>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get realm client optional scopes", e);
-            }
-
-            return new KcResponse<IEnumerable<KcClientScope>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the optional client scopes.
+        return await ProcessRequestAsync<IEnumerable<KcClientScope>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm client optional scopes",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.AddOptionalScopeAsync"/>
-    public async Task<KcResponse<object>> AddOptionalScopeAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> AddOptionalScopeAsync(
+        string realm,
+        string accessToken,
         string id,
-        string scopeId, CancellationToken cancellationToken = default)
+        string scopeId,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        if ( string.IsNullOrWhiteSpace(scopeId) )
-        {
-            throw new KcException($"{nameof(scopeId)} is required");
-        }
+        // Validate that the scope ID is not null or empty.
+        ValidateRequiredString(nameof(scopeId), scopeId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/clients/{id}/optional-client-scopes/{scopeId}", accessToken);
+        // Construct the URL for adding the optional client scope.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/optional-client-scopes/{scopeId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to add scope to realm client optional scopes", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to add the optional client scope.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            "Unable to add scope to realm client optional scopes",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.DeleteOptionalScopeAsync"/>
-    public async Task<KcResponse<object>> DeleteOptionalScopeAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> DeleteOptionalScopeAsync(
+        string realm,
+        string accessToken,
         string id,
-        string scopeId, CancellationToken cancellationToken = default)
+        string scopeId,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        if ( string.IsNullOrWhiteSpace(scopeId) )
-        {
-            throw new KcException($"{nameof(scopeId)} is required");
-        }
+        // Validate that the scope ID is not null or empty.
+        ValidateRequiredString(nameof(scopeId), scopeId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/clients/{id}/optional-client-scopes/{scopeId}", accessToken);
+        // Construct the URL for deleting the optional client scope.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/optional-client-scopes/{scopeId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to delete scope from realm client optional scopes", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to remove the optional client scope.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            "Unable to delete scope from realm client optional scopes",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.PushRevocationAsync"/>
-    public async Task<KcResponse<KcGlobalRequestResult>> PushRevocationAsync(string realm,
+    public async Task<KcResponse<KcGlobalRequestResult>> PushRevocationAsync(
+        string realm,
         string accessToken,
-        string id, CancellationToken cancellationToken = default)
-    {
-        ValidateAccess(realm, accessToken);
-
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
-
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/clients/{id}/push-revocation", accessToken);
-
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcGlobalRequestResult>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to push realm client revocation", e);
-            }
-
-            return new KcResponse<KcGlobalRequestResult>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
-    }
-
-    /// <inheritdoc cref="IKcClients.GetRegistrationAccessTokenAsync"/>
-    public async Task<KcResponse<KcClient>> GetRegistrationAccessTokenAsync(string realm,
-        string accessToken, string id,
-        CancellationToken cancellationToken = default)
-    {
-        ValidateAccess(realm, accessToken);
-
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
-
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/clients/{id}/registration-access-token", accessToken);
-
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcClient>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to create realm client registration access token", e);
-            }
-
-            return new KcResponse<KcClient>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
-    }
-
-    /// <inheritdoc cref="IKcClients.GetServiceAccountUserAsync"/>
-    public async Task<KcResponse<KcUser>> GetServiceAccountUserAsync(string realm,
-        string accessToken, string id,
-        CancellationToken cancellationToken = default)
-    {
-        ValidateAccess(realm, accessToken);
-
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
-
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{id}/service-account-user", accessToken);
-
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcUser>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get realm client service account user", e);
-            }
-
-            return new KcResponse<KcUser>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
-    }
-
-    /// <inheritdoc cref="IKcClients.CountSessionsAsync"/>
-    public async Task<KcResponse<object>> CountSessionsAsync(string realm, string accessToken,
         string id,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{id}/session-count", accessToken);
+        // Construct the URL for pushing the revocation.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/push-revocation";
 
-            using var client = new HttpClient();
+        // Process the request to push the revocation.
+        return await ProcessRequestAsync<KcGlobalRequestResult>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to push realm client revocation",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
+    }
 
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+    /// <inheritdoc cref="IKcClients.GetRegistrationAccessTokenAsync"/>
+    public async Task<KcResponse<KcClient>> GetRegistrationAccessTokenAsync(
+        string realm,
+        string accessToken,
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        // Validate the realm and access token inputs.
+        ValidateAccess(realm, accessToken);
 
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get realm client sessions count", e);
-            }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Construct the URL for retrieving the registration access token.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/registration-access-token";
+
+        // Process the request to generate the registration access token.
+        return await ProcessRequestAsync<KcClient>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to create realm client registration access token",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc cref="IKcClients.GetServiceAccountUserAsync"/>
+    public async Task<KcResponse<KcUser>> GetServiceAccountUserAsync(
+        string realm,
+        string accessToken,
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        // Validate the realm and access token inputs.
+        ValidateAccess(realm, accessToken);
+
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
+
+        // Construct the URL for retrieving the service account user.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/service-account-user";
+
+        // Process the request to retrieve the service account user.
+        return await ProcessRequestAsync<KcUser>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm client service account user",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc cref="IKcClients.CountSessionsAsync"/>
+    public async Task<KcResponse<object>> CountSessionsAsync(
+        string realm,
+        string accessToken,
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        // Validate the realm and access token inputs.
+        ValidateAccess(realm, accessToken);
+
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
+
+        // Construct the URL for retrieving the session count.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/session-count";
+
+        // Process the request to retrieve the session count.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm client sessions count",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.TestAvailableNodesAsync"/>
-    public async Task<KcResponse<KcGlobalRequestResult>> TestAvailableNodesAsync(string realm,
+    public async Task<KcResponse<KcGlobalRequestResult>> TestAvailableNodesAsync(
+        string realm,
         string accessToken,
-        string id, CancellationToken cancellationToken = default)
+        string id,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{id}/test-nodes-available", accessToken);
+        // Construct the URL for testing the availability of nodes.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/test-nodes-available";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcGlobalRequestResult>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to test realm client available nodes", e);
-            }
-
-            return new KcResponse<KcGlobalRequestResult>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to test the availability of nodes.
+        return await ProcessRequestAsync<KcGlobalRequestResult>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to test realm client available nodes",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcClients.GetUsersSessionsAsync"/>
-    public async Task<KcResponse<IEnumerable<KcSession>>> GetUsersSessionsAsync(string realm,
+    public async Task<KcResponse<IEnumerable<KcSession>>> GetUsersSessionsAsync(
+        string realm,
         string accessToken,
-        string id, KcFilter filter = null, CancellationToken cancellationToken = default)
+        string id,
+        KcFilter filter = null,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
+        // Initialize the filter if it is not provided.
         filter ??= new KcFilter();
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{id}/user-sessions{filter.BuildQuery()}", accessToken);
+        // Construct the URL for retrieving user sessions with optional query parameters from the filter.
+        var url = $"{BaseUrl}/{realm}/clients/{id}/user-sessions{filter.BuildQuery()}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcSession>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get realm client users sessions", e);
-            }
-
-            return new KcResponse<IEnumerable<KcSession>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve user sessions.
+        return await ProcessRequestAsync<IEnumerable<KcSession>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm client users sessions",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 }

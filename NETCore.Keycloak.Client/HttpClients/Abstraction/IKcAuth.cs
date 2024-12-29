@@ -30,21 +30,28 @@ public interface IKcAuth
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<KcResponse<KcIdentityProviderToken>> GetResourceOwnerPasswordTokenAsync(string realm,
-        KcClientCredentials clientCredentials, KcUserLogin userLogin, string scope = null,
-        string resource = null, CancellationToken cancellationToken = default);
+        KcClientCredentials clientCredentials, KcUserLogin userLogin, string scope = null, string resource = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Validate password
-    /// The call is tricky, it uses the password resource owner grant type to get a token.
+    /// Validates a user's password by attempting to retrieve an access token using the provided credentials
+    /// and then revoking the token if the retrieval is successful.
     /// </summary>
-    /// <param name="realm">Keycloak realm name</param>
-    /// <param name="clientCredentials">Client credentials <see cref="KcClientCredentials"/></param>
-    /// <param name="userLogin">User credentials <see cref="KcUserLogin"/></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    Task<KcResponse<bool>> ValidatePasswordAsync(string realm,
-        KcClientCredentials clientCredentials, KcUserLogin userLogin,
-        CancellationToken cancellationToken = default);
+    /// <param name="realm">The Keycloak realm to validate the user's password against.</param>
+    /// <param name="clientCredentials">The client credentials used to authenticate the request.</param>
+    /// <param name="userLogin">The user's login credentials to validate.</param>
+    /// <param name="cancellationToken">
+    /// Optional cancellation token to cancel the asynchronous operation.
+    /// </param>
+    /// <returns>
+    /// A <see cref="KcOperationResponse{T}"/> containing a <c>true</c> response if the password is valid,
+    /// or <c>false</c> if the validation fails, along with any associated error messages and monitoring metrics.
+    /// </returns>
+    /// <exception cref="KcException">
+    /// Thrown if the realm, client credentials, or user login information is invalid or missing.
+    /// </exception>
+    Task<KcOperationResponse<bool>> ValidatePasswordAsync(string realm, KcClientCredentials clientCredentials,
+        KcUserLogin userLogin, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Refresh token
@@ -55,46 +62,67 @@ public interface IKcAuth
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<KcResponse<KcIdentityProviderToken>> RefreshAccessTokenAsync(string realm,
-        KcClientCredentials clientCredentials, string refreshToken,
-        CancellationToken cancellationToken = default);
+        KcClientCredentials clientCredentials, string refreshToken, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Revoke access token
+    /// Revokes an access token for a Keycloak realm using the specified client credentials.
     /// </summary>
-    /// <param name="realm">Keycloak realm name</param>
-    /// <param name="clientCredentials">Client credentials <see cref="KcClientCredentials"/></param>
-    /// <param name="accessToken">Access token</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    Task<KcResponse<bool>> RevokeAccessTokenAsync(string realm,
-        KcClientCredentials clientCredentials, string accessToken,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Revoke refresh token
-    /// </summary>
-    /// <param name="realm">Keycloak realm name</param>
-    /// <param name="clientCredentials">Client credentials <see cref="KcClientCredentials"/></param>
-    /// <param name="refreshToken">Refresh token</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    Task<KcResponse<bool>> RevokeRefreshTokenAsync(string realm,
-        KcClientCredentials clientCredentials, string refreshToken,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Get request party token (RPT)
-    /// </summary>
-    /// <param name="realm">Keycloak realm name</param>
-    /// <param name="accessToken">Bearer access token</param>
-    /// <param name="audience">The client identifier of the resource server to which the client is seeking access.</param>
-    /// <param name="permissions">
-    /// A string representing a set of one or more resources and scopes the client is seeking access.
-    /// <see href="https://github.com/keycloak/keycloak-documentation/blob/main/authorization_services/topics/service-authorization-obtaining-permission.adoc"/>
+    /// <param name="realm">The Keycloak realm to which the token belongs.</param>
+    /// <param name="clientCredentials">The client credentials used for authentication.</param>
+    /// <param name="accessToken">The access token to revoke.</param>
+    /// <param name="cancellationToken">
+    /// Optional cancellation token to cancel the asynchronous operation.
     /// </param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    Task<KcResponse<KcIdentityProviderToken>> GetRequestPartyTokenAsync(string realm,
-        string accessToken, string audience, IEnumerable<string> permissions = null,
-        CancellationToken cancellationToken = default);
+    /// <returns>
+    /// A <see cref="KcResponse{T}"/> containing a <c>true</c> response if the token was successfully revoked,
+    /// or <c>false</c> if the revocation fails. The response includes any associated error messages
+    /// and monitoring metrics.
+    /// </returns>
+    /// <exception cref="KcException">
+    /// Thrown if the realm or client credentials are null or invalid.
+    /// </exception>
+    Task<KcResponse<bool>> RevokeAccessTokenAsync(string realm, KcClientCredentials clientCredentials,
+        string accessToken, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Revokes a refresh token for a Keycloak realm using the specified client credentials.
+    /// </summary>
+    /// <param name="realm">The Keycloak realm to which the token belongs.</param>
+    /// <param name="clientCredentials">The client credentials used for authentication.</param>
+    /// <param name="refreshToken">The refresh token to revoke.</param>
+    /// <param name="cancellationToken">
+    /// Optional cancellation token to cancel the asynchronous operation.
+    /// </param>
+    /// <returns>
+    /// A <see cref="KcResponse{T}"/> containing a <c>true</c> response if the token was successfully revoked,
+    /// or <c>false</c> if the revocation fails. The response includes any associated error messages
+    /// and monitoring metrics.
+    /// </returns>
+    /// <exception cref="KcException">
+    /// Thrown if the realm or client credentials are null or invalid.
+    /// </exception>
+    Task<KcResponse<bool>> RevokeRefreshTokenAsync(string realm, KcClientCredentials clientCredentials,
+        string refreshToken, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves a Request Party Token (RPT) from Keycloak, which is used for resource-based access authorization.
+    /// </summary>
+    /// <param name="realm">The Keycloak realm where the request is made.</param>
+    /// <param name="accessToken">The access token used for authentication.</param>
+    /// <param name="audience">The intended audience of the token.</param>
+    /// <param name="permissions">
+    /// A collection of permissions to request in the token, or <c>null</c> if no specific permissions are required.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Optional cancellation token to cancel the asynchronous operation.
+    /// </param>
+    /// <returns>
+    /// A <see cref="KcResponse{T}"/> containing a <see cref="KcIdentityProviderToken"/> if successful,
+    /// or an error response if the operation fails.
+    /// </returns>
+    /// <exception cref="KcException">
+    /// Thrown if the realm, access token, or audience is null or invalid.
+    /// </exception>
+    Task<KcResponse<KcIdentityProviderToken>> GetRequestPartyTokenAsync(string realm, string accessToken,
+        string audience, IEnumerable<string> permissions = null, CancellationToken cancellationToken = default);
 }

@@ -1,45 +1,23 @@
+using NETCore.Keycloak.Client.Models.Common;
 using Newtonsoft.Json;
 
 namespace NETCore.Keycloak.Client.Models;
 
 /// <summary>
-/// Represents a generic Keycloak request response.
+/// Represents a generic Keycloak request response, encapsulating the result of an API call.
+/// Inherits from <see cref="KcBaseResponse{T}"/> to include common properties for API responses.
 /// </summary>
 /// <typeparam name="T">The type of the response data.</typeparam>
-public class KcResponse<T>
+public class KcResponse<T> : KcBaseResponse<T>
 {
     /// <summary>
-    /// Gets or sets the response data.
+    /// Gets or sets the monitoring metrics associated with the API request.
     /// </summary>
     /// <value>
-    /// An instance of type <typeparamref name="T"/> containing the response data.
+    /// An instance of <see cref="KcHttpApiMonitoringMetrics"/> containing monitoring data,
+    /// including details such as execution time, HTTP method, and status code,
+    /// or <c>null</c> if monitoring metrics are not available for the request.
     /// </value>
-    public T Response { get; set; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether the request resulted in an error.
-    /// </summary>
-    /// <value>
-    /// <c>true</c> if the request failed; otherwise, <c>false</c>.
-    /// </value>
-    [JsonProperty("isError")]
-    public bool IsError { get; set; }
-
-    /// <summary>
-    /// Gets or sets the exception that occurred during the request, if any.
-    /// </summary>
-    /// <value>
-    /// An <see cref="Exception"/> representing the error that occurred during the request.
-    /// </value>
-    [JsonProperty("exception")]
-    public Exception Exception { get; set; }
-
-    /// <summary>
-    /// Gets or sets the error message for the failed request.
-    /// </summary>
-    /// <value>
-    /// A string containing the error message.
-    /// </value>
-    [JsonProperty("errorMessage")]
-    public string ErrorMessage { get; set; }
+    [JsonProperty("monitoringMetrics")]
+    public KcHttpApiMonitoringMetrics MonitoringMetrics { get; set; }
 }

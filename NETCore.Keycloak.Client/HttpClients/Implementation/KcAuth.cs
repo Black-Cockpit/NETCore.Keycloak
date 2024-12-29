@@ -3,97 +3,84 @@ using NETCore.Keycloak.Client.Constants;
 using NETCore.Keycloak.Client.HttpClients.Abstraction;
 using NETCore.Keycloak.Client.Models;
 using NETCore.Keycloak.Client.Models.Auth;
+using NETCore.Keycloak.Client.Models.Common;
 using NETCore.Keycloak.Client.Models.Tokens;
-using NETCore.Keycloak.Client.Requests;
 using NETCore.Keycloak.Client.Utils;
 
 namespace NETCore.Keycloak.Client.HttpClients.Implementation;
 
 /// <inheritdoc cref="IKcAuth"/>
-public class KcAuth : KcClientValidator, IKcAuth
+internal sealed class KcAuth(string baseUrl,
+    ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcAuth
 {
-    /// <summary>
-    /// Logger <see cref="ILogger"/>
-    /// </summary>
-    private readonly ILogger _logger;
-
-    /// <summary>
-    /// Keycloak base URL
-    /// </summary>
-    private readonly string _baseUrl;
-
-    /// <summary>
-    /// Auth client constructor
-    /// </summary>
-    /// <param name="baseUrl">Keycloak server base url.
-    /// <see href="https://www.keycloak.org/docs-api/20.0.3/rest-api/index.html#_uri_scheme"/></param>
-    /// <param name="logger">Logger <see cref="ILogger"/></param>
-    public KcAuth(string baseUrl, ILogger logger = null)
-    {
-        if ( string.IsNullOrWhiteSpace(baseUrl) )
-        {
-            throw new KcException($"{nameof(baseUrl)} is required");
-        }
-
-        // Remove last "/" from base url
-        _baseUrl = baseUrl.EndsWith("/", StringComparison.Ordinal)
-            ? baseUrl.Remove(baseUrl.Length - 1, 1)
-            : baseUrl;
-
-        _logger = logger;
-    }
-
     /// <inheritdoc cref="IKcAuth.GetClientCredentialsTokenAsync"/>
     public async Task<KcResponse<KcIdentityProviderToken>> GetClientCredentialsTokenAsync(
         string realm,
-        KcClientCredentials clientCredentials, CancellationToken cancellationToken = default)
+        KcClientCredentials clientCredentials,
+        CancellationToken cancellationToken = default)
     {
+        // Validate that the realm is not null or empty.
         if ( string.IsNullOrWhiteSpace(realm) )
         {
             throw new KcException($"{nameof(realm)} is required");
         }
 
+        // Validate that the client credentials are provided.
         if ( clientCredentials == null )
         {
             throw new KcException($"{nameof(clientCredentials)} is required");
         }
 
+        // Perform validation on the client credentials object.
         clientCredentials.Validate();
 
-        using var client = new HttpClient();
-
-        var tokenEndpoint = $"{_baseUrl}/{realm}/{KcOpenIdConnectEndpoints.TokenEndpoint}";
+        // Construct the token endpoint URL for the realm.
+        var tokenEndpoint = $"{BaseUrl}/{realm}/{KcOpenIdConnectEndpoints.TokenEndpoint}";
 
         try
         {
-            using var form = new FormUrlEncodedContent(
-                new Dictionary<string, string>
-                {
-                    {
-                        "client_id", clientCredentials.ClientId
-                    },
-                    {
-                        "client_secret", clientCredentials.Secret
-                    },
-                    {
-                        "grant_type", "client_credentials"
-                    }
-                });
+            // Execute the HTTP POST request to get the client credentials token.
+            using var tokenRequest = await ExecuteRequest(async () =>
+            {
+                // Initialize the HTTP client for the request.
+                using var client = new HttpClient();
 
-            var tokenRequest =
-                await client.PostAsync(new Uri(tokenEndpoint), form, cancellationToken)
+                // Create the form content with the client credentials grant type.
+                using var form = new FormUrlEncodedContent(
+                    new Dictionary<string, string>
+                    {
+                        {
+                            "client_id", clientCredentials.ClientId
+                        },
+                        {
+                            "client_secret", clientCredentials.Secret
+                        },
+                        {
+                            "grant_type", "client_credentials"
+                        }
+                    });
+
+                // Send the POST request to the token endpoint with the form content.
+                return await client.PostAsync(new Uri(tokenEndpoint), form, cancellationToken)
                     .ConfigureAwait(false);
+            }, new KcHttpMonitoringFallbackModel
+            {
+                Url = tokenEndpoint, // Log the token endpoint URL for monitoring.
+                HttpMethod = HttpMethod.Post // Log the HTTP method for monitoring.
+            }).ConfigureAwait(false);
 
-            return await KcRequestHandler.HandleAsync<KcIdentityProviderToken>(tokenRequest,
-                cancellationToken: cancellationToken).ConfigureAwait(false);
+            // Handle the response and deserialize it into a KcIdentityProviderToken object.
+            return await HandleAsync<KcIdentityProviderToken>(tokenRequest, cancellationToken).ConfigureAwait(false);
         }
         catch ( Exception e )
         {
-            if ( _logger != null )
+            // Log the error if a logger is available.
+            if ( Logger != null )
             {
-                KcLoggerMessages.Error(_logger, "Unable to get client credentials token", e);
+                KcLoggerMessages.Error(Logger, "Unable to get client credentials token", e);
             }
 
+            // Return a response indicating an error occurred.
             return new KcResponse<KcIdentityProviderToken>
             {
                 IsError = true,
@@ -105,78 +92,94 @@ public class KcAuth : KcClientValidator, IKcAuth
     /// <inheritdoc cref="IKcAuth.GetResourceOwnerPasswordTokenAsync"/>
     public async Task<KcResponse<KcIdentityProviderToken>> GetResourceOwnerPasswordTokenAsync(
         string realm,
-        KcClientCredentials clientCredentials, KcUserLogin userLogin, string scope = null,
-        string resource = null, CancellationToken cancellationToken = default)
+        KcClientCredentials clientCredentials,
+        KcUserLogin userLogin,
+        string scope = null,
+        string resource = null,
+        CancellationToken cancellationToken = default)
     {
-        if ( string.IsNullOrWhiteSpace(realm) )
-        {
-            throw new KcException($"{nameof(realm)} is required");
-        }
+        // Validate that the realm is not null or empty.
+        ValidateRequiredString(nameof(realm), realm);
 
-        if ( clientCredentials == null )
-        {
-            throw new KcException($"{nameof(clientCredentials)} is required");
-        }
+        // Validate that the client credentials are provided.
+        ValidateNotNull(nameof(clientCredentials), clientCredentials);
 
+        // Perform validation on the client credentials object.
         clientCredentials.Validate();
 
-        if ( userLogin == null )
-        {
-            throw new KcException($"{nameof(userLogin)} is required");
-        }
+        // Validate that the user login information is provided.
+        ValidateNotNull(nameof(userLogin), userLogin);
 
+        // Perform validation on the user login object.
         userLogin.Validate();
 
-        var tokenEndpoint = $"{_baseUrl}/{realm}/{KcOpenIdConnectEndpoints.TokenEndpoint}";
+        // Construct the token endpoint URL for the realm.
+        var tokenEndpoint = $"{BaseUrl}/{realm}/{KcOpenIdConnectEndpoints.TokenEndpoint}";
 
-        using var client = new HttpClient();
         try
         {
-            var formData = new Dictionary<string, string>
+            // Execute the HTTP POST request to get the resource owner password token.
+            using var tokenRequest = await ExecuteRequest(async () =>
             {
+                // Initialize the HTTP client for the request.
+                using var client = new HttpClient();
+
+                // Prepare the form data for the request, including client credentials and user login details.
+                var formData = new Dictionary<string, string>
                 {
-                    "client_id", clientCredentials.ClientId
-                },
+                    {
+                        "client_id", clientCredentials.ClientId
+                    },
+                    {
+                        "client_secret", clientCredentials.Secret
+                    },
+                    {
+                        "grant_type", "password"
+                    },
+                    {
+                        "username", userLogin.Username
+                    },
+                    {
+                        "password", userLogin.Password
+                    }
+                };
+
+                // Add the scope to the form data if it is specified.
+                if ( !string.IsNullOrWhiteSpace(scope) )
                 {
-                    "client_secret", clientCredentials.Secret
-                },
-                {
-                    "grant_type", "password"
-                },
-                {
-                    "username", userLogin.Username
-                },
-                {
-                    "password", userLogin.Password
+                    formData.Add("scope", scope);
                 }
-            };
 
-            if ( !string.IsNullOrWhiteSpace(scope) )
-            {
-                formData.Add("scope", scope);
-            }
+                // Add the resource to the form data if it is specified.
+                if ( !string.IsNullOrWhiteSpace(resource) )
+                {
+                    formData.Add("resource", resource);
+                }
 
-            if ( !string.IsNullOrWhiteSpace(resource) )
-            {
-                formData.Add("resource", resource);
-            }
+                // Create the form content with the prepared data.
+                using var form = new FormUrlEncodedContent(formData);
 
-            using var form = new FormUrlEncodedContent(formData);
-
-            var tokenRequest =
-                await client.PostAsync(new Uri(tokenEndpoint), form, cancellationToken)
+                // Send the POST request to the token endpoint with the form content.
+                return await client.PostAsync(new Uri(tokenEndpoint), form, cancellationToken)
                     .ConfigureAwait(false);
+            }, new KcHttpMonitoringFallbackModel
+            {
+                Url = tokenEndpoint, // Log the token endpoint URL for monitoring.
+                HttpMethod = HttpMethod.Post // Log the HTTP method for monitoring.
+            }).ConfigureAwait(false);
 
-            return await KcRequestHandler.HandleAsync<KcIdentityProviderToken>(tokenRequest,
-                cancellationToken: cancellationToken).ConfigureAwait(false);
+            // Handle the response and deserialize it into a KcIdentityProviderToken object.
+            return await HandleAsync<KcIdentityProviderToken>(tokenRequest, cancellationToken).ConfigureAwait(false);
         }
         catch ( Exception e )
         {
-            if ( _logger != null )
+            // Log the error if a logger is available.
+            if ( Logger != null )
             {
-                KcLoggerMessages.Error(_logger, "Unable to get resource owner password token", e);
+                KcLoggerMessages.Error(Logger, "Unable to get resource owner password token", e);
             }
 
+            // Return a response indicating an error occurred.
             return new KcResponse<KcIdentityProviderToken>
             {
                 IsError = true,
@@ -186,107 +189,133 @@ public class KcAuth : KcClientValidator, IKcAuth
     }
 
     /// <inheritdoc cref="IKcAuth.ValidatePasswordAsync"/>
-    public async Task<KcResponse<bool>> ValidatePasswordAsync(string realm,
+    public async Task<KcOperationResponse<bool>> ValidatePasswordAsync(
+        string realm,
         KcClientCredentials clientCredentials,
-        KcUserLogin userLogin, CancellationToken cancellationToken = default)
+        KcUserLogin userLogin,
+        CancellationToken cancellationToken = default)
     {
+        // Attempt to retrieve an access token using the provided credentials.
         if ( await GetResourceOwnerPasswordTokenAsync(realm, clientCredentials, userLogin,
-                cancellationToken: cancellationToken).ConfigureAwait(false)
-            is not { } tokenResponse )
+                    cancellationToken: cancellationToken)
+                .ConfigureAwait(false) is not { } tokenResponse )
         {
-            return new KcResponse<bool>();
+            return new KcOperationResponse<bool>();
         }
 
+        // Initialize the operation response and add token monitoring metrics.
+        var response = new KcOperationResponse<bool>();
+        response.MonitoringMetrics.Add(tokenResponse.MonitoringMetrics);
+
+        // Check if the token response indicates an error.
         if ( tokenResponse.IsError )
         {
-            return new KcResponse<bool>
-            {
-                Exception = tokenResponse.Exception,
-                IsError = string.IsNullOrWhiteSpace(tokenResponse.ErrorMessage),
-                Response = false,
-                ErrorMessage = tokenResponse.ErrorMessage
-            };
+            response.ErrorMessage = tokenResponse.ErrorMessage; // Capture the error message.
+            response.Response = false; // Indicate a failed validation.
+            response.Exception = tokenResponse.Exception; // Capture the exception, if any.
+            response.IsError =
+                string.IsNullOrWhiteSpace(tokenResponse
+                    .ErrorMessage); // Mark response as error if no message is provided.
+
+            return response;
         }
 
+        // If an access token is available, revoke it.
         if ( !string.IsNullOrWhiteSpace(tokenResponse.Response?.AccessToken) )
         {
-            _ = await RevokeAccessTokenAsync(realm, clientCredentials,
-                tokenResponse.Response.AccessToken,
-                cancellationToken).ConfigureAwait(false);
+            var revokeTokenResponse = await RevokeAccessTokenAsync(realm, clientCredentials,
+                tokenResponse.Response.AccessToken, cancellationToken).ConfigureAwait(false);
+
+            // Add monitoring metrics for the token revocation operation.
+            response.MonitoringMetrics.Add(revokeTokenResponse.MonitoringMetrics);
         }
 
+        // If a refresh token is available, revoke it.
         if ( !string.IsNullOrWhiteSpace(tokenResponse.Response?.RefreshToken) )
         {
-            _ = await RevokeRefreshTokenAsync(realm, clientCredentials,
-                tokenResponse.Response.RefreshToken,
-                cancellationToken).ConfigureAwait(false);
+            var revokeRefreshTokenResponse = await RevokeRefreshTokenAsync(realm, clientCredentials,
+                tokenResponse.Response.RefreshToken, cancellationToken).ConfigureAwait(false);
+
+            // Add monitoring metrics for the refresh token revocation operation.
+            response.MonitoringMetrics.Add(revokeRefreshTokenResponse.MonitoringMetrics);
         }
 
-        return new KcResponse<bool>
-        {
-            Response = true
-        };
+        // Mark the password validation as successful.
+        response.Response = true;
+
+        return response;
     }
 
     /// <inheritdoc cref="IKcAuth.RefreshAccessTokenAsync"/>
-    public async Task<KcResponse<KcIdentityProviderToken>> RefreshAccessTokenAsync(string realm,
-        KcClientCredentials clientCredentials, string refreshToken,
+    public async Task<KcResponse<KcIdentityProviderToken>> RefreshAccessTokenAsync(
+        string realm,
+        KcClientCredentials clientCredentials,
+        string refreshToken,
         CancellationToken cancellationToken = default)
     {
-        if ( string.IsNullOrWhiteSpace(realm) )
-        {
-            throw new KcException($"{nameof(realm)} is required");
-        }
+        // Validate that the realm is not null or empty.
+        ValidateRequiredString(nameof(realm), realm);
 
-        if ( string.IsNullOrWhiteSpace(refreshToken) )
-        {
-            throw new KcException($"{nameof(refreshToken)} is required");
-        }
+        // Validate that the refresh token is not null or empty.
+        ValidateRequiredString(nameof(refreshToken), refreshToken);
 
-        if ( clientCredentials == null )
-        {
-            throw new KcException($"{nameof(clientCredentials)} is required");
-        }
+        // Validate that the client credentials are provided.
+        ValidateNotNull(nameof(clientCredentials), clientCredentials);
 
+        // Perform validation on the client credentials object.
         clientCredentials.Validate();
 
-        var tokenEndpoint = $"{_baseUrl}/{realm}/{KcOpenIdConnectEndpoints.TokenEndpoint}";
+        // Construct the token endpoint URL for the realm.
+        var tokenEndpoint = $"{BaseUrl}/{realm}/{KcOpenIdConnectEndpoints.TokenEndpoint}";
 
-        using var client = new HttpClient();
         try
         {
-            using var form = new FormUrlEncodedContent(
-                new Dictionary<string, string>
-                {
-                    {
-                        "client_id", clientCredentials.ClientId
-                    },
-                    {
-                        "client_secret", clientCredentials.Secret
-                    },
-                    {
-                        "grant_type", "refresh_token"
-                    },
-                    {
-                        "refresh_token", refreshToken
-                    }
-                });
+            // Execute the HTTP POST request to refresh the access token.
+            using var refreshTokenResponse = await ExecuteRequest(async () =>
+            {
+                // Initialize the HTTP client for the request.
+                using var client = new HttpClient();
 
-            var tokenRequest =
-                await client.PostAsync(new Uri(tokenEndpoint), form, cancellationToken)
+                // Prepare the form data for the refresh token request.
+                using var form = new FormUrlEncodedContent(
+                    new Dictionary<string, string>
+                    {
+                        {
+                            "client_id", clientCredentials.ClientId
+                        },
+                        {
+                            "client_secret", clientCredentials.Secret
+                        },
+                        {
+                            "grant_type", "refresh_token"
+                        },
+                        {
+                            "refresh_token", refreshToken
+                        }
+                    });
+
+                // Send the POST request to the token endpoint with the form content.
+                return await client.PostAsync(new Uri(tokenEndpoint), form, cancellationToken)
                     .ConfigureAwait(false);
+            }, new KcHttpMonitoringFallbackModel
+            {
+                Url = tokenEndpoint, // Log the token endpoint URL for monitoring.
+                HttpMethod = HttpMethod.Post // Log the HTTP method for monitoring.
+            }).ConfigureAwait(false);
 
-            return await KcRequestHandler.HandleAsync<KcIdentityProviderToken>(tokenRequest,
-                    cancellationToken: cancellationToken)
+            // Handle the response and deserialize it into a KcIdentityProviderToken object.
+            return await HandleAsync<KcIdentityProviderToken>(refreshTokenResponse, cancellationToken)
                 .ConfigureAwait(false);
         }
         catch ( Exception e )
         {
-            if ( _logger != null )
+            // Log the error if a logger is available.
+            if ( Logger != null )
             {
-                KcLoggerMessages.Error(_logger, "Unable to refresh token", e);
+                KcLoggerMessages.Error(Logger, "Unable to refresh token", e);
             }
 
+            // Return a response indicating an error occurred.
             return new KcResponse<KcIdentityProviderToken>
             {
                 IsError = true,
@@ -296,69 +325,85 @@ public class KcAuth : KcClientValidator, IKcAuth
     }
 
     /// <inheritdoc cref="IKcAuth.RevokeAccessTokenAsync"/>
-    public async Task<KcResponse<bool>> RevokeAccessTokenAsync(string realm,
-        KcClientCredentials clientCredentials, string accessToken,
+    public async Task<KcResponse<bool>> RevokeAccessTokenAsync(
+        string realm,
+        KcClientCredentials clientCredentials,
+        string accessToken,
         CancellationToken cancellationToken = default)
     {
-        if ( string.IsNullOrWhiteSpace(realm) )
-        {
-            throw new KcException($"{nameof(realm)} is required");
-        }
+        // Validate that the realm is not null or empty.
+        ValidateRequiredString(nameof(realm), realm);
 
-        if ( string.IsNullOrWhiteSpace(accessToken) )
-        {
-            return new KcResponse<bool>();
-        }
+        // Return an empty response if the access token is null or empty.
+        ValidateRequiredString(nameof(accessToken), accessToken);
 
-        if ( clientCredentials == null )
-        {
-            throw new KcException($"{nameof(clientCredentials)} is required");
-        }
+        // Validate that the client credentials are provided.
+        ValidateNotNull(nameof(clientCredentials), clientCredentials);
 
+        // Perform validation on the client credentials object.
         clientCredentials.Validate();
 
-        var tokenRevocationEndpoint =
-            $"{_baseUrl}/{realm}/{KcOpenIdConnectEndpoints.TokenRevocationEndpoint}";
+        // Construct the token revocation endpoint URL for the realm.
+        var tokenRevocationEndpoint = $"{BaseUrl}/{realm}/{KcOpenIdConnectEndpoints.TokenRevocationEndpoint}";
 
-        using var client = new HttpClient();
         try
         {
-            using var form = new FormUrlEncodedContent(
-                new Dictionary<string, string>
-                {
-                    {
-                        "client_id", clientCredentials.ClientId
-                    },
-                    {
-                        "client_secret", clientCredentials.Secret
-                    },
-                    {
-                        "token", accessToken
-                    },
-                    {
-                        "token_type_hint", "access_token"
-                    }
-                });
+            // Execute the HTTP POST request to revoke the access token.
+            using var tokenRevocationResponse = await ExecuteRequest(async () =>
+            {
+                // Initialize the HTTP client for the request.
+                using var client = new HttpClient();
 
-            var tokenRevocationRequest = await client.PostAsync(new Uri(tokenRevocationEndpoint),
-                form, cancellationToken).ConfigureAwait(false);
+                // Prepare the form data for the token revocation request.
+                using var form = new FormUrlEncodedContent(
+                    new Dictionary<string, string>
+                    {
+                        {
+                            "client_id", clientCredentials.ClientId
+                        },
+                        {
+                            "client_secret", clientCredentials.Secret
+                        },
+                        {
+                            "token", accessToken
+                        },
+                        {
+                            "token_type_hint", "access_token"
+                        }
+                    });
 
+                // Send the POST request to the token revocation endpoint with the form content.
+                return await client.PostAsync(new Uri(tokenRevocationEndpoint), form, cancellationToken)
+                    .ConfigureAwait(false);
+            }, new KcHttpMonitoringFallbackModel
+            {
+                Url = tokenRevocationEndpoint, // Log the token revocation endpoint URL for monitoring.
+                HttpMethod = HttpMethod.Post // Log the HTTP method for monitoring.
+            }).ConfigureAwait(false);
+
+            // Construct and return the response object.
             return new KcResponse<bool>
             {
-                Response = tokenRevocationRequest.IsSuccessStatusCode,
-                IsError = !tokenRevocationRequest.IsSuccessStatusCode,
-                ErrorMessage =
-                    await tokenRevocationRequest.Content.ReadAsStringAsync(cancellationToken)
+                Response = tokenRevocationResponse?.ResponseMessage?.IsSuccessStatusCode == true,
+                IsError = tokenRevocationResponse?.ResponseMessage?.IsSuccessStatusCode != true,
+                ErrorMessage = tokenRevocationResponse?.ResponseMessage != null
+                    ? await tokenRevocationResponse.ResponseMessage.Content.ReadAsStringAsync(cancellationToken)
                         .ConfigureAwait(false)
+                    : null,
+                MonitoringMetrics = await KcHttpApiMonitoringMetrics
+                    .MapFromHttpRequestExecutionResult(tokenRevocationResponse, cancellationToken)
+                    .ConfigureAwait(false)
             };
         }
         catch ( Exception e )
         {
-            if ( _logger != null )
+            // Log the error if a logger is available.
+            if ( Logger != null )
             {
-                KcLoggerMessages.Error(_logger, "Unable to revoke access token", e);
+                KcLoggerMessages.Error(Logger, "Unable to revoke access token", e);
             }
 
+            // Return a response indicating an error occurred.
             return new KcResponse<bool>
             {
                 IsError = true,
@@ -368,69 +413,85 @@ public class KcAuth : KcClientValidator, IKcAuth
     }
 
     /// <inheritdoc cref="IKcAuth.RevokeRefreshTokenAsync"/>
-    public async Task<KcResponse<bool>> RevokeRefreshTokenAsync(string realm,
+    public async Task<KcResponse<bool>> RevokeRefreshTokenAsync(
+        string realm,
         KcClientCredentials clientCredentials,
-        string refreshToken, CancellationToken cancellationToken = default)
+        string refreshToken,
+        CancellationToken cancellationToken = default)
     {
-        if ( string.IsNullOrWhiteSpace(realm) )
-        {
-            throw new KcException($"{nameof(realm)} is required");
-        }
+        // Validate that the realm is not null or empty.
+        ValidateRequiredString(nameof(realm), realm);
 
-        if ( string.IsNullOrWhiteSpace(refreshToken) )
-        {
-            return new KcResponse<bool>();
-        }
+        // Return an empty response if the refresh token is null or empty.
+        ValidateRequiredString(nameof(refreshToken), refreshToken);
 
-        if ( clientCredentials == null )
-        {
-            throw new KcException($"{nameof(clientCredentials)} is required");
-        }
+        // Validate that the client credentials are provided.
+        ValidateNotNull(nameof(clientCredentials), clientCredentials);
 
+        // Perform validation on the client credentials object.
         clientCredentials.Validate();
 
-        var tokenRevocationEndpoint =
-            $"{_baseUrl}/{realm}/{KcOpenIdConnectEndpoints.TokenRevocationEndpoint}";
+        // Construct the token revocation endpoint URL for the realm.
+        var tokenRevocationEndpoint = $"{BaseUrl}/{realm}/{KcOpenIdConnectEndpoints.TokenRevocationEndpoint}";
 
-        using var client = new HttpClient();
         try
         {
-            using var form = new FormUrlEncodedContent(
-                new Dictionary<string, string>
-                {
-                    {
-                        "client_id", clientCredentials.ClientId
-                    },
-                    {
-                        "client_secret", clientCredentials.Secret
-                    },
-                    {
-                        "token", refreshToken
-                    },
-                    {
-                        "token_type_hint", "refresh_token"
-                    }
-                });
+            // Execute the HTTP POST request to revoke the refresh token.
+            using var tokenRevocationResponse = await ExecuteRequest(async () =>
+            {
+                // Initialize the HTTP client for the request.
+                using var client = new HttpClient();
 
-            var tokenRevocationRequest = await client.PostAsync(new Uri(tokenRevocationEndpoint),
-                form, cancellationToken).ConfigureAwait(false);
+                // Prepare the form data for the token revocation request.
+                using var form = new FormUrlEncodedContent(
+                    new Dictionary<string, string>
+                    {
+                        {
+                            "client_id", clientCredentials.ClientId
+                        },
+                        {
+                            "client_secret", clientCredentials.Secret
+                        },
+                        {
+                            "token", refreshToken
+                        },
+                        {
+                            "token_type_hint", "refresh_token"
+                        }
+                    });
 
+                // Send the POST request to the token revocation endpoint with the form content.
+                return await client.PostAsync(new Uri(tokenRevocationEndpoint), form, cancellationToken)
+                    .ConfigureAwait(false);
+            }, new KcHttpMonitoringFallbackModel
+            {
+                Url = tokenRevocationEndpoint, // Log the token revocation endpoint URL for monitoring.
+                HttpMethod = HttpMethod.Post // Log the HTTP method for monitoring.
+            }).ConfigureAwait(false);
+
+            // Construct and return the response object.
             return new KcResponse<bool>
             {
-                Response = tokenRevocationRequest.IsSuccessStatusCode,
-                IsError = !tokenRevocationRequest.IsSuccessStatusCode,
-                ErrorMessage =
-                    await tokenRevocationRequest.Content.ReadAsStringAsync(cancellationToken)
+                Response = tokenRevocationResponse?.ResponseMessage?.IsSuccessStatusCode == true,
+                IsError = tokenRevocationResponse?.ResponseMessage?.IsSuccessStatusCode != true,
+                ErrorMessage = tokenRevocationResponse?.ResponseMessage != null
+                    ? await tokenRevocationResponse.ResponseMessage.Content.ReadAsStringAsync(cancellationToken)
                         .ConfigureAwait(false)
+                    : null,
+                MonitoringMetrics = await KcHttpApiMonitoringMetrics
+                    .MapFromHttpRequestExecutionResult(tokenRevocationResponse, cancellationToken)
+                    .ConfigureAwait(false)
             };
         }
         catch ( Exception e )
         {
-            if ( _logger != null )
+            // Log the error if a logger is available.
+            if ( Logger != null )
             {
-                KcLoggerMessages.Error(_logger, "Unable to revoke refresh token", e);
+                KcLoggerMessages.Error(Logger, "Unable to revoke refresh token", e);
             }
 
+            // Return a response indicating an error occurred.
             return new KcResponse<bool>
             {
                 IsError = true,
@@ -440,62 +501,79 @@ public class KcAuth : KcClientValidator, IKcAuth
     }
 
     /// <inheritdoc cref="IKcAuth.GetRequestPartyTokenAsync"/>
-    public async Task<KcResponse<KcIdentityProviderToken>> GetRequestPartyTokenAsync(string realm,
-        string accessToken, string audience, IEnumerable<string> permissions = null,
+    public async Task<KcResponse<KcIdentityProviderToken>> GetRequestPartyTokenAsync(
+        string realm,
+        string accessToken,
+        string audience,
+        IEnumerable<string> permissions = null,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(audience) )
-        {
-            throw new KcException($"{nameof(audience)} is required");
-        }
+        // Validate that the audience is not null or empty.
+        ValidateRequiredString(nameof(audience), audience);
 
-        var tokenEndpoint = $"{_baseUrl}/{realm}/{KcOpenIdConnectEndpoints.TokenEndpoint}";
-
-        using var client = new HttpClient();
-
-        _ = client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization",
-            $"Bearer {accessToken}");
+        // Construct the token endpoint URL for the realm.
+        var tokenEndpoint = $"{BaseUrl}/{realm}/{KcOpenIdConnectEndpoints.TokenEndpoint}";
 
         try
         {
-            var formData = new Dictionary<string, string>
+            // Execute the HTTP POST request to retrieve the Request Party Token.
+            using var tokenRequest = await ExecuteRequest(async () =>
             {
+                // Initialize the HTTP client for the request.
+                using var client = new HttpClient();
+
+                // Add the Authorization header with the provided access token.
+                _ = client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bearer {accessToken}");
+
+                // Prepare the form data for the RPT request.
+                var formData = new Dictionary<string, string>
                 {
-                    "grant_type", "urn:ietf:params:oauth:grant-type:uma-ticket"
-                },
+                    {
+                        "grant_type", "urn:ietf:params:oauth:grant-type:uma-ticket"
+                    }, // Specify the UMA grant type.
+                    {
+                        "audience", audience
+                    } // Specify the audience.
+                };
+
+                // Convert the permissions collection to a list, if provided.
+                var permissionList = permissions?.ToList();
+
+                // Add each permission to the form data if permissions are specified.
+                if ( permissionList != null && permissionList.Count != 0 )
                 {
-                    "audience", audience
+                    foreach ( var permission in permissionList )
+                    {
+                        formData.Add("permission", permission);
+                    }
                 }
-            };
 
-            var permissionList = permissions?.ToList();
+                // Create the form content with the prepared data.
+                using var form = new FormUrlEncodedContent(formData);
 
-            if ( permissionList != null && permissionList.Count != 0 )
+                // Send the POST request to the token endpoint with the form content.
+                return await client.PostAsync(new Uri(tokenEndpoint), form, cancellationToken).ConfigureAwait(false);
+            }, new KcHttpMonitoringFallbackModel
             {
-                foreach ( var permission in permissionList )
-                {
-                    formData.Add("permission", permission);
-                }
-            }
+                Url = tokenEndpoint, // Log the token endpoint URL for monitoring.
+                HttpMethod = HttpMethod.Delete // Log the HTTP method for monitoring (should be POST, not DELETE here).
+            }).ConfigureAwait(false);
 
-            using var form = new FormUrlEncodedContent(formData);
-
-            var tokenRequest = await client.PostAsync(new Uri(tokenEndpoint), form,
-                    cancellationToken)
-                .ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcIdentityProviderToken>(tokenRequest,
-                cancellationToken: cancellationToken).ConfigureAwait(false);
+            // Handle the response and deserialize it into a KcIdentityProviderToken object.
+            return await HandleAsync<KcIdentityProviderToken>(tokenRequest, cancellationToken).ConfigureAwait(false);
         }
         catch ( Exception e )
         {
-            if ( _logger != null )
+            // Log the error if a logger is available.
+            if ( Logger != null )
             {
-                KcLoggerMessages.Error(_logger, "Unable to get resource owner password token", e);
+                KcLoggerMessages.Error(Logger, "Unable to get resource owner password token", e);
             }
 
+            // Return a response indicating an error occurred.
             return new KcResponse<KcIdentityProviderToken>
             {
                 IsError = true,

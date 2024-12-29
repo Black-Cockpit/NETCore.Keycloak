@@ -1,96 +1,58 @@
-using System.Globalization;
 using Microsoft.Extensions.Logging;
 using NETCore.Keycloak.Client.HttpClients.Abstraction;
 using NETCore.Keycloak.Client.Models;
 using NETCore.Keycloak.Client.Models.Common;
 using NETCore.Keycloak.Client.Models.Groups;
 using NETCore.Keycloak.Client.Models.Users;
-using NETCore.Keycloak.Client.Requests;
-using NETCore.Keycloak.Client.Utils;
 
 namespace NETCore.Keycloak.Client.HttpClients.Implementation;
 
 /// <inheritdoc cref="IKcUsers"/>
-public class KcUsers : KcClientValidator, IKcUsers
+internal sealed class KcUsers(string baseUrl,
+    ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcUsers
 {
-    /// <summary>
-    /// Logger <see cref="ILogger"/>
-    /// </summary>
-    private readonly ILogger _logger;
-
-    private readonly string _baseUrl;
-
-    /// <summary>
-    /// Users client constructor
-    /// </summary>
-    /// <param name="baseUrl">Keycloak server base url.
-    /// <see href="https://www.keycloak.org/docs-api/20.0.3/rest-api/index.html#_uri_scheme"/></param>
-    /// <param name="logger">Logger <see cref="ILogger"/></param>
-    public KcUsers(string baseUrl, ILogger logger = null)
-    {
-        if ( string.IsNullOrWhiteSpace(baseUrl) )
-        {
-            throw new KcException($"{nameof(baseUrl)} is required");
-        }
-
-        // Remove last "/" from base url
-        _baseUrl = baseUrl.EndsWith("/", StringComparison.Ordinal)
-            ? baseUrl.Remove(baseUrl.Length - 1, 1)
-            : baseUrl;
-
-        _logger = logger;
-    }
-
     /// <inheritdoc cref="IKcUsers.CreateAsync"/>
-    public async Task<KcResponse<object>> CreateAsync(string realm, string accessToken, KcUser user,
+    public async Task<KcResponse<object>> CreateAsync(
+        string realm,
+        string accessToken,
+        KcUser user,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( user == null )
-        {
-            throw new KcException($"{nameof(user)} is required");
-        }
+        // Validate that the user object is not null.
+        ValidateNotNull(nameof(user), user);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/users", accessToken,
-                KcRequestHandler.GetBody(user));
+        // Construct the URL to create a new user in the specified realm.
+        var url = $"{BaseUrl}/{realm}/users";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to create user", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to create the user.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to create user",
+            user,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
-    /// <inheritdoc cref="IKcUsers.CreateAsync"/>
-    public async Task<KcResponse<bool>> IsUserExistsByEmailAsync(string realm, string accessToken,
+    /// <inheritdoc cref="IKcUsers.IsUserExistsByEmailAsync"/>
+    public async Task<KcResponse<bool>> IsUserExistsByEmailAsync(
+        string realm,
+        string accessToken,
         string email,
         CancellationToken cancellationToken = default)
     {
+        // Retrieve the list of users matching the specified email in the realm.
         var usersList = await ListUserAsync(realm, accessToken, new KcUserFilter
         {
             Email = email,
             Exact = true
         }, cancellationToken).ConfigureAwait(false);
 
+        // Return the response based on the results of the user lookup.
         return usersList.IsError
             ? new KcResponse<bool>
             {
@@ -105,682 +67,461 @@ public class KcUsers : KcClientValidator, IKcUsers
     }
 
     /// <inheritdoc cref="IKcUsers.ListUserAsync"/>
-    public async Task<KcResponse<IEnumerable<KcUser>>> ListUserAsync(string realm,
-        string accessToken, KcUserFilter filter = null, CancellationToken cancellationToken = default)
-    {
-        ValidateAccess(realm, accessToken);
-
-        filter ??= new KcUserFilter();
-
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/users{filter.BuildQuery()}", accessToken);
-
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcUser>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, $"Unable to list realm {realm} users", e);
-            }
-
-            return new KcResponse<IEnumerable<KcUser>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
-    }
-
-    /// <inheritdoc cref="IKcUsers.CountAsync"/>
-    public async Task<KcResponse<int>> CountAsync(string realm, string accessToken,
+    public async Task<KcResponse<IEnumerable<KcUser>>> ListUserAsync(
+        string realm,
+        string accessToken,
         KcUserFilter filter = null,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
+        // Ensure a default user filter is used if none is provided.
         filter ??= new KcUserFilter();
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/users/count{filter.BuildQuery()}", accessToken);
+        // Construct the URL for retrieving users with the optional filter.
+        var url = $"{BaseUrl}/{realm}/users{filter.BuildQuery()}";
 
-            using var client = new HttpClient();
+        // Process the request to retrieve the list of users.
+        return await ProcessRequestAsync<IEnumerable<KcUser>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            $"Unable to list realm {realm} users",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
+    }
 
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+    /// <inheritdoc cref="IKcUsers.CountAsync"/>
+    public async Task<KcResponse<object>> CountAsync(
+        string realm,
+        string accessToken,
+        KcUserFilter filter = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Validate the realm and access token inputs.
+        ValidateAccess(realm, accessToken);
 
-            return response.IsSuccessStatusCode
-                ? new KcResponse<int>
-                {
-                    Response = int.Parse(await response.Content.ReadAsStringAsync(cancellationToken)
-                        .ConfigureAwait(false), CultureInfo.CurrentCulture)
-                }
-                : new KcResponse<int>
-                {
-                    IsError = true,
-                    ErrorMessage = await response.Content.ReadAsStringAsync(cancellationToken)
-                        .ConfigureAwait(false)
-                };
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, $"Unable to count realm {realm} users", e);
-            }
+        // Ensure a default user filter is used if none is provided.
+        filter ??= new KcUserFilter();
 
-            return new KcResponse<int>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Construct the URL for retrieving the user count with the optional filter.
+        var url = $"{BaseUrl}/{realm}/users/count{filter.BuildQuery()}";
+
+        // Process the request to retrieve the count of users.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            $"Unable to count realm {realm} users",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcUsers.GetAsync"/>
-    public async Task<KcResponse<KcUser>> GetAsync(string realm, string accessToken, string userId,
+    public async Task<KcResponse<KcUser>> GetAsync(
+        string realm,
+        string accessToken,
+        string userId,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(userId) )
-        {
-            throw new KcException($"{nameof(userId)} is required");
-        }
+        // Ensure the userId parameter is provided and valid.
+        ValidateRequiredString(nameof(userId), userId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/users/{userId}", accessToken);
+        // Construct the URL to retrieve the user details by ID.
+        var url = $"{BaseUrl}/{realm}/users/{userId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcUser>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, $"Unable to get user {userId}", e);
-            }
-
-            return new KcResponse<KcUser>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the user details.
+        return await ProcessRequestAsync<KcUser>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            $"Unable to get user {userId}",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcUsers.UpdateAsync"/>
-    public async Task<KcResponse<object>> UpdateAsync(string realm, string accessToken,
-        string userId, KcUser user,
+    public async Task<KcResponse<object>> UpdateAsync(
+        string realm,
+        string accessToken,
+        string userId,
+        KcUser user,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(userId) )
-        {
-            throw new KcException($"{nameof(userId)} is required");
-        }
+        // Ensure the userId parameter is provided and valid.
+        ValidateRequiredString(nameof(userId), userId);
 
-        if ( user == null )
-        {
-            throw new KcException($"{nameof(user)} is required");
-        }
+        // Ensure the user object is provided and not null.
+        ValidateNotNull(nameof(user), user);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/users/{userId}",
-                accessToken, KcRequestHandler.GetBody(user));
+        // Construct the URL to update the user details by ID.
+        var url = $"{BaseUrl}/{realm}/users/{userId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, $"Unable to update user {userId}", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to update the user details.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            $"Unable to update user {userId}",
+            user,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcUsers.DeleteAsync"/>
-    public async Task<KcResponse<object>> DeleteAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> DeleteAsync(
+        string realm,
+        string accessToken,
         string userId,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(userId) )
-        {
-            throw new KcException($"{nameof(userId)} is required");
-        }
+        // Ensure the userId parameter is provided and valid.
+        ValidateRequiredString(nameof(userId), userId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/users/{userId}", accessToken);
+        // Construct the URL to delete the user by ID.
+        var url = $"{BaseUrl}/{realm}/users/{userId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, $"Unable to delete user {userId}", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to delete the user.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            $"Unable to delete user {userId}",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcUsers.GetCredentialsAsync"/>
-    public async Task<KcResponse<IEnumerable<KcCredentials>>> GetCredentialsAsync(string realm,
+    public async Task<KcResponse<IEnumerable<KcCredentials>>> GetCredentialsAsync(
+        string realm,
         string accessToken,
-        string userId, CancellationToken cancellationToken = default)
+        string userId,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(userId) )
-        {
-            throw new KcException($"{nameof(userId)} is required");
-        }
+        // Ensure the userId parameter is provided and valid.
+        ValidateRequiredString(nameof(userId), userId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/users/{userId}/credentials", accessToken);
+        // Construct the URL to retrieve the user's credentials.
+        var url = $"{BaseUrl}/{realm}/users/{userId}/credentials";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcCredentials>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, $"Unable to get user {userId} credentials", e);
-            }
-
-            return new KcResponse<IEnumerable<KcCredentials>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the user's credentials.
+        return await ProcessRequestAsync<IEnumerable<KcCredentials>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            $"Unable to get user {userId} credentials",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcUsers.DeleteCredentialsAsync"/>
-    public async Task<KcResponse<object>> DeleteCredentialsAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> DeleteCredentialsAsync(
+        string realm,
+        string accessToken,
         string userId,
-        string credentialsId, CancellationToken cancellationToken = default)
+        string credentialsId,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(userId) )
-        {
-            throw new KcException($"{nameof(userId)} is required");
-        }
+        // Ensure the userId parameter is provided and valid.
+        ValidateRequiredString(nameof(userId), userId);
 
-        if ( string.IsNullOrWhiteSpace(credentialsId) )
-        {
-            throw new KcException($"{nameof(credentialsId)} is required");
-        }
+        // Ensure the credentialsId parameter is provided and valid.
+        ValidateRequiredString(nameof(credentialsId), credentialsId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/users/{userId}/credentials/{credentialsId}", accessToken);
+        // Construct the URL to delete the specific credential.
+        var url = $"{BaseUrl}/{realm}/users/{userId}/credentials/{credentialsId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, $"Unable to delete user {userId} credentials", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to delete the credential.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            $"Unable to delete user {userId} credentials",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcUsers.UpdateCredentialsLabelAsync"/>
-    public async Task<KcResponse<object>> UpdateCredentialsLabelAsync(string realm,
-        string accessToken, string userId,
-        string credentialsId, string label, CancellationToken cancellationToken = default)
+    public async Task<KcResponse<object>> UpdateCredentialsLabelAsync(
+        string realm,
+        string accessToken,
+        string userId,
+        string credentialsId,
+        string label,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(userId) )
-        {
-            throw new KcException($"{nameof(userId)} is required");
-        }
+        // Ensure the userId parameter is provided and valid.
+        ValidateRequiredString(nameof(userId), userId);
 
-        if ( string.IsNullOrWhiteSpace(credentialsId) )
-        {
-            throw new KcException($"{nameof(credentialsId)} is required");
-        }
+        // Ensure the credentialsId parameter is provided and valid.
+        ValidateRequiredString(nameof(credentialsId), credentialsId);
 
-        if ( string.IsNullOrWhiteSpace(label) )
-        {
-            throw new KcException($"{nameof(label)} is required");
-        }
+        // Ensure the label parameter is provided and valid.
+        ValidateRequiredString(nameof(label), label);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/users/{userId}/credentials/{credentialsId}/userLabel",
-                accessToken, new StringContent(label), "text/plain");
+        // Construct the URL to update the credential label.
+        var url = $"{BaseUrl}/{realm}/users/{userId}/credentials/{credentialsId}/userLabel";
 
-            using var client = new HttpClient();
+        // Create the content for the label update.
+        using var content = new StringContent(label);
 
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, $"Unable to update user {userId} credentials label", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to update the credential label.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            $"Unable to update user {userId} credentials label",
+            contentType: "text/plain",
+            content: content,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcUsers.UserGroupsAsync"/>
-    public async Task<KcResponse<IEnumerable<KcGroup>>> UserGroupsAsync(string realm,
-        string accessToken, string userId,
-        KcFilter filter = null, CancellationToken cancellationToken = default)
+    public async Task<KcResponse<IEnumerable<KcGroup>>> UserGroupsAsync(
+        string realm,
+        string accessToken,
+        string userId,
+        KcFilter filter = null,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(userId) )
-        {
-            throw new KcException($"{nameof(userId)} is required");
-        }
+        // Ensure the userId parameter is provided and valid.
+        ValidateRequiredString(nameof(userId), userId);
 
+        // Initialize the filter if none is provided.
         filter ??= new KcFilter();
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/users/{userId}/groups{filter.BuildQuery()}", accessToken);
+        // Construct the URL to retrieve the user's groups.
+        var url = $"{BaseUrl}/{realm}/users/{userId}/groups{filter.BuildQuery()}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcGroup>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, $"Unable to get user {userId} groups", e);
-            }
-
-            return new KcResponse<IEnumerable<KcGroup>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the user's groups.
+        return await ProcessRequestAsync<IEnumerable<KcGroup>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            $"Unable to get user {userId} groups",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcUsers.CountGroupsAsync"/>
-    public async Task<KcResponse<int>> CountGroupsAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> CountGroupsAsync(
+        string realm,
+        string accessToken,
         string userId,
-        KcFilter filter, CancellationToken cancellationToken = default)
+        KcFilter filter = null,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(userId) )
-        {
-            throw new KcException($"{nameof(userId)} is required");
-        }
+        // Ensure the userId parameter is provided and valid.
+        ValidateRequiredString(nameof(userId), userId);
 
+        // Initialize the filter if none is provided.
         filter ??= new KcFilter();
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/users/{userId}/groups/count{filter.BuildQuery()}",
-                accessToken);
+        // Construct the URL to retrieve the count of user's groups.
+        var url = $"{BaseUrl}/{realm}/users/{userId}/groups/count{filter.BuildQuery()}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return response.IsSuccessStatusCode
-                ? new KcResponse<int>
-                {
-                    Response = int.Parse(await response.Content.ReadAsStringAsync(cancellationToken)
-                        .ConfigureAwait(false), CultureInfo.CurrentCulture)
-                }
-                : new KcResponse<int>
-                {
-                    IsError = true,
-                    ErrorMessage = await response.Content.ReadAsStringAsync(cancellationToken)
-                        .ConfigureAwait(false)
-                };
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, $"Unable to count user {userId} groups", e);
-            }
-
-            return new KcResponse<int>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to count the user's groups.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            $"Unable to count user {userId} groups",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcUsers.AddToGroupAsync"/>
-    public async Task<KcResponse<object>> AddToGroupAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> AddToGroupAsync(
+        string realm,
+        string accessToken,
         string userId,
-        string groupId, CancellationToken cancellationToken = default)
+        string groupId,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(userId) )
-        {
-            throw new KcException($"{nameof(userId)} is required");
-        }
+        // Ensure the userId parameter is provided and valid.
+        ValidateRequiredString(nameof(userId), userId);
 
-        if ( string.IsNullOrWhiteSpace(groupId) )
-        {
-            throw new KcException($"{nameof(groupId)} is required");
-        }
+        // Ensure the groupId parameter is provided and valid.
+        ValidateRequiredString(nameof(groupId), groupId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/users/{userId}/groups/{groupId}", accessToken);
+        // Construct the URL to add the user to the specified group.
+        var url = $"{BaseUrl}/{realm}/users/{userId}/groups/{groupId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, $"Unable to add user {userId} to group {groupId}", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to add the user to the group.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            $"Unable to add user {userId} to group {groupId}",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcUsers.DeleteFromGroupAsync"/>
-    public async Task<KcResponse<object>> DeleteFromGroupAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> DeleteFromGroupAsync(
+        string realm,
+        string accessToken,
         string userId,
-        string groupId, CancellationToken cancellationToken = default)
+        string groupId,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(userId) )
-        {
-            throw new KcException($"{nameof(userId)} is required");
-        }
+        // Ensure the userId parameter is provided and valid.
+        ValidateRequiredString(nameof(userId), userId);
 
-        if ( string.IsNullOrWhiteSpace(groupId) )
-        {
-            throw new KcException($"{nameof(groupId)} is required");
-        }
+        // Ensure the groupId parameter is provided and valid.
+        ValidateRequiredString(nameof(groupId), groupId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/users/{userId}/groups/{groupId}", accessToken);
+        // Construct the URL to remove the user from the specified group.
+        var url = $"{BaseUrl}/{realm}/users/{userId}/groups/{groupId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, $"Unable to delete user {userId} from group {groupId}", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to remove the user from the group.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            $"Unable to delete user {userId} from group {groupId}",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcUsers.ResetPasswordAsync"/>
-    public async Task<KcResponse<KcCredentials>> ResetPasswordAsync(string realm,
-        string accessToken, string userId,
-        KcCredentials credentials, CancellationToken cancellationToken = default)
+    public async Task<KcResponse<KcCredentials>> ResetPasswordAsync(
+        string realm,
+        string accessToken,
+        string userId,
+        KcCredentials credentials,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(userId) )
-        {
-            throw new KcException($"{nameof(userId)} is required");
-        }
+        // Ensure the userId parameter is provided and valid.
+        ValidateRequiredString(nameof(userId), userId);
 
-        if ( credentials == null )
-        {
-            throw new KcException($"{nameof(credentials)} is required");
-        }
+        // Ensure the credential parameter is provided and not null.
+        ValidateNotNull(nameof(credentials), credentials);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/users/{userId}/reset-password",
-                accessToken, KcRequestHandler.GetBody(credentials));
+        // Construct the URL to reset the user's password.
+        var url = $"{BaseUrl}/{realm}/users/{userId}/reset-password";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcCredentials>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, $"Unable to update reset password for user {userId}", e);
-            }
-
-            return new KcResponse<KcCredentials>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to reset the user's password.
+        return await ProcessRequestAsync<KcCredentials>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            $"Unable to update reset password for user {userId}",
+            credentials,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcUsers.SessionsAsync"/>
-    public async Task<KcResponse<IEnumerable<KcSession>>> SessionsAsync(string realm,
-        string accessToken, string userId,
+    public async Task<KcResponse<IEnumerable<KcSession>>> SessionsAsync(
+        string realm,
+        string accessToken,
+        string userId,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(userId) )
-        {
-            throw new KcException($"{nameof(userId)} is required");
-        }
+        // Ensure the userId parameter is provided and valid.
+        ValidateRequiredString(nameof(userId), userId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/users/{userId}/sessions", accessToken);
+        // Construct the URL to retrieve the user's sessions.
+        var url = $"{BaseUrl}/{realm}/users/{userId}/sessions";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcSession>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, $"Unable to get user {userId} sessions", e);
-            }
-
-            return new KcResponse<IEnumerable<KcSession>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the user's active sessions.
+        return await ProcessRequestAsync<IEnumerable<KcSession>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            $"Unable to get user {userId} sessions",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcUsers.DeleteSessionAsync"/>
-    public async Task<KcResponse<object>> DeleteSessionAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> DeleteSessionAsync(
+        string realm,
+        string accessToken,
         string sessionId,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(sessionId) )
-        {
-            throw new KcException($"{nameof(sessionId)} is required");
-        }
+        // Ensure the sessionId parameter is provided and valid.
+        ValidateRequiredString(nameof(sessionId), sessionId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/sessions/{sessionId}",
-                accessToken);
+        // Construct the URL to delete the specified session.
+        var url = $"{BaseUrl}/{realm}/sessions/{sessionId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, $"Unable delete session {sessionId}", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to delete the session.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            $"Unable delete session {sessionId}",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcUsers.LogoutFromAllSessionsAsync"/>
-    public async Task<KcResponse<object>> LogoutFromAllSessionsAsync(string realm,
-        string accessToken, string userId,
+    public async Task<KcResponse<object>> LogoutFromAllSessionsAsync(
+        string realm,
+        string accessToken,
+        string userId,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(userId) )
-        {
-            throw new KcException($"{nameof(userId)} is required");
-        }
+        // Ensure the userId parameter is provided and valid.
+        ValidateRequiredString(nameof(userId), userId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/users/{userId}/logout", accessToken);
+        // Construct the URL to logout the specified user from all sessions.
+        var url = $"{BaseUrl}/{realm}/users/{userId}/logout";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to logout from all sessions", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to perform the logout operation.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to logout from all sessions",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 }

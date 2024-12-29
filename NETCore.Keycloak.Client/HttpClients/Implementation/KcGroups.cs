@@ -4,441 +4,286 @@ using NETCore.Keycloak.Client.Models;
 using NETCore.Keycloak.Client.Models.Common;
 using NETCore.Keycloak.Client.Models.Groups;
 using NETCore.Keycloak.Client.Models.Users;
-using NETCore.Keycloak.Client.Requests;
-using NETCore.Keycloak.Client.Utils;
 
 namespace NETCore.Keycloak.Client.HttpClients.Implementation;
 
 /// <inheritdoc cref="IKcGroups"/>
-public class KcGroups : KcClientValidator, IKcGroups
+internal sealed class KcGroups(string baseUrl,
+    ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcGroups
 {
-    /// <summary>
-    /// Logger <see cref="ILogger"/>
-    /// </summary>
-    private readonly ILogger _logger;
-
-    /// <summary>
-    /// Keycloak base URL
-    /// </summary>
-    private readonly string _baseUrl;
-
-    /// <summary>
-    /// Groups client constructor
-    /// </summary>
-    /// <param name="baseUrl">Keycloak server base url.
-    /// <see href="https://www.keycloak.org/docs-api/20.0.3/rest-api/index.html#_uri_scheme"/></param>
-    /// <param name="logger">Logger <see cref="ILogger"/></param>
-    public KcGroups(string baseUrl, ILogger logger = null)
-    {
-        if ( string.IsNullOrWhiteSpace(baseUrl) )
-        {
-            throw new KcException($"{nameof(baseUrl)} is required");
-        }
-
-        // Remove last "/" from base url
-        _baseUrl = baseUrl.EndsWith("/", StringComparison.Ordinal)
-            ? baseUrl.Remove(baseUrl.Length - 1, 1)
-            : baseUrl;
-
-        _logger = logger;
-    }
-
     /// <inheritdoc cref="IKcGroups.CreateAsync"/>
-    public async Task<KcResponse<KcGroup>> CreateAsync(string realm, string accessToken,
+    public async Task<KcResponse<KcGroup>> CreateAsync(
+        string realm,
+        string accessToken,
         KcGroup kcGroup,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( kcGroup == null )
-        {
-            throw new KcException($"{nameof(kcGroup)} is required");
-        }
+        // Validate that the group object is not null.
+        ValidateNotNull(nameof(kcGroup), kcGroup);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/groups", accessToken, KcRequestHandler.GetBody(kcGroup));
+        // Construct the URL for creating a new group in the specified realm.
+        var url = $"{BaseUrl}/{realm}/groups";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcGroup>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to create realm group", e);
-            }
-
-            return new KcResponse<KcGroup>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to create the group.
+        return await ProcessRequestAsync<KcGroup>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to create realm group",
+            kcGroup,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcGroups.ListAsync"/>
-    public async Task<KcResponse<IEnumerable<KcGroup>>> ListAsync(string realm, string accessToken,
-        KcGroupFilter filter = null, CancellationToken cancellationToken = default)
-    {
-        ValidateAccess(realm, accessToken);
-
-        filter ??= new KcGroupFilter();
-
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/groups{filter.BuildQuery()}", accessToken);
-
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcGroup>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to list realm group", e);
-            }
-
-            return new KcResponse<IEnumerable<KcGroup>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
-    }
-
-    /// <inheritdoc cref="IKcGroups.CountAsync"/>
-    public async Task<KcResponse<object>> CountAsync(string realm, string accessToken,
+    public async Task<KcResponse<IEnumerable<KcGroup>>> ListAsync(
+        string realm,
+        string accessToken,
         KcGroupFilter filter = null,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
+        // Initialize the filter if not provided.
         filter ??= new KcGroupFilter();
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/groups/count{filter.BuildQuery()}", accessToken);
+        // Construct the URL for retrieving groups, including query parameters if specified.
+        var url = $"{BaseUrl}/{realm}/groups{filter.BuildQuery()}";
 
-            using var client = new HttpClient();
+        // Process the request to retrieve the list of groups.
+        return await ProcessRequestAsync<IEnumerable<KcGroup>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to list realm group",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
+    }
 
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+    /// <inheritdoc cref="IKcGroups.CountAsync"/>
+    public async Task<KcResponse<object>> CountAsync(
+        string realm,
+        string accessToken,
+        KcGroupFilter filter = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Validate the realm and access token inputs.
+        ValidateAccess(realm, accessToken);
 
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to count realm group", e);
-            }
+        // Initialize the filter if not provided.
+        filter ??= new KcGroupFilter();
 
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Construct the URL for counting groups, including query parameters if specified.
+        var url = $"{BaseUrl}/{realm}/groups/count{filter.BuildQuery()}";
+
+        // Process the request to retrieve the count of groups.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to count realm group",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcGroups.GetAsync"/>
-    public async Task<KcResponse<KcGroup>> GetAsync(string realm, string accessToken, string id,
+    public async Task<KcResponse<KcGroup>> GetAsync(
+        string realm,
+        string accessToken,
+        string id,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the group ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/groups/{id}", accessToken);
+        // Construct the URL for retrieving the group details.
+        var url = $"{BaseUrl}/{realm}/groups/{id}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcGroup>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get realm group", e);
-            }
-
-            return new KcResponse<KcGroup>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the group details.
+        return await ProcessRequestAsync<KcGroup>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm group",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcGroups.UpdateAsync"/>
-    public async Task<KcResponse<KcGroup>> UpdateAsync(string realm, string accessToken, string id,
+    public async Task<KcResponse<KcGroup>> UpdateAsync(
+        string realm,
+        string accessToken,
+        string id,
         KcGroup kcGroup,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the group ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        if ( kcGroup == null )
-        {
-            throw new KcException($"{nameof(kcGroup)} is required");
-        }
+        // Validate that the updated group data is not null.
+        ValidateNotNull(nameof(kcGroup), kcGroup);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/groups/{id}", accessToken, KcRequestHandler.GetBody(kcGroup));
+        // Construct the URL for updating the group details.
+        var url = $"{BaseUrl}/{realm}/groups/{id}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcGroup>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to update realm group", e);
-            }
-
-            return new KcResponse<KcGroup>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to update the group details.
+        return await ProcessRequestAsync<KcGroup>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            "Unable to update realm group",
+            kcGroup,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcGroups.DeleteAsync"/>
-    public async Task<KcResponse<object>> DeleteAsync(string realm, string accessToken, string id,
+    public async Task<KcResponse<object>> DeleteAsync(
+        string realm,
+        string accessToken,
+        string id,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the group ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/groups/{id}", accessToken);
+        // Construct the URL for deleting the group.
+        var url = $"{BaseUrl}/{realm}/groups/{id}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to delete realm group", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to remove the group.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            "Unable to delete realm group",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcGroups.SetOrCreateChildAsync"/>
-    public async Task<KcResponse<KcGroup>> SetOrCreateChildAsync(string realm, string accessToken,
+    public async Task<KcResponse<KcGroup>> SetOrCreateChildAsync(
+        string realm,
+        string accessToken,
         string id,
-        KcGroup kcGroup, CancellationToken cancellationToken = default)
+        KcGroup kcGroup,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the parent group ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        if ( kcGroup == null )
-        {
-            throw new KcException($"{nameof(kcGroup)} is required");
-        }
+        // Validate that the child group details are provided.
+        ValidateNotNull(nameof(kcGroup), kcGroup);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/groups/{id}/children", accessToken,
-                KcRequestHandler.GetBody(kcGroup));
+        // Construct the URL for setting or creating a child group.
+        var url = $"{BaseUrl}/{realm}/groups/{id}/children";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcGroup>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to et sor create child for realm group", e);
-            }
-
-            return new KcResponse<KcGroup>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to set or create the child group.
+        return await ProcessRequestAsync<KcGroup>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to set or create child for realm group",
+            kcGroup,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcGroups.GetAuthorizationManagementPermissionAsync"/>
     public async Task<KcResponse<KcPermissionManagement>> GetAuthorizationManagementPermissionAsync(
         string realm,
-        string accessToken, string id, CancellationToken cancellationToken = default)
+        string accessToken,
+        string id,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the group ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/groups/{id}/management/permissions", accessToken);
+        // Construct the URL for retrieving the group's management permissions.
+        var url = $"{BaseUrl}/{realm}/groups/{id}/management/permissions";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcPermissionManagement>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get realm group management permission", e);
-            }
-
-            return new KcResponse<KcPermissionManagement>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the management permissions.
+        return await ProcessRequestAsync<KcPermissionManagement>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm group management permission",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcGroups.SetAuthorizationManagementPermissionAsync"/>
     public async Task<KcResponse<KcPermissionManagement>> SetAuthorizationManagementPermissionAsync(
         string realm,
-        string accessToken, string id, KcPermissionManagement permissionManagement,
+        string accessToken,
+        string id,
+        KcPermissionManagement permissionManagement,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the group ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        if ( permissionManagement == null )
-        {
-            throw new KcException($"{nameof(permissionManagement)} is required");
-        }
+        // Validate that the permissionManagement object is not null.
+        ValidateNotNull(nameof(permissionManagement), permissionManagement);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/groups/{id}/management/permissions", accessToken,
-                KcRequestHandler.GetBody(permissionManagement));
+        // Construct the URL for setting the group's management permissions.
+        var url = $"{BaseUrl}/{realm}/groups/{id}/management/permissions";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcPermissionManagement>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to set realm group management permission", e);
-            }
-
-            return new KcResponse<KcPermissionManagement>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to set the management permissions.
+        return await ProcessRequestAsync<KcPermissionManagement>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            "Unable to set realm group management permission",
+            permissionManagement,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcGroups.GetMembersAsync"/>
-    public async Task<KcResponse<IEnumerable<KcUser>>> GetMembersAsync(string realm,
-        string accessToken, string id,
+    public async Task<KcResponse<IEnumerable<KcUser>>> GetMembersAsync(
+        string realm,
+        string accessToken,
+        string id,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        // Validate that the group ID is not null or empty.
+        ValidateRequiredString(nameof(id), id);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/groups/{id}/members", accessToken);
+        // Construct the URL for retrieving the group's members.
+        var url = $"{BaseUrl}/{realm}/groups/{id}/members";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcUser>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get realm group members", e);
-            }
-
-            return new KcResponse<IEnumerable<KcUser>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the group's members.
+        return await ProcessRequestAsync<IEnumerable<KcUser>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm group members",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 }

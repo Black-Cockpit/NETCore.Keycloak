@@ -3,686 +3,448 @@ using NETCore.Keycloak.Client.HttpClients.Abstraction;
 using NETCore.Keycloak.Client.Models;
 using NETCore.Keycloak.Client.Models.ClientScope;
 using NETCore.Keycloak.Client.Models.KcEnum;
-using NETCore.Keycloak.Client.Requests;
-using NETCore.Keycloak.Client.Utils;
 
 namespace NETCore.Keycloak.Client.HttpClients.Implementation;
 
 /// <inheritdoc cref="IKcProtocolMappers"/>
-public class KcProtocolMappers : KcClientValidator, IKcProtocolMappers
+internal sealed class KcProtocolMappers(string baseUrl,
+    ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcProtocolMappers
 {
-    /// <summary>
-    /// Logger <see cref="ILogger"/>
-    /// </summary>
-    private readonly ILogger _logger;
-
-    /// <summary>
-    /// Keycloak base URL
-    /// </summary>
-    private readonly string _baseUrl;
-
-    /// <summary>
-    /// Protocol mappers client constructor
-    /// </summary>
-    /// <param name="baseUrl">Keycloak server base url.
-    /// <see href="https://www.keycloak.org/docs-api/20.0.3/rest-api/index.html#_uri_scheme"/></param>
-    /// <param name="logger">Logger <see cref="ILogger"/></param>
-    public KcProtocolMappers(string baseUrl, ILogger logger = null)
-    {
-        if ( string.IsNullOrWhiteSpace(baseUrl) )
-        {
-            throw new KcException($"{nameof(baseUrl)} is required");
-        }
-
-        // Remove last "/" from base url
-        _baseUrl = baseUrl.EndsWith("/", StringComparison.Ordinal)
-            ? baseUrl.Remove(baseUrl.Length - 1, 1)
-            : baseUrl;
-
-        _logger = logger;
-    }
-
     /// <inheritdoc cref="IKcProtocolMappers.AddMappersAsync"/>
-    public async Task<KcResponse<object>> AddMappersAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> AddMappersAsync(
+        string realm,
+        string accessToken,
         string clientScopeId,
         IEnumerable<KcProtocolMapper> protocolMappers,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientScopeId) )
-        {
-            throw new KcException($"{nameof(clientScopeId)} is required");
-        }
+        // Validate that the client scope ID is not null or empty.
+        ValidateRequiredString(nameof(clientScopeId), clientScopeId);
 
-        if ( protocolMappers == null )
-        {
-            throw new KcException($"{nameof(protocolMappers)} is required");
-        }
+        // Validate that the protocol mappers collection is not null.
+        ValidateNotNull(nameof(protocolMappers), protocolMappers);
 
+        // Return an empty response if the protocol mappers collection is empty.
         if ( !protocolMappers.Any() )
         {
             return new KcResponse<object>();
         }
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/client-scopes/{clientScopeId}/protocol-mappers/add-models",
-                accessToken,
-                KcRequestHandler.GetBody(protocolMappers));
+        // Construct the URL for adding protocol mappers to the specified client scope.
+        var url = $"{BaseUrl}/{realm}/client-scopes/{clientScopeId}/protocol-mappers/add-models";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to add realm client scope protocol mappers", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to add the protocol mappers.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to add realm client scope protocol mappers",
+            protocolMappers,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcProtocolMappers.AddMapperAsync"/>
-    public async Task<KcResponse<KcProtocolMapper>> AddMapperAsync(string realm, string accessToken,
-        string clientScopeId, KcProtocolMapper protocolMapper,
+    public async Task<KcResponse<KcProtocolMapper>> AddMapperAsync(
+        string realm,
+        string accessToken,
+        string clientScopeId,
+        KcProtocolMapper protocolMapper,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientScopeId) )
-        {
-            throw new KcException($"{nameof(clientScopeId)} is required");
-        }
+        // Validate that the client scope ID is not null or empty.
+        ValidateRequiredString(nameof(clientScopeId), clientScopeId);
 
-        if ( protocolMapper == null )
-        {
-            throw new KcException($"{nameof(protocolMapper)} is required");
-        }
+        // Validate that the protocol mapper is not null.
+        ValidateNotNull(nameof(protocolMapper), protocolMapper);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/client-scopes/{clientScopeId}/protocol-mappers/models",
-                accessToken,
-                KcRequestHandler.GetBody(protocolMapper));
+        // Construct the URL for adding the protocol mapper to the specified client scope.
+        var url = $"{BaseUrl}/{realm}/client-scopes/{clientScopeId}/protocol-mappers/models";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcProtocolMapper>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to add realm client scope protocol mapper", e);
-            }
-
-            return new KcResponse<KcProtocolMapper>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to add the protocol mapper.
+        return await ProcessRequestAsync<KcProtocolMapper>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to add realm client scope protocol mapper",
+            protocolMapper,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcProtocolMappers.ListMappersAsync"/>
-    public async Task<KcResponse<IEnumerable<KcProtocolMapper>>> ListMappersAsync(string realm,
+    public async Task<KcResponse<IEnumerable<KcProtocolMapper>>> ListMappersAsync(
+        string realm,
         string accessToken,
-        string clientScopeId, CancellationToken cancellationToken = default)
+        string clientScopeId,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientScopeId) )
-        {
-            throw new KcException($"{nameof(clientScopeId)} is required");
-        }
+        // Validate that the client scope ID is not null or empty.
+        ValidateRequiredString(nameof(clientScopeId), clientScopeId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/client-scopes/{clientScopeId}/protocol-mappers/models",
-                accessToken);
+        // Construct the URL for listing protocol mappers of the specified client scope.
+        var url = $"{BaseUrl}/{realm}/client-scopes/{clientScopeId}/protocol-mappers/models";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcProtocolMapper>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to list realm client scope protocol mappers", e);
-            }
-
-            return new KcResponse<IEnumerable<KcProtocolMapper>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the protocol mappers.
+        return await ProcessRequestAsync<IEnumerable<KcProtocolMapper>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to list realm client scope protocol mappers",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcProtocolMappers.GetMapperAsync"/>
-    public async Task<KcResponse<KcProtocolMapper>> GetMapperAsync(string realm, string accessToken,
-        string clientScopeId, string mapperId, CancellationToken cancellationToken = default)
+    public async Task<KcResponse<KcProtocolMapper>> GetMapperAsync(
+        string realm,
+        string accessToken,
+        string clientScopeId,
+        string mapperId,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientScopeId) )
-        {
-            throw new KcException($"{nameof(clientScopeId)} is required");
-        }
+        // Validate that the client scope ID is not null or empty.
+        ValidateRequiredString(nameof(clientScopeId), clientScopeId);
 
-        if ( string.IsNullOrWhiteSpace(mapperId) )
-        {
-            throw new KcException($"{nameof(mapperId)} is required");
-        }
+        // Validate that the mapper ID is not null or empty.
+        ValidateRequiredString(nameof(mapperId), mapperId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/client-scopes/{clientScopeId}/protocol-mappers/models/{mapperId}",
-                accessToken);
+        // Construct the URL for retrieving the specified protocol mapper.
+        var url = $"{BaseUrl}/{realm}/client-scopes/{clientScopeId}/protocol-mappers/models/{mapperId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcProtocolMapper>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get realm client scope protocol mapper", e);
-            }
-
-            return new KcResponse<KcProtocolMapper>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the protocol mapper.
+        return await ProcessRequestAsync<KcProtocolMapper>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get realm client scope protocol mapper",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcProtocolMappers.UpdateMapperAsync"/>
-    public async Task<KcResponse<KcProtocolMapper>> UpdateMapperAsync(string realm,
+    public async Task<KcResponse<KcProtocolMapper>> UpdateMapperAsync(
+        string realm,
         string accessToken,
-        string clientScopeId, string mapperId, KcProtocolMapper protocolMapper,
+        string clientScopeId,
+        string mapperId,
+        KcProtocolMapper protocolMapper,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientScopeId) )
-        {
-            throw new KcException($"{nameof(clientScopeId)} is required");
-        }
+        // Validate that the client scope ID is not null or empty.
+        ValidateRequiredString(nameof(clientScopeId), clientScopeId);
 
-        if ( string.IsNullOrWhiteSpace(mapperId) )
-        {
-            throw new KcException($"{nameof(mapperId)} is required");
-        }
+        // Validate that the mapper ID is not null or empty.
+        ValidateRequiredString(nameof(mapperId), mapperId);
 
-        if ( protocolMapper == null )
-        {
-            throw new KcException($"{nameof(protocolMapper)} is required");
-        }
+        // Validate that the protocol mapper configuration is not null.
+        ValidateNotNull(nameof(protocolMapper), protocolMapper);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/client-scopes/{clientScopeId}/protocol-mappers/models/{mapperId}",
-                accessToken,
-                KcRequestHandler.GetBody(protocolMapper));
+        // Construct the URL for updating the specified protocol mapper.
+        var url = $"{BaseUrl}/{realm}/client-scopes/{clientScopeId}/protocol-mappers/models/{mapperId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcProtocolMapper>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to update realm client scope protocol mapper", e);
-            }
-
-            return new KcResponse<KcProtocolMapper>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to update the protocol mapper.
+        return await ProcessRequestAsync<KcProtocolMapper>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            "Unable to update realm client scope protocol mapper",
+            protocolMapper,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcProtocolMappers.DeleteMapperAsync"/>
-    public async Task<KcResponse<object>> DeleteMapperAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> DeleteMapperAsync(
+        string realm,
+        string accessToken,
         string clientScopeId,
-        string mapperId, CancellationToken cancellationToken = default)
+        string mapperId,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientScopeId) )
-        {
-            throw new KcException($"{nameof(clientScopeId)} is required");
-        }
+        // Validate that the client scope ID is not null or empty.
+        ValidateRequiredString(nameof(clientScopeId), clientScopeId);
 
-        if ( string.IsNullOrWhiteSpace(mapperId) )
-        {
-            throw new KcException($"{nameof(mapperId)} is required");
-        }
+        // Validate that the mapper ID is not null or empty.
+        ValidateRequiredString(nameof(mapperId), mapperId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/client-scopes/{clientScopeId}/protocol-mappers/models/{mapperId}",
-                accessToken);
+        // Construct the URL for deleting the specified protocol mapper.
+        var url = $"{BaseUrl}/{realm}/client-scopes/{clientScopeId}/protocol-mappers/models/{mapperId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to delete realm client scope protocol mapper", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to remove the protocol mapper.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            "Unable to delete realm client scope protocol mapper",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcProtocolMappers.ListMappersByProtocolNameAsync"/>
     public async Task<KcResponse<IEnumerable<KcProtocolMapper>>> ListMappersByProtocolNameAsync(
         string realm,
-        string accessToken, string clientScopeId, KcProtocol protocol,
+        string accessToken,
+        string clientScopeId,
+        KcProtocol protocol,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientScopeId) )
-        {
-            throw new KcException($"{nameof(clientScopeId)} is required");
-        }
+        // Validate that the client scope ID is not null or empty.
+        ValidateRequiredString(nameof(clientScopeId), clientScopeId);
 
+        // Determine the protocol name based on the protocol type.
         var protocolName = protocol == KcProtocol.Saml ? "saml" : "openid-connect";
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/client-scopes/{clientScopeId}/protocol-mappers/protocol/{protocolName}",
-                accessToken);
+        // Construct the URL for listing protocol mappers by protocol name.
+        var url = $"{BaseUrl}/{realm}/client-scopes/{clientScopeId}/protocol-mappers/protocol/{protocolName}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcProtocolMapper>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to list realm client scope protocol mappers by protocol name",
-                    e);
-            }
-
-            return new KcResponse<IEnumerable<KcProtocolMapper>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the protocol mappers.
+        return await ProcessRequestAsync<IEnumerable<KcProtocolMapper>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to list realm client scope protocol mappers by protocol name",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcProtocolMappers.AddClientMappersAsync"/>
-    public async Task<KcResponse<object>> AddClientMappersAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> AddClientMappersAsync(
+        string realm,
+        string accessToken,
         string clientId,
         IEnumerable<KcProtocolMapper> protocolMappers,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        if ( protocolMappers == null )
-        {
-            throw new KcException($"{nameof(protocolMappers)} is required");
-        }
+        // Validate that the protocol mappers are not null.
+        ValidateNotNull(nameof(protocolMappers), protocolMappers);
 
+        // Return early if the protocol mappers collection is empty.
         if ( !protocolMappers.Any() )
         {
             return new KcResponse<object>();
         }
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/clients/{clientId}/protocol-mappers/add-models",
-                accessToken, KcRequestHandler.GetBody(protocolMappers));
+        // Construct the URL for adding protocol mappers to the client.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/protocol-mappers/add-models";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to add client level protocol mappers", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to add the client protocol mappers.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to add client level protocol mappers",
+            protocolMappers,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcProtocolMappers.AddClientMapperAsync"/>
-    public async Task<KcResponse<KcProtocolMapper>> AddClientMapperAsync(string realm,
+    public async Task<KcResponse<KcProtocolMapper>> AddClientMapperAsync(
+        string realm,
         string accessToken,
-        string clientId, KcProtocolMapper kcProtocolMapper,
+        string clientId,
+        KcProtocolMapper kcProtocolMapper,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        if ( kcProtocolMapper == null )
-        {
-            throw new KcException($"{nameof(kcProtocolMapper)} is required");
-        }
+        // Validate that the protocol mapper is not null.
+        ValidateNotNull(nameof(kcProtocolMapper), kcProtocolMapper);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/clients/{clientId}/protocol-mappers/models",
-                accessToken, KcRequestHandler.GetBody(kcProtocolMapper));
+        // Construct the URL for adding the protocol mapper to the client.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/protocol-mappers/models";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcProtocolMapper>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to add client level protocol mapper", e);
-            }
-
-            return new KcResponse<KcProtocolMapper>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to add the client protocol mapper.
+        return await ProcessRequestAsync<KcProtocolMapper>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to add client level protocol mapper",
+            kcProtocolMapper,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcProtocolMappers.ListClientMappersAsync"/>
     public async Task<KcResponse<IEnumerable<KcProtocolMapper>>> ListClientMappersAsync(
         string realm,
-        string accessToken, string clientId, CancellationToken cancellationToken = default)
+        string accessToken,
+        string clientId,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{clientId}/protocol-mappers/models", accessToken);
+        // Construct the URL for retrieving the client protocol mappers.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/protocol-mappers/models";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcProtocolMapper>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to list client level protocol mappers", e);
-            }
-
-            return new KcResponse<IEnumerable<KcProtocolMapper>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the client protocol mappers.
+        return await ProcessRequestAsync<IEnumerable<KcProtocolMapper>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to list client level protocol mappers",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcProtocolMappers.GetClientMapperAsync"/>
-    public async Task<KcResponse<KcProtocolMapper>> GetClientMapperAsync(string realm,
+    public async Task<KcResponse<KcProtocolMapper>> GetClientMapperAsync(
+        string realm,
         string accessToken,
-        string clientId, string mapperId, CancellationToken cancellationToken = default)
+        string clientId,
+        string mapperId,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        if ( string.IsNullOrWhiteSpace(mapperId) )
-        {
-            throw new KcException($"{nameof(mapperId)} is required");
-        }
+        // Validate that the mapper ID is not null or empty.
+        ValidateRequiredString(nameof(mapperId), mapperId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients/{clientId}/protocol-mappers/models/{mapperId}",
-                accessToken);
+        // Construct the URL for retrieving the specific protocol mapper.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/protocol-mappers/models/{mapperId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcProtocolMapper>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to get client level protocol mapper", e);
-            }
-
-            return new KcResponse<KcProtocolMapper>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the client protocol mapper.
+        return await ProcessRequestAsync<KcProtocolMapper>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to get client level protocol mapper",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcProtocolMappers.UpdateClientMapperAsync"/>
-    public async Task<KcResponse<KcProtocolMapper>> UpdateClientMapperAsync(string realm,
+    public async Task<KcResponse<KcProtocolMapper>> UpdateClientMapperAsync(
+        string realm,
         string accessToken,
-        string clientId, string mapperId, KcProtocolMapper protocolMapper,
+        string clientId,
+        string mapperId,
+        KcProtocolMapper protocolMapper,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        if ( string.IsNullOrWhiteSpace(mapperId) )
-        {
-            throw new KcException($"{nameof(mapperId)} is required");
-        }
+        // Validate that the mapper ID is not null or empty.
+        ValidateRequiredString(nameof(mapperId), mapperId);
 
-        if ( protocolMapper == null )
-        {
-            throw new KcException($"{nameof(protocolMapper)} is required");
-        }
+        // Validate that the protocol mapper details are not null.
+        ValidateNotNull(nameof(protocolMapper), protocolMapper);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/clients/{clientId}/protocol-mappers/models/{mapperId}",
-                accessToken,
-                KcRequestHandler.GetBody(protocolMapper));
+        // Construct the URL for updating the specific protocol mapper.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/protocol-mappers/models/{mapperId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcProtocolMapper>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to update client level protocol mapper", e);
-            }
-
-            return new KcResponse<KcProtocolMapper>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to update the client protocol mapper.
+        return await ProcessRequestAsync<KcProtocolMapper>(
+            url,
+            HttpMethod.Put,
+            accessToken,
+            "Unable to update client level protocol mapper",
+            protocolMapper,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcProtocolMappers.DeleteClientMapperAsync"/>
-    public async Task<KcResponse<object>> DeleteClientMapperAsync(string realm, string accessToken,
+    public async Task<KcResponse<object>> DeleteClientMapperAsync(
+        string realm,
+        string accessToken,
         string clientId,
-        string mapperId, CancellationToken cancellationToken = default)
+        string mapperId,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(clientId), clientId);
 
-        if ( string.IsNullOrWhiteSpace(mapperId) )
-        {
-            throw new KcException($"{nameof(mapperId)} is required");
-        }
+        // Validate that the mapper ID is not null or empty.
+        ValidateRequiredString(nameof(mapperId), mapperId);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Delete,
-                $"{_baseUrl}/{realm}/clients/{clientId}/protocol-mappers/models/{mapperId}",
-                accessToken);
+        // Construct the URL for deleting the specific protocol mapper.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/protocol-mappers/models/{mapperId}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<object>(response, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to delete client level protocol mapper", e);
-            }
-
-            return new KcResponse<object>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to remove the client protocol mapper.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            "Unable to delete client level protocol mapper",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcProtocolMappers.ListClientMappersByProtocolNameAsync"/>
-    public async Task<KcResponse<IEnumerable<KcProtocolMapper>>>
-        ListClientMappersByProtocolNameAsync(string realm,
-        string accessToken, string clientId, KcProtocol protocol,
+    public async Task<KcResponse<IEnumerable<KcProtocolMapper>>> ListClientMappersByProtocolNameAsync(
+        string realm,
+        string accessToken,
+        string clientId,
+        KcProtocol protocol,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( string.IsNullOrWhiteSpace(clientId) )
-        {
-            throw new KcException($"{nameof(clientId)} is required");
-        }
+        // Validate that the client ID is not null or empty.
+        ValidateRequiredString(nameof(clientId), clientId);
 
+        // Determine the protocol name based on the input protocol type.
         var protocolName = protocol == KcProtocol.Saml ? "saml" : "openid-connect";
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Put,
-                $"{_baseUrl}/{realm}/clients/{clientId}/protocol-mappers/protocol/{protocolName}",
-                accessToken);
+        // Construct the URL for retrieving the protocol mappers filtered by protocol name.
+        var url = $"{BaseUrl}/{realm}/clients/{clientId}/protocol-mappers/protocol/{protocolName}";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcProtocolMapper>>(response,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to list client level protocol mappers by protocol name", e);
-            }
-
-            return new KcResponse<IEnumerable<KcProtocolMapper>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to retrieve the client protocol mappers.
+        return await ProcessRequestAsync<IEnumerable<KcProtocolMapper>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to list client level protocol mappers by protocol name",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 }

@@ -2,117 +2,88 @@ using Microsoft.Extensions.Logging;
 using NETCore.Keycloak.Client.HttpClients.Abstraction;
 using NETCore.Keycloak.Client.Models;
 using NETCore.Keycloak.Client.Models.Clients;
-using NETCore.Keycloak.Client.Requests;
-using NETCore.Keycloak.Client.Utils;
 
 namespace NETCore.Keycloak.Client.HttpClients.Implementation;
 
 /// <inheritdoc cref="IKcClientInitialAccess"/>
-public class KcClientInitialAccess : KcClientValidator, IKcClientInitialAccess
+internal sealed class KcClientInitialAccess(string baseUrl,
+    ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcClientInitialAccess
 {
-    /// <summary>
-    /// Logger <see cref="ILogger"/>
-    /// </summary>
-    private readonly ILogger _logger;
-
-    /// <summary>
-    /// Keycloak base URL
-    /// </summary>
-    private readonly string _baseUrl;
-
-    /// <summary>
-    /// Initial access client constructor
-    /// </summary>
-    /// <param name="baseUrl">Keycloak server base url.
-    /// <see href="https://www.keycloak.org/docs-api/20.0.3/rest-api/index.html#_uri_scheme"/></param>
-    /// <param name="logger">Logger <see cref="ILogger"/></param>
-    public KcClientInitialAccess(string baseUrl, ILogger logger = null)
-    {
-        if ( string.IsNullOrWhiteSpace(baseUrl) )
-        {
-            throw new KcException($"{nameof(baseUrl)} is required");
-        }
-
-        // Remove last "/" from base url
-        _baseUrl = baseUrl.EndsWith("/", StringComparison.Ordinal)
-            ? baseUrl.Remove(baseUrl.Length - 1, 1)
-            : baseUrl;
-
-        _logger = logger;
-    }
-
     /// <inheritdoc cref="IKcClientInitialAccess.CreateInitialAccessTokenAsync"/>
     public async Task<KcResponse<KcClientInitialAccessModel>> CreateInitialAccessTokenAsync(
         string realm,
-        string accessToken, KcCreateClientInitialAccess access,
+        string accessToken,
+        KcCreateClientInitialAccess access,
         CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        if ( access == null )
-        {
-            throw new KcException($"{nameof(access)} is required");
-        }
+        // Validate that the access configuration is provided.
+        ValidateNotNull(nameof(access), access);
 
-        try
-        {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Post,
-                $"{_baseUrl}/{realm}/clients-initial-access", accessToken,
-                KcRequestHandler.GetBody(access));
+        // Construct the URL for creating the initial access token.
+        var url = $"{BaseUrl}/{realm}/clients-initial-access";
 
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<KcClientInitialAccessModel>(response,
-                cancellationToken: cancellationToken).ConfigureAwait(false);
-        }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable create client initial access token", e);
-            }
-
-            return new KcResponse<KcClientInitialAccessModel>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Process the request to create the initial access token.
+        return await ProcessRequestAsync<KcClientInitialAccessModel>(
+            url,
+            HttpMethod.Post,
+            accessToken,
+            "Unable to create client initial access token",
+            access,
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 
-    /// <inheritdoc cref="IKcClientInitialAccess.GetInitialAccess"/>
-    public async Task<KcResponse<IEnumerable<KcClientInitialAccessModel>>> GetInitialAccess(
+    /// <inheritdoc cref="IKcClientInitialAccess.GetInitialAccessAsync"/>
+    public async Task<KcResponse<IEnumerable<KcClientInitialAccessModel>>> GetInitialAccessAsync(
         string realm,
-        string accessToken, CancellationToken cancellationToken = default)
+        string accessToken,
+        CancellationToken cancellationToken = default)
     {
+        // Validate the realm and access token inputs.
         ValidateAccess(realm, accessToken);
 
-        try
+        // Construct the URL for retrieving the initial access tokens.
+        var url = $"{BaseUrl}/{realm}/clients-initial-access";
+
+        // Process the request to retrieve the initial access tokens.
+        return await ProcessRequestAsync<IEnumerable<KcClientInitialAccessModel>>(
+            url,
+            HttpMethod.Get,
+            accessToken,
+            "Unable to list client initial access tokens",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc cref="IKcClientInitialAccess.DeleteInitialAccessTokenAsync"/>
+    public async Task<KcResponse<object>> DeleteInitialAccessTokenAsync(
+        string realm,
+        string accessToken,
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        // Validate the realm and access token inputs.
+        ValidateAccess(realm, accessToken);
+
+        // Validate that the initial access token ID is not null or empty.
+        if ( string.IsNullOrWhiteSpace(id) )
         {
-            using var request = KcRequestHandler.CreateRequest(HttpMethod.Get,
-                $"{_baseUrl}/{realm}/clients-initial-access", accessToken);
-
-            using var client = new HttpClient();
-
-            var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return await KcRequestHandler.HandleAsync<IEnumerable<KcClientInitialAccessModel>>(
-                response, cancellationToken: cancellationToken).ConfigureAwait(false);
+            throw new KcException($"{nameof(id)} is required");
         }
-        catch ( Exception e )
-        {
-            if ( _logger != null )
-            {
-                KcLoggerMessages.Error(_logger, "Unable to list client initial access tokens", e);
-            }
 
-            return new KcResponse<IEnumerable<KcClientInitialAccessModel>>
-            {
-                IsError = true,
-                Exception = e
-            };
-        }
+        // Construct the URL for deleting the initial access token in the specified realm.
+        var url = $"{BaseUrl}/{realm}/clients-initial-access/{id}";
+
+        // Process the request to delete the initial access token.
+        return await ProcessRequestAsync<object>(
+            url,
+            HttpMethod.Delete,
+            accessToken,
+            "Unable to delete client initial access token",
+            cancellationToken: cancellationToken
+        ).ConfigureAwait(false);
     }
 }
