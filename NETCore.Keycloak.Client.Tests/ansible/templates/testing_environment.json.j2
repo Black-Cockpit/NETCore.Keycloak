@@ -2,12 +2,30 @@
     "baseUrl": "{{ keycloak.auth_url }}",
     "auth_realm": "{{ keycloak.auth_realm }}",
     "client_id": "{{ keycloak.client_id }}",
-    "username": "{{ keycloak.username }}",
-    "password": "{{ keycloak.password }}",
+    "admin":{
+        "username": "{{ keycloak.username }}",
+        "password": "{{ keycloak.password }}"
+    },
     "testing_realm": {
         "name": "{{ realm }}",
-        "client_id": "{{ keycloak.testing_realm_client_id }}",
-        "username": "{{ keycloak.testing_realm_admin.username }}",
-        "password": "{{ keycloak.testing_realm_admin.password }}"
+        "public_client": {
+            "client_id": "{{ keycloak.testing_realm_client_id }}"
+        },
+        "private_client": {
+            "client_id": "{{ keycloak.testing_realm_auth_client_id }}",
+            "client_secret": "{{ keycloak.testing_realm_auth_client_secret }}"
+        },
+        "user": {
+            "username": "{{ keycloak.testing_realm_admin.username }}",
+            "password": "{{ keycloak.testing_realm_admin.password }}",
+            "permissions": [
+                {
+                    "name" : "auth_client",
+                    "scopes": [
+                        "Profile#Get"
+                    ]
+                }
+            ]
+        }
     }
 }

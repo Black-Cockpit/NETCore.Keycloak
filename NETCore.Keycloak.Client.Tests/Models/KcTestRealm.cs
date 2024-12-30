@@ -1,39 +1,39 @@
+using NETCore.Keycloak.Client.Models.Auth;
 using Newtonsoft.Json;
 
 namespace NETCore.Keycloak.Client.Tests.Models;
 
 /// <summary>
 /// Represents the configuration for the testing realm in Keycloak integration tests.
-/// This class maps to a JSON object containing the details of a Keycloak testing realm.
+/// This class is used to deserialize JSON objects containing details of a Keycloak testing realm,
+/// including clients and users associated with the realm.
 /// </summary>
 public class KcTestRealm
 {
     /// <summary>
-    /// The name of the testing realm in Keycloak.
-    /// Example: "net_core_keycloak_tests"
+    /// Gets or sets the name of the testing realm in Keycloak.
     /// </summary>
     [JsonProperty("name")]
     public string Name { get; set; }
 
     /// <summary>
-    /// The client ID associated with the testing realm.
-    /// Used for authenticating applications in the test environment.
-    /// Example: "app_client"
+    /// Gets or sets the public client credentials for the testing realm.
+    /// Public clients do not require a secret for authentication.
     /// </summary>
-    [JsonProperty("client_id")]
-    public string ClientId { get; set; }
+    [JsonProperty("public_client")]
+    public KcClientCredentials PublicClient { get; set; }
 
     /// <summary>
-    /// The username of the administrator for the testing realm.
-    /// Example: "net_core_keycloak_tests_admin"
+    /// Gets or sets the private client credentials for the testing realm.
+    /// Private clients require a secret for authentication.
     /// </summary>
-    [JsonProperty("username")]
-    public string Username { get; set; }
+    [JsonProperty("private_client")]
+    public KcClientCredentials PrivateClient { get; set; }
 
     /// <summary>
-    /// The password for the administrator of the testing realm.
-    /// Example: "6W)+P6E7ek@CdklQ#S$0Swlu$4#P&YuK"
+    /// Gets or sets the test user configuration associated with the testing realm.
+    /// Includes login details and permissions for the user.
     /// </summary>
-    [JsonProperty("password")]
-    public string Password { get; set; }
+    [JsonProperty("user")]
+    public KcTestUser User { get; set; }
 }

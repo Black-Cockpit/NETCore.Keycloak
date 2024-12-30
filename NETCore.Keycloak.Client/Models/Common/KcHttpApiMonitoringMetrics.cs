@@ -36,12 +36,6 @@ public class KcHttpApiMonitoringMetrics
     public double RequestMilliseconds { get; set; }
 
     /// <summary>
-    /// Gets or sets the unique identifier for the request.
-    /// </summary>
-    [JsonProperty("requestId")]
-    public string RequestId { get; set; }
-
-    /// <summary>
     /// Gets or sets the error message, if any, associated with the request.
     /// </summary>
     [JsonProperty("error")]
@@ -55,12 +49,6 @@ public class KcHttpApiMonitoringMetrics
     /// </remarks>
     [JsonProperty("requestException")]
     public Exception RequestException { get; set; }
-
-    /// <summary>
-    /// Gets or sets the raw request and response data for the account verification request.
-    /// </summary>
-    [JsonProperty("rawRequest")]
-    public string RawRequestResponse { get; set; }
 
     /// <summary>
     /// Maps an execution result of an HTTP request to an instance of <see cref="KcHttpApiMonitoringMetrics"/>.
@@ -123,9 +111,13 @@ public class KcHttpApiMonitoringMetrics
                 // Extract the HTTP status code from the fallback model.
                 StatusCode = requestExecutionResult.MonitoringFallback.StatusCode,
 
+                // Extract the error from the exception if possible.
+                Error = requestExecutionResult.Exception.Message,
+
                 // Validate and extract the URL from the fallback model.
                 Url = Uri.TryCreate(requestExecutionResult.MonitoringFallback.Url,
-                    UriKind.Absolute, out var uriResult)
+                    UriKind.Absolute,
+                    out var uriResult)
                     ? uriResult
                     : null
             };

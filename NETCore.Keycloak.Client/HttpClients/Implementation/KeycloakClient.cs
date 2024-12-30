@@ -64,7 +64,7 @@ public sealed class KeycloakClient : IKeycloakClient
             throw new KcException($"{nameof(baseUrl)} is required");
         }
 
-        // Remove the trailing slash from the base URL, if it exists.
+        // Remove the trailing slash from the base URL if it exists.
         baseUrl = baseUrl.EndsWith("/", StringComparison.Ordinal)
             ? baseUrl.Remove(baseUrl.Length - 1, 1)
             : baseUrl;

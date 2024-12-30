@@ -1,0 +1,307 @@
+# Delete auth_client from realm
+- name: "Delete auth_client client if it exists from {{ realm }}"
+  community.general.keycloak_client:
+    auth_client_id: "{{ keycloak.client_id }}"
+    auth_keycloak_url: "{{ keycloak.auth_url }}"
+    auth_realm: "{{ keycloak.auth_realm }}"
+    auth_username: "{{ keycloak.username }}"
+    auth_password: "{{ keycloak.password }}"
+    realm: "{{ realm }}"
+    client_id: auth_client
+    state: absent
+  retries: 5
+
+# Create auth_client client
+- name: "Create {{ realm }} app client"
+  community.general.keycloak_client:
+    auth_client_id: "{{ keycloak.client_id }}"
+    auth_keycloak_url: "{{ keycloak.auth_url }}"
+    auth_realm: "{{ keycloak.auth_realm }}"
+    auth_username: "{{ keycloak.username }}"
+    auth_password: "{{ keycloak.password }}"
+    public_client: false
+    client_authenticator_type: "client-secret"
+    client_id: auth_client
+    secret: "{{ keycloak.testing_realm_auth_client_secret }}"
+    consent_required: false
+    description: "Authentication service"
+    direct_access_grants_enabled: true
+    enabled: true
+    frontchannel_logout: true
+    full_scope_allowed: true
+    implicit_flow_enabled: false
+    name: "Authentication service"
+    realm: "{{ realm }}"
+    service_accounts_enabled: true
+    authorization_services_enabled: true
+    always_display_in_console: false
+    standard_flow_enabled: false
+    authorization_settings:
+      allowRemoteResourceManagement: true
+      policyEnforcementMode: ENFORCING
+      resources:
+      - name: Account
+        type: urn:api:resources:account
+        ownerManagedAccess: true
+        displayName: Account endpoint
+        uris:
+        - "/api/*/auth/account/*"
+        scopes:
+        - name: UpdateEmail
+        - name: UpdatePassword
+        - name: Verify
+        - name: GetVerificationCode
+      - name: Profile
+        type: urn:api:resources:profile
+        ownerManagedAccess: true
+        displayName: Profile endpoint
+        uris:
+        - "/api/*/auth/profile/*"
+        scopes:
+        - name: Get
+        - name: Business
+      - name: Role
+        type: urn:api:resources:role
+        ownerManagedAccess: true
+        displayName: Role endpoint
+        uris:
+        - "/api/*/auth/role/*"
+        scopes:
+        - name: Create
+        - name: Update
+        - name: List
+        - name: AvailablePermissions
+        - name: Assign
+        - name: Unassign
+        - name: ChangeOwner
+        - name: Delete
+      - name: TwoFactor
+        type: urn:api:resources:twofactor
+        ownerManagedAccess: true
+        displayName: Two factor endpoint
+        uris:
+          - "/api/*/auth/twofactor/*"
+        scopes:
+          - name: Enable
+          - name: Verify
+          - name: Disable
+          - name: GetRecoveryCodes
+      policies:
+      - name: should_be_client_user
+        description: 'Should be a client user'
+        type: role
+        logic: POSITIVE
+        config:
+          roles: '[{"id":"kc_client_role_1","required":false},{"id":"kc_client_role_2","required":false},{"id":"kc_client_role_3","required":false}]'
+      - name: should_be_account_owner
+        description: 'Should be self account owner'
+        type: js
+        logic: POSITIVE
+        config:
+          code: |
+            var context = $evaluation.getContext();
+            var identity = context.getIdentity();
+            var attributes = identity.getAttributes();   
+            if(attributes.exists("account_owner")){
+              $evaluation.grant();
+            }
+      - name: should_be_business_account_owner
+        description: 'Should be business account owner'
+        type: js
+        logic: POSITIVE
+        config:
+          code: |
+            var context = $evaluation.getContext();
+            var identity = context.getIdentity();
+            var attributes = identity.getAttributes();   
+            if(attributes.exists("business_account_owner")){
+              $evaluation.grant();
+            }
+      - name: can_view_roles
+        description: 'Can view roles'
+        type: js
+        logic: POSITIVE
+        config:
+          code: |
+            var context = $evaluation.getContext();
+            var identity = context.getIdentity();
+            var attributes = identity.getAttributes();   
+            if(attributes.exists("role_view")){
+              $evaluation.grant();
+            }
+      - name: can_write_roles
+        description: 'Can write roles'
+        type: js
+        logic: POSITIVE
+        config:
+          code: |
+            var context = $evaluation.getContext();
+            var identity = context.getIdentity();
+            var attributes = identity.getAttributes();   
+            if(attributes.exists("role_write")){
+              $evaluation.grant();
+            }
+      - name: can_delete_roles
+        description: 'Can delete roles'
+        type: js
+        logic: POSITIVE
+        config:
+          code: |
+            var context = $evaluation.getContext();
+            var identity = context.getIdentity();
+            var attributes = identity.getAttributes();   
+            if(attributes.exists("role_delete")){
+              $evaluation.grant();
+            }
+      - name: should_be_client_owner
+        description: 'Should have client role and business account owner'
+        type: aggregate
+        logic: POSITIVE
+        decisionStrategy: UNANIMOUS
+        config:
+          applyPolicies: '["should_be_client_user","should_be_business_account_owner"]'
+      - name: should_be_client_role_writer
+        description: 'Should have client role and can write client roles'
+        type: aggregate
+        logic: POSITIVE
+        decisionStrategy: UNANIMOUS
+        config:
+          applyPolicies: '["should_be_client_user","can_write_roles"]'
+      - name: should_be_client_role_viewer
+        description: 'Should have client role and can view client roles'
+        type: aggregate
+        logic: POSITIVE
+        decisionStrategy: UNANIMOUS
+        config:
+          applyPolicies: '["should_be_client_user","can_view_roles"]'
+      - name: should_be_client_role_remover
+        description: 'Should have client role and can delete client roles'
+        type: aggregate
+        logic: POSITIVE
+        decisionStrategy: UNANIMOUS
+        config:
+          applyPolicies: '["should_be_client_user","can_delete_roles"]'
+      - name: permit_users_to_manage_their_accounts
+        description: Permit users to manager their accounts.
+        type: scope
+        logic: POSITIVE
+        decisionStrategy: UNANIMOUS
+        config:
+          scopes: '["UpdatePassword","Verify","GetVerificationCode","UpdateEmail","Verify","Enable","Disable","GetRecoveryCodes"]'
+          resources: '["Account","TwoFactor"]'
+          applyPolicies: '["should_be_client_user","should_be_account_owner"]'
+      - name: permit_users_to_get_their_profiles
+        description: Permit users to fetch their profiles.
+        type: scope
+        logic: POSITIVE
+        decisionStrategy: UNANIMOUS
+        config:
+          scopes: '["Get","Business"]'
+          resources: '["Profile"]'
+          applyPolicies: '["should_be_client_user","should_be_account_owner"]'
+      - name: permit_users_to_view_roles
+        description: Permit users to list roles and permissions.
+        type: scope
+        logic: POSITIVE
+        decisionStrategy: AFFIRMATIVE
+        config:
+          scopes: '["List","AvailablePermissions"]'
+          resources: '["Role"]'
+          applyPolicies: '["should_be_client_owner","should_be_client_role_viewer","should_be_client_role_writer","should_be_client_role_remover"]'
+      - name: permit_users_to_write_roles
+        description: Permit users to create, update, assign and un-assign roles.
+        type: scope
+        logic: POSITIVE
+        decisionStrategy: AFFIRMATIVE
+        config:
+          scopes: '["Create","Update","Assign","Unassign"]'
+          resources: '["Role"]'
+          applyPolicies: '["should_be_client_owner","should_be_client_role_writer"]'
+      - name: permit_users_to_delete_roles
+        description: Permit users to delete roles.
+        type: scope
+        logic: POSITIVE
+        decisionStrategy: AFFIRMATIVE
+        config:
+          scopes: '["Delete"]'
+          resources: '["Role"]'
+          applyPolicies: '["should_be_client_owner","should_be_client_role_writer"]'
+      - name: permit_users_to_change_owner
+        description: Permit users to change account owner.
+        type: scope
+        logic: POSITIVE
+        decisionStrategy: UNANIMOUS
+        config:
+          scopes: '["ChangeOwner"]'
+          resources: '["Role"]'
+          applyPolicies: '["should_be_client_owner"]'
+      scopes:
+      - name: GetVerificationCode
+        displayName: Get verification code scope.
+      - name: UpdateEmail
+        displayName: Update email scope
+      - name: UpdatePassword
+        displayName: Update password scope
+      - name: Verify
+        displayName: Verify scope
+      - name: Business
+        displayName: Business scope
+      - name: Create
+        displayName: Create scope
+      - name: Update
+        displayName: Update scope
+      - name: List
+        displayName: List scope
+      - name: AvailablePermissions
+        displayName: Get available permissions scope
+      - name: Assign
+        displayName: Assign scope
+      - name: Unassign
+        displayName: Unassign scope
+      - name: ChangeOwner
+        displayName: Change owner scope
+      - name: Delete
+        displayName: Delete scope
+      - name: Enable
+        displayName: Enable scope
+      - name: Disable
+        displayName: Disable scope
+      - name: GetRecoveryCodes
+        displayName: Get multi factor recovery codes scope
+      decisionStrategy: UNANIMOUS
+    attributes:
+      client.secret.creation.time: 1681353515
+      backchannel.logout.session.required: 'true'
+      client_credentials.use_refresh_token: 'false'
+      display.on.consent.screen: 'false'
+      oauth2.device.authorization.grant.enabled: 'false'
+      backchannel.logout.revoke.offline.tokens: 'false'
+      use.refresh.tokens: 'true'
+      exclude.session.state.from.auth.response: 'false'
+    state: present
+  register: auth_client_result
+  retries: 5
+
+
+# Delete auth_client client default authz
+- name: "Delete realm {{ realm }} auth_client client default authz"
+  command:
+    argv:
+    - "python3"
+    - "scripts/delete_client_default_authz.py"
+    - "{{ keycloak.auth_url }}"
+    - "-a"
+    - "{{ keycloak.username }}"
+    - "-p"
+    - "{{ keycloak.password }}"
+    - "-aR"
+    - "{{ keycloak.auth_realm }}"
+    - "-c"
+    - "{{ keycloak.client_id }}"
+    - "-r"
+    - "{{ default_admin_roles | join(',')}}"
+    - "-rN"
+    - "{{ realm }}"
+    - "-n"
+    - "auth_client"
+  retries: 5

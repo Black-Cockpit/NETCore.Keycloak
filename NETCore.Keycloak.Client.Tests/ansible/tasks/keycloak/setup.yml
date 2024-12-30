@@ -89,4 +89,6 @@
 # Create realm clients
 # Includes the task file to configure Keycloak clients for the specified realm.
 - include_tasks:
-    file: "tasks/keycloak/clients/app_client.yml"
+    file: "{{ item }}"
+  with_fileglob:
+  - "tasks/keycloak/clients/*.yml"

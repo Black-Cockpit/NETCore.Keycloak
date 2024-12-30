@@ -54,15 +54,11 @@ public abstract class KcHttpClientBase
     /// <exception cref="KcException">Thrown if either <paramref name="realm"/> or <paramref name="accessToken"/> is null or empty.</exception>
     protected static void ValidateAccess(string realm, string accessToken)
     {
-        if ( string.IsNullOrWhiteSpace(realm) )
-        {
-            throw new KcException($"{nameof(realm)} is required");
-        }
+        // Validate that the realm is not null or empty.
+        ValidateRequiredString(nameof(realm), realm);
 
-        if ( string.IsNullOrWhiteSpace(accessToken) )
-        {
-            throw new KcException($"{nameof(accessToken)} is required");
-        }
+        // Validate that the access token is not null or empty.
+        ValidateRequiredString(nameof(accessToken), accessToken);
     }
 
     /// <summary>
@@ -80,7 +76,8 @@ public abstract class KcHttpClientBase
                 IsError = true,
                 ErrorMessage = result?.ResponseMessage != null
                     ? await result.ResponseMessage.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false)
-                    : null,
+                    : result?.Exception?.Message,
+                Exception = result?.Exception,
                 MonitoringMetrics = await KcHttpApiMonitoringMetrics
                     .MapFromHttpRequestExecutionResult(result, cancellationToken)
                     .ConfigureAwait(false)

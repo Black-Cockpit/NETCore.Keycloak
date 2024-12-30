@@ -33,7 +33,7 @@ public class KcIdentityProviderToken
     /// A string representing the token type.
     /// </value>
     [JsonProperty("token_type")]
-    public string RequestingPartyToken { get; set; }
+    public string TokenType { get; set; }
 
     /// <summary>
     /// Gets or sets the token's expiry timestamp in seconds.

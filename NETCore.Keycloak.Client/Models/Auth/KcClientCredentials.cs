@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+
 namespace NETCore.Keycloak.Client.Models.Auth;
 
 /// <summary>
@@ -11,6 +13,7 @@ public class KcClientCredentials
     /// <value>
     /// A string representing the unique client identifier.
     /// </value>
+    [JsonProperty("client_id")]
     public string ClientId { get; set; }
 
     /// <summary>
@@ -19,6 +22,7 @@ public class KcClientCredentials
     /// <value>
     /// A string representing the client's secret key.
     /// </value>
+    [JsonProperty("client_secret")]
     public string Secret { get; set; }
 
     /// <summary>

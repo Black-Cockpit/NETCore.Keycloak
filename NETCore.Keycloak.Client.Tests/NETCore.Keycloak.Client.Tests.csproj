@@ -1,20 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <RootNamespace>NETCore.Keycloak.Client.Tests</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisMode>All</AnalysisMode>
-    <NoWarn>$(NoWarn);CA1031, CA1054, CA1056, CA1865, CA1815, CA1711</NoWarn>
+    <NoWarn>$(NoWarn);CA1031, CA1054, CA1056, CA1865, CA1815, CA1711, CA1707</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Cake" Version="1.3.0"/>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0"/>
+    <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="MSTest.TestAdapter" Version="3.0.4"/>
     <PackageReference Include="MSTest.TestFramework" Version="3.0.4"/>
     <PackageReference Include="coverlet.collector" Version="6.0.0"/>
@@ -29,7 +32,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="ansible\" />
+    <Folder Include="ansible\"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Assets/testing_environment.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

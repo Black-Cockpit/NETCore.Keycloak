@@ -20,16 +20,10 @@ internal sealed class KcAuth(string baseUrl,
         CancellationToken cancellationToken = default)
     {
         // Validate that the realm is not null or empty.
-        if ( string.IsNullOrWhiteSpace(realm) )
-        {
-            throw new KcException($"{nameof(realm)} is required");
-        }
+        ValidateRequiredString(nameof(realm), realm);
 
         // Validate that the client credentials are provided.
-        if ( clientCredentials == null )
-        {
-            throw new KcException($"{nameof(clientCredentials)} is required");
-        }
+        ValidateNotNull(nameof(clientCredentials), clientCredentials);
 
         // Perform validation on the client credentials object.
         clientCredentials.Validate();
@@ -559,7 +553,7 @@ internal sealed class KcAuth(string baseUrl,
             }, new KcHttpMonitoringFallbackModel
             {
                 Url = tokenEndpoint, // Log the token endpoint URL for monitoring.
-                HttpMethod = HttpMethod.Delete // Log the HTTP method for monitoring (should be POST, not DELETE here).
+                HttpMethod = HttpMethod.Post // Log the HTTP method for monitoring.
             }).ConfigureAwait(false);
 
             // Handle the response and deserialize it into a KcIdentityProviderToken object.
