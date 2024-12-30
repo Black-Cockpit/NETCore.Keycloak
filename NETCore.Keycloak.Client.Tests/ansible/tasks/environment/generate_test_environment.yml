@@ -1,0 +1,16 @@
+# Create test environment directory
+# Ensures that the directory for the test environment exists.
+- name: Create test environment directory
+  file:
+    path: "{{ current_dir }}/Assets"
+    state: directory
+    recurse: true
+    force: true
+
+# Generate test environment
+# Renders the testing environment configuration file from a template and saves it to the specified location.
+- name: "Generate test environment"
+  template:
+    src: "templates/testing_environment.json.j2"
+    dest: "{{ current_dir }}/Assets/testing_environment.json"
+    mode: "0644"

@@ -1,0 +1,24 @@
+# Wait for database to start
+# Ensures that the database service is reachable before proceeding with further tasks.
+- name: Wait for database to start
+  wait_for:
+    host: 127.0.0.1
+    port: 5432
+    timeout: 60
+    state: started
+    delay: 5
+  retries: 2
+
+# Create Keycloak database
+# Creates the Keycloak database if it does not already exist, ensuring it is ready for use.
+- name: Create keycloak database
+  community.postgresql.postgresql_db:
+    name: "{{ db.db_name }}"
+    login_user: "{{ db.username }}"
+    login_password: "{{ db.password }}"
+    login_host: 127.0.0.1
+    port: 5432
+    owner: "{{ db.username }}"
+    state: present
+    force: true
+  when: not (stack_state == 'stopped' or stack_state == 'absent')

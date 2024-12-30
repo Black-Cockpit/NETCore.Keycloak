@@ -1,0 +1,13 @@
+{
+    "baseUrl": "{{ keycloak.auth_url }}",
+    "auth_realm": "{{ keycloak.auth_realm }}",
+    "client_id": "{{ keycloak.client_id }}",
+    "username": "{{ keycloak.username }}",
+    "password": "{{ keycloak.password }}",
+    "testing_realm": {
+        "name": "{{ realm }}",
+        "client_id": "{{ keycloak.testing_realm_client_id }}",
+        "username": "{{ keycloak.testing_realm_admin.username }}",
+        "password": "{{ keycloak.testing_realm_admin.password }}"
+    }
+}

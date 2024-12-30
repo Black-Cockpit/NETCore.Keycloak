@@ -1,0 +1,48 @@
+# Create app client
+# Configures an application client in the specified Keycloak realm.
+- name: "Create {{ realm }} app client"
+  community.general.keycloak_client:
+    auth_client_id: "{{ keycloak.client_id }}"
+    auth_keycloak_url: "{{ keycloak.auth_url }}"
+    auth_realm: "{{ keycloak.auth_realm }}"
+    auth_username: "{{ keycloak.username }}"
+    auth_password: "{{ keycloak.password }}"
+    public_client: true
+    client_authenticator_type: "client-secret"
+    client_id: app_client
+    consent_required: false
+    description: "Application client"
+    direct_access_grants_enabled: true
+    enabled: true
+    frontchannel_logout: true
+    full_scope_allowed: true
+    implicit_flow_enabled: false
+    name: "Application client"
+    realm: "{{ realm }}"
+    service_accounts_enabled: false
+    authorization_services_enabled: false
+    always_display_in_console: false
+    standard_flow_enabled: false
+    default_client_scopes:
+      - "acr"
+      - "attributes"
+      - "audiences"
+      - "email"
+      - "offline_access"
+      - "profile"
+      - "roles"
+      - "web-origins"
+    optional_client_scopes:
+      - "address"
+      - "microprofile-jwt"
+      - "phone"
+    attributes:
+      backchannel.logout.session.required: 'true'
+      client_credentials.use_refresh_token: 'false'
+      display.on.consent.screen: 'false'
+      oauth2.device.authorization.grant.enabled: 'false'
+      backchannel.logout.revoke.offline.tokens: 'false'
+      use.refresh.tokens: 'true'
+      exclude.session.state.from.auth.response: 'false'
+    state: present
+  retries: 5

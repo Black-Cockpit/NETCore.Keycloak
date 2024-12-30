@@ -1,0 +1,92 @@
+# Wait for Keycloak to start
+# Ensures that the Keycloak service is up and running before proceeding with further tasks.
+- name: Wait for keycloak to start
+  wait_for:
+    host: 127.0.0.1
+    port: 8080
+    timeout: 60
+    state: started
+    delay: 15
+  retries: 2
+
+# Create realm
+# Includes the task file to create a Keycloak realm.
+- include_tasks:
+    file: "tasks/keycloak/create_realm.yml"
+
+# Create realm admin user
+# Creates an admin user for the specified realm with the provided credentials.
+- name: "Create {{ realm }} realm admin user"
+  community.general.keycloak_user:
+    auth_client_id: "{{ keycloak.client_id }}"
+    auth_keycloak_url: "{{ keycloak.auth_url }}"
+    auth_realm: "{{ keycloak.auth_realm }}"
+    auth_username: "{{ keycloak.username }}"
+    auth_password: "{{ keycloak.password }}"
+    realm: "{{ realm }}"
+    username: "{{ keycloak.testing_realm_admin.username }}"
+    firstName: "{{ keycloak.testing_realm_admin.firstName }}"
+    lastName: "{{ keycloak.testing_realm_admin.lastName }}"
+    email: "{{ keycloak.testing_realm_admin.email }}"
+    enabled: true
+    emailVerified: false
+    credentials:
+    - type: password
+      value: "{{ keycloak.testing_realm_admin.password }}"
+      temporary: false
+    state: present
+    force: false
+  retries: 5
+  when: realm is defined
+
+# Assign roles to realm admin user
+# Assigns default roles to the admin user in the specified realm using a Python script.
+- name: "Assign realm {{ realm }} admin roles"
+  command:
+    argv:
+    - "python3"
+    - "scripts/assign_admin_roles.py"
+    - "{{ keycloak.auth_url }}"
+    - "-a"
+    - "{{ keycloak.username }}"
+    - "-p"
+    - "{{ keycloak.password }}"
+    - "-aR"
+    - "{{ keycloak.auth_realm }}"
+    - "-c"
+    - "{{ keycloak.client_id }}"
+    - "-r"
+    - "{{ default_admin_roles | join(',')}}"
+    - "-rN"
+    - "{{ realm }}"
+    - "-u"
+    - "{{ keycloak.testing_realm_admin.username }}"
+  retries: 5
+  when: realm is defined and default_admin_roles is defined and default_admin_roles | length > 0
+
+# Create realm roles
+# Configures roles for the specified realm, iterating through the provided list of roles.
+- name: Create realm roles
+  community.general.keycloak_role:
+    auth_client_id: "{{ keycloak.client_id }}"
+    auth_keycloak_url: "{{ keycloak.auth_url }}"
+    auth_realm: "{{ keycloak.auth_realm }}"
+    auth_username: "{{ keycloak.username }}"
+    auth_password: "{{ keycloak.password }}"
+    realm: "{{ realm }}"
+    name: "{{ item }}"
+    state: present
+    description: "{{ item | replace('_',' ') | capitalize }} role"
+  loop: "{{ roles }}"
+  retries: 5
+  when: roles is defined and roles | length > 0
+
+# Create client scopes and audiences
+# Includes the task file to configure client scopes and audiences in Keycloak.
+- include_tasks:
+    file: "tasks/keycloak/client_scopes/audiences.yml"
+
+# Create realm clients
+# Includes the task file to configure Keycloak clients for the specified realm.
+- include_tasks:
+    file: "tasks/keycloak/clients/app_client.yml"

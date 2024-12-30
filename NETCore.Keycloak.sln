@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NETCore.Keycloak.Client", "NETCore.Keycloak.Client\NETCore.Keycloak.Client.csproj", "{497CADC5-935D-4CC1-A60A-ED327FC872E8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NETCore.Keycloak.Client.Tests", "NETCore.Keycloak.Client.Tests\NETCore.Keycloak.Client.Tests.csproj", "{DA20BD25-C24A-4507-8BC9-BCC44239DDDF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{497CADC5-935D-4CC1-A60A-ED327FC872E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{497CADC5-935D-4CC1-A60A-ED327FC872E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{497CADC5-935D-4CC1-A60A-ED327FC872E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA20BD25-C24A-4507-8BC9-BCC44239DDDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA20BD25-C24A-4507-8BC9-BCC44239DDDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA20BD25-C24A-4507-8BC9-BCC44239DDDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA20BD25-C24A-4507-8BC9-BCC44239DDDF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

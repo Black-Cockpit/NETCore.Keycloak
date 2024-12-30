@@ -1,0 +1,32 @@
+services:
+  net_core_keycloak_postgres:
+    container_name: net_core_keycloak_postgres
+    image: postgres:16
+    env_file:
+      - postgres.env
+    volumes:
+      - net_core_keycloak_tests_postgres:/data/postgres
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks:
+      - net_core_keycloak_tests_network
+    restart: on-failure
+
+  net_core_keycloak_idp:
+    container_name: net_core_keycloak_idp
+    image: "quay.io/keycloak/keycloak:{{ keycloak_version}}"
+    command: ["start-dev", "--spi-user-sessions-infinispan-preload-offline-sessions-from-database=true", "--spi-connections-jpa-legacy-migration-strategy=update"]
+    env_file:
+      - keycloak.env
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - net_core_keycloak_tests_network
+    restart: on-failure
+    
+networks:
+  net_core_keycloak_tests_network:
+    driver: bridge
+
+volumes:
+  net_core_keycloak_tests_postgres:

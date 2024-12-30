@@ -35,8 +35,9 @@ sec.json
 **/.feature_flags
 out
 **/out
+**/containers/**
+**/Assets/*.json
 
-sec.json
 private.pem
 location_db.bin
 

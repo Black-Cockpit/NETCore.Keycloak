@@ -1,0 +1,20 @@
+# Create containers directory
+# Ensures the containers directory is created with the specified properties.
+- name: Create containers directory
+  file:
+    path: "{{ containers_dir }}"
+    state: directory
+    recurse: true
+    force: true
+
+# Generate services environments
+# Renders environment configuration files for services using templates and places them in the containers directory.
+- name: Generate services environments
+  template:
+    src: "templates/{{ item }}.j2"
+    dest: "{{ containers_dir }}/{{ item }}"
+    mode: "0644"
+  loop:
+    - compose.yml
+    - keycloak.env
+    - postgres.env

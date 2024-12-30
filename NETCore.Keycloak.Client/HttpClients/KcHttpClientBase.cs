@@ -18,7 +18,7 @@ public abstract class KcHttpClientBase
     /// <summary>
     /// Logger instance for logging operations.
     /// </summary>
-    protected ILogger Logger { get; private set; }
+    protected ILogger Logger { get; }
 
     /// <summary>
     /// The base URL for Keycloak API.
@@ -96,50 +96,6 @@ public abstract class KcHttpClientBase
                         .MapFromHttpRequestExecutionResult(result, cancellationToken)
                         .ConfigureAwait(false)
                 };
-
-    /// <summary>
-    /// Creates an HTTP request message for Keycloak operations.
-    /// </summary>
-    /// <param name="method">The HTTP method (e.g., GET, POST).</param>
-    /// <param name="endpoint">The endpoint URL.</param>
-    /// <param name="accessToken">The access token for authorization.</param>
-    /// <param name="content">Optional request content.</param>
-    /// <param name="contentType">The content type header for the request. Defaults to "application/json".</param>
-    /// <returns>An <see cref="HttpRequestMessage"/> configured with the specified parameters.</returns>
-    protected static HttpRequestMessage CreateRequest(
-        HttpMethod method,
-        string endpoint,
-        string accessToken,
-        HttpContent content = null,
-        string contentType = "application/json")
-    {
-        // Initialize the HTTP request message with the provided method, endpoint, and content.
-        var request = new HttpRequestMessage
-        {
-            Method = method,
-            RequestUri = new Uri(endpoint),
-            Content = content ?? new StringContent(string.Empty) // Use empty content if none is provided.
-        };
-
-        // Configure the content type header if the content exists.
-        if ( request.Content.Headers.ContentType != null )
-        {
-            request.Content.Headers.ContentType.MediaType = contentType; // Set the media type for the content.
-            request.Content.Headers.ContentType.CharSet = null; // Clear the charset to ensure compatibility.
-        }
-
-        // Add the Accept header to indicate the expected response content type.
-        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(contentType));
-
-        // Add the Authorization header with the access token if it is not null or empty.
-        if ( !string.IsNullOrWhiteSpace(accessToken) )
-        {
-            _ = request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {accessToken}");
-        }
-
-        // Return the configured HTTP request message.
-        return request;
-    }
 
     /// <summary>
     /// Executes an HTTP request and captures execution metrics, including fallback data in case of exceptions.
@@ -280,22 +236,6 @@ public abstract class KcHttpClientBase
     }
 
     /// <summary>
-    /// Builds the body for an HTTP request.
-    /// </summary>
-    /// <param name="o">The object to serialize as the request body.</param>
-    /// <returns>A <see cref="StringContent"/> containing the serialized object.</returns>
-    protected static StringContent GetBody(object o) =>
-        new(JsonConvert.SerializeObject(o, new JsonSerializerSettings
-        {
-            NullValueHandling = NullValueHandling.Ignore,
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-            Converters = new List<JsonConverter>
-            {
-                new StringEnumConverter()
-            }
-        }));
-
-    /// <summary>
     /// Validates that a required string parameter is not null, empty, or whitespace.
     /// </summary>
     /// <param name="paramName">The name of the parameter being validated, used in the exception message.</param>
@@ -322,4 +262,64 @@ public abstract class KcHttpClientBase
             throw new KcException($"{paramName} is required");
         }
     }
+
+    /// <summary>
+    /// Creates an HTTP request message for Keycloak operations.
+    /// </summary>
+    /// <param name="method">The HTTP method (e.g., GET, POST).</param>
+    /// <param name="endpoint">The endpoint URL.</param>
+    /// <param name="accessToken">The access token for authorization.</param>
+    /// <param name="content">Optional request content.</param>
+    /// <param name="contentType">The content type header for the request. Defaults to "application/json".</param>
+    /// <returns>An <see cref="HttpRequestMessage"/> configured with the specified parameters.</returns>
+    private static HttpRequestMessage CreateRequest(
+        HttpMethod method,
+        string endpoint,
+        string accessToken,
+        HttpContent content = null,
+        string contentType = "application/json")
+    {
+        // Initialize the HTTP request message with the provided method, endpoint, and content.
+        var request = new HttpRequestMessage
+        {
+            Method = method,
+            RequestUri = new Uri(endpoint),
+            Content = content ?? new StringContent(string.Empty) // Use empty content if none is provided.
+        };
+
+        // Configure the content type header if the content exists.
+        if ( request.Content.Headers.ContentType != null )
+        {
+            request.Content.Headers.ContentType.MediaType = contentType; // Set the media type for the content.
+            request.Content.Headers.ContentType.CharSet = null; // Clear the charset to ensure compatibility.
+        }
+
+        // Add the Accept header to indicate the expected response content type.
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(contentType));
+
+        // Add the Authorization header with the access token if it is not null or empty.
+        if ( !string.IsNullOrWhiteSpace(accessToken) )
+        {
+            _ = request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {accessToken}");
+        }
+
+        // Return the configured HTTP request message.
+        return request;
+    }
+
+    /// <summary>
+    /// Builds the body for an HTTP request.
+    /// </summary>
+    /// <param name="o">The object to serialize as the request body.</param>
+    /// <returns>A <see cref="StringContent"/> containing the serialized object.</returns>
+    private static StringContent GetBody(object o) =>
+        new(JsonConvert.SerializeObject(o, new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            Converters = new List<JsonConverter>
+            {
+                new StringEnumConverter()
+            }
+        }));
 }

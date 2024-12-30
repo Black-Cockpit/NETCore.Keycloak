@@ -1,0 +1,98 @@
+# Net core keycloak tests realm configuration
+id: net_core_keycloak_tests
+realm: net_core_keycloak_tests
+attributes:
+  cibaBackchannelTokenDeliveryMode: poll
+  cibaExpiresIn: '120'
+  cibaAuthRequestedUserHint: login_hint
+  oauth2DeviceCodeLifespan: '600'
+  oauth2DevicePollingInterval: '5'
+  clientOfflineSessionMaxLifespan: '0'
+  clientSessionIdleTimeout: '0'
+  parRequestUriLifespan: '60'
+  clientSessionMaxLifespan: '0'
+  clientOfflineSessionIdleTimeout: '0'
+  cibaInterval: '5'
+  realmReusableOtpCode: 'false'
+access_code_lifespan: 60
+access_code_lifespan_login: 1800
+access_token_lifespan_for_implicit_flow: 300
+action_token_generated_by_admin_lifespan: 43200
+action_token_generated_by_user_lifespan: 300
+browser_flow: "browser"
+client_authentication_flow: "clients"
+default_signature_algorithm: "PS512"
+direct_grant_flow: "direct grant"
+docker_authentication_flow: "docker auth"
+duplicate_emails_allowed: false
+edit_username_allowed: true
+enabled: true
+login_with_email_allowed: true
+offline_session_idle_timeout: 1800
+offline_session_max_lifespan: 1800
+offline_session_max_lifespan_enabled: true
+password_policy: "hashIterations(27500) and length(10) and notUsername(undefined) and notEmail(undefined) and specialChars(1) and upperCase(1) and lowerCase(1) and digits(1) and passwordHistory(12)"
+refresh_token_max_reuse: 0
+registration_allowed: false
+registration_email_as_username: false
+registration_flow: "registration"
+remember_me: false
+reset_credentials_flow: "reset credentials"
+reset_password_allowed: false
+revoke_refresh_token: false
+ssl_required: "external"
+sso_session_idle_timeout: 43200
+sso_session_idle_timeout_remember_me: 0
+sso_session_max_lifespan: 36000
+sso_session_max_lifespan_remember_me: 0
+user_managed_access_allowed: true
+verify_email: false
+otp_policy_algorithm: "HmacSHA1"
+otp_policy_digits: 6
+otp_policy_initial_counter: 0
+otp_policy_look_ahead_window: 1
+otp_policy_period: 30
+otp_policy_type: "totp"
+brute_force_protected: true
+max_failure_wait_seconds: 900
+wait_increment_seconds: 60
+failure_factor: 3
+permanent_lockout: true
+quick_login_check_milli_seconds: 1000
+minimum_quick_login_wait_seconds: 60
+browser_security_headers:
+  contentSecurityPolicyReportOnly: ''
+  xContentTypeOptions: nosniff
+  referrerPolicy: no-referrer
+  xRobotsTag: none
+  xFrameOptions: SAMEORIGIN
+  contentSecurityPolicy: frame-src 'self'; frame-ancestors 'self'; object-src 'none';
+  xXSSProtection: 1; mode=block
+  strictTransportSecurity: max-age=31536000; includeSubDomains
+events_enabled: true
+events_expiration: 3600
+admin_events_enabled: true
+admin_events_details_enabled: true
+enabled_event_types:
+- "LOGIN"
+- "LOGOUT"
+events_listeners:
+- "jboss-logging"
+state: present
+roles:
+- kc_client_role_1
+- kc_client_role_2
+- kc_client_role_3
+default_admin_roles:
+- "query-realms"
+- "manage-authorization"
+- "view-users"
+- "manage-clients"
+- "view-authorization"
+- "query-groups"
+- "view-realm"
+- "manage-users"
+- "query-clients"
+- "realm-admin"
+- "view-clients"
+- "query-users"

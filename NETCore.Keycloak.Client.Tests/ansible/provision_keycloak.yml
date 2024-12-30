@@ -1,0 +1,75 @@
+# Provision Keycloak environment services
+- name: Provision Keycloak environment services
+  hosts: localhost
+  connection: local
+  become: false
+  gather_facts: true
+  any_errors_fatal: yes
+
+  # Pre-tasks are executed before the main tasks
+  pre_tasks:
+  # Include main variables
+  # This task loads all variable files from the specified directory.
+  - include_vars:
+      dir: "./vars/"
+
+  # Set Keycloak version
+  # Sets the Keycloak version to the value provided in 'kc_version', or defaults to '22.0.3' if none is provided.
+  - set_fact:
+      keycloak_version: "{{ kc_version | default('22.0.3') }}"
+
+  # Preflight check
+  # Includes and executes the preflight check tasks to validate the environment and ensure prerequisites are met.
+  # This is skipped if the stack state is 'stopped' or 'absent'.
+  - include_tasks:
+      file: "{{ workspace }}/utils/extra/pre_flight.yml"
+    when: not (stack_state == 'stopped' or stack_state == 'absent')
+
+  # Generate secrets
+  # Generates required secrets for the Keycloak environment.
+  # This is skipped if the stack state is 'stopped' or 'absent'.
+  - include_tasks:
+      file: "{{ workspace }}/tasks/common/generate_secrets.yml"
+    when: not (stack_state == 'stopped' or stack_state == 'absent')
+
+  tasks:
+  # Generate services environment
+  # Includes tasks to generate environment configuration for Keycloak services.
+  # This step is skipped if the stack state is 'stopped' or 'absent'.
+  - include_tasks:
+      file: "{{ workspace }}/tasks/environment/generate_services_environment.yml"
+    when: not (stack_state == 'stopped' or stack_state == 'absent')
+
+  # Manage Keycloak environment services
+  # Uses the Docker Compose v2 module to manage the Keycloak services.
+  # - Ensures the stack is built and running as per the specified stack state.
+  # - Removes orphan containers and unused volumes/images to maintain a clean state.
+  - name: Manage Keycloak environment services
+    community.docker.docker_compose_v2:
+      project_src: "{{ containers_dir }}/"
+      build: always
+      remove_orphans: true
+      remove_volumes: true
+      state: "{{ stack_state }}"
+      remove_images: local
+      recreate: always
+    ignore_errors: "{{ true if (stack_state == 'stopped' or stack_state == 'absent') else false }}"
+
+  # Include database setup tasks
+  # Includes a separate task file for setting up the database when the stack state is not stopped or absent.
+  - include_tasks:
+      file: "{{ workspace }}/tasks/database/setup.yml"
+    when: not (stack_state == 'stopped' or stack_state == 'absent')
+
+  # Include keycloak setup tasks
+  # Includes a separate task file for setting up the keycloak when the stack state is not stopped or absent.
+  - include_tasks:
+      file: "{{ workspace }}/tasks/keycloak/setup.yml"
+    when: not (stack_state == 'stopped' or stack_state == 'absent')
+
+  # Generate test environment
+  # Includes the task file to generate the test environment, ensuring it is only executed
+  # when the stack state is not stopped or absent.
+  - include_tasks:
+      file: "{{ workspace }}/tasks/environment/generate_test_environment.yml"
+    when: not (stack_state == 'stopped' or stack_state == 'absent')

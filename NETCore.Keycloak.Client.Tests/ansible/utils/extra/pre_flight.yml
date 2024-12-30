@@ -1,0 +1,25 @@
+# Gathering facts
+- name: Gathering package fact
+  package_facts:
+    manager: auto
+  changed_when: false
+
+# Check target platforms 
+- name: "Check OS version and family"
+  assert:
+    that: ansible_distribution in {{ supported_distribution }}
+    fail_msg: "This can only be run against Supported OSs. {{ ansible_distribution }} {{ ansible_distribution_major_version }} is not supported."
+    success_msg: "This is running against a supported OS {{ ansible_distribution }} {{ ansible_distribution_major_version }}"
+  changed_when: false
+  tags:
+  - always
+
+# Set rhel as a target
+- set_fact:
+    target_platform: rhel
+  when: ansible_distribution == 'CentOS' or ansible_os_family == 'RedHat' or ansible_os_family == "Rocky" or ansible_os_family == "AlmaLinux"
+
+# Set debian as a target
+- set_fact:
+    target_platform: debian
+  when: ansible_distribution == 'Ubuntu' or ansible_os_family == 'Debian'

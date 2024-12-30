@@ -1,0 +1,51 @@
+# Current working directory
+# Dynamically sets the current directory using the PWD environment variable.
+current_dir: "{{ lookup('env', 'PWD') }}"
+
+# Workspace directory
+# Defines the workspace directory used for Ansible-related tasks.
+# It is derived from the current directory.
+workspace: "{{ current_dir }}/ansible"
+
+# Containers directory
+# Specifies the directory where container-related files and configurations are stored.
+# This directory is derived from the workspace path.
+containers_dir: "{{ workspace }}/containers"
+
+# Services state
+# Manages the state of Docker Compose stacks.
+# Accepted values align with the 'state' parameter of the community.docker.docker_compose_v2 module:
+# - present: Ensures the stack is up and running.
+# - absent: Ensures the stack is removed.
+stack_state: ""
+
+# Database credentials
+# Holds dynamically generated database credentials during playbook execution.
+# Includes sensitive information required for database operations.
+db: {}
+
+# Keycloak credentials
+# Holds dynamically generated Keycloak credentials during playbook execution.
+# Includes sensitive information such as admin username, password, or client secrets.
+keycloak: {}
+
+# Keycloak version
+# Specifies the version of Keycloak to use for deployment or configuration.
+# Example values: "18.0.0", "latest".
+kc_version: ""
+
+# Target platform
+# Specifies the operating system platform for playbook execution.
+# This variable is set during pre-audit tasks and is used for platform-specific configurations.
+target_platform: ""
+
+# Supported platforms
+# Lists the Linux distributions supported by the playbook.
+# Ensure the target host's distribution matches one of these values to prevent compatibility issues.
+supported_distribution:
+- CentOS
+- RedHat
+- Rocky
+- AlmaLinux
+- Ubuntu
+- Debian

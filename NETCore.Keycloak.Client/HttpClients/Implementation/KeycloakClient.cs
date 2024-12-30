@@ -5,7 +5,7 @@ namespace NETCore.Keycloak.Client.HttpClients.Implementation;
 
 /// <inheritdoc cref="IKeycloakClient"/>
 // ReSharper disable once InconsistentNaming
-public class KeycloakClient : IKeycloakClient
+public sealed class KeycloakClient : IKeycloakClient
 {
     /// <inheritdoc cref="IKeycloakClient.Auth"/>
     public IKcAuth Auth { get; }
@@ -44,10 +44,19 @@ public class KeycloakClient : IKeycloakClient
     public IKcScopeMappings ScopeMappings { get; }
 
     /// <summary>
-    /// Keycloak client constructor
+    /// Initializes a new instance of the <see cref="KeycloakClient"/> class.
+    /// Provides access to various Keycloak API services through respective clients.
     /// </summary>
-    /// <param name="baseUrl">Keycloak server base url. Example: http://localhost:8080</param>
-    /// <param name="logger">Logger <see cref="ILogger"/></param>
+    /// <param name="baseUrl">
+    /// The base URL of the Keycloak server.
+    /// Example: <c>http://localhost:8080</c>.
+    /// The trailing slash, if present, will be automatically removed.
+    /// </param>
+    /// <param name="logger">
+    /// An optional logger instance for logging activities.
+    /// If not provided, logging will be disabled. See <see cref="ILogger"/>.
+    /// </param>
+    /// <exception cref="KcException">Thrown if the <paramref name="baseUrl"/> is null, empty, or contains only whitespace.</exception>
     public KeycloakClient(string baseUrl, ILogger logger = null)
     {
         if ( string.IsNullOrWhiteSpace(baseUrl) )
@@ -55,13 +64,15 @@ public class KeycloakClient : IKeycloakClient
             throw new KcException($"{nameof(baseUrl)} is required");
         }
 
-        // Remove last "/" from base url
+        // Remove the trailing slash from the base URL, if it exists.
         baseUrl = baseUrl.EndsWith("/", StringComparison.Ordinal)
             ? baseUrl.Remove(baseUrl.Length - 1, 1)
             : baseUrl;
 
+        // Define the admin API base URL for realm-specific administrative operations.
         var adminUrl = $"{baseUrl}/admin/realms";
 
+        // Initialize various Keycloak API clients with their respective base URLs and logger.
         Auth = new KcAuth($"{baseUrl}/realms", logger);
         AttackDetection = new KcAttackDetection(adminUrl, logger);
         ClientInitialAccess = new KcClientInitialAccess(adminUrl, logger);
