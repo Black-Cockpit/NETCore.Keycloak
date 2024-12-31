@@ -234,7 +234,7 @@ public interface IKcUsers
     /// <exception cref="KcException">
     /// Thrown if <paramref name="realm"/>, <paramref name="accessToken"/>, or <paramref name="userId"/> is invalid.
     /// </exception>
-    Task<KcResponse<object>> CountGroupsAsync(string realm, string accessToken, string userId, KcFilter filter = null,
+    Task<KcResponse<KcCount>> CountGroupsAsync(string realm, string accessToken, string userId, KcFilter filter = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -291,7 +291,7 @@ public interface IKcUsers
     /// <exception cref="KcException">
     /// Thrown if <paramref name="realm"/>, <paramref name="accessToken"/>, <paramref name="userId"/>, or <paramref name="credentials"/> is invalid.
     /// </exception>
-    Task<KcResponse<KcCredentials>> ResetPasswordAsync(string realm, string accessToken, string userId,
+    Task<KcResponse<object>> ResetPasswordAsync(string realm, string accessToken, string userId,
         KcCredentials credentials, CancellationToken cancellationToken = default);
 
     /// <summary>

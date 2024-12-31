@@ -327,7 +327,7 @@ internal sealed class KcUsers(string baseUrl,
     }
 
     /// <inheritdoc cref="IKcUsers.CountGroupsAsync"/>
-    public async Task<KcResponse<object>> CountGroupsAsync(
+    public async Task<KcResponse<KcCount>> CountGroupsAsync(
         string realm,
         string accessToken,
         string userId,
@@ -347,7 +347,7 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users/{userId}/groups/count{filter.BuildQuery()}";
 
         // Process the request to count the user's groups.
-        return await ProcessRequestAsync<object>(
+        return await ProcessRequestAsync<KcCount>(
             url,
             HttpMethod.Get,
             accessToken,
@@ -417,7 +417,7 @@ internal sealed class KcUsers(string baseUrl,
     }
 
     /// <inheritdoc cref="IKcUsers.ResetPasswordAsync"/>
-    public async Task<KcResponse<KcCredentials>> ResetPasswordAsync(
+    public async Task<KcResponse<object>> ResetPasswordAsync(
         string realm,
         string accessToken,
         string userId,
@@ -437,7 +437,7 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users/{userId}/reset-password";
 
         // Process the request to reset the user's password.
-        return await ProcessRequestAsync<KcCredentials>(
+        return await ProcessRequestAsync<object>(
             url,
             HttpMethod.Put,
             accessToken,

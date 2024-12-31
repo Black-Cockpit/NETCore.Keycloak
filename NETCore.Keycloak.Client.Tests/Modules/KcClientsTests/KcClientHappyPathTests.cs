@@ -14,7 +14,7 @@ namespace NETCore.Keycloak.Client.Tests.Modules.KcClientsTests;
 /// This class ensures that clients can be created, listed, retrieved, and deleted without errors.
 /// </summary>
 [TestClass]
-[TestCategory("Initial")]
+[TestCategory("Sequential")]
 public class KcClientHappyPathTests : KcTestingModule
 {
     /// <summary>
