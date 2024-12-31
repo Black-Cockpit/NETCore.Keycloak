@@ -1,12 +1,6 @@
 using System.Net;
-using Microsoft.Extensions.Logging;
-using Moq;
-using NETCore.Keycloak.Client.HttpClients.Abstraction;
-using NETCore.Keycloak.Client.HttpClients.Implementation;
 using NETCore.Keycloak.Client.Models.Auth;
-using NETCore.Keycloak.Client.Models.Tokens;
 using NETCore.Keycloak.Client.Tests.Abstraction;
-using Newtonsoft.Json;
 
 namespace NETCore.Keycloak.Client.Tests.Modules.KcAuthTests;
 
@@ -20,86 +14,23 @@ namespace NETCore.Keycloak.Client.Tests.Modules.KcAuthTests;
 public class KcAuthRevokeTokenTests : KcTestingModule
 {
     /// <summary>
-    /// Mock instance of the <see cref="ILogger"/> for testing logging behavior during Keycloak operations.
+    /// Represents the context of the current test.
+    /// Used for consistent naming and environment variable management across tests in this class.
     /// </summary>
-    private Mock<ILogger> _mockLogger;
-
-    /// <summary>
-    /// Instance of the <see cref="IKeycloakClient"/> used to perform Keycloak authentication operations.
-    /// </summary>
-    private IKeycloakClient _client;
-
-    /// <summary>
-    /// Gets or sets the current access token used during tests.
-    /// The token is stored as an environment variable and serialized/deserialized as needed.
-    /// </summary>
-    private static KcIdentityProviderToken AccessToken
-    {
-        get
-        {
-            try
-            {
-                return JsonConvert.DeserializeObject<KcIdentityProviderToken>(
-                    Environment.GetEnvironmentVariable($"{nameof(KcAuthRefreshAccessTokenTests)}_KC_TOKEN") ??
-                    string.Empty);
-            }
-            catch ( Exception e )
-            {
-                Assert.Fail(e.Message);
-                return null;
-            }
-        }
-        set => Environment.SetEnvironmentVariable($"{nameof(KcAuthRefreshAccessTokenTests)}_KC_TOKEN",
-            JsonConvert.SerializeObject(value));
-    }
+    private const string TestContext = $"{nameof(KcAuthRevokeTokenTests)}";
 
     /// <summary>
     /// Sets up the test environment and initializes required components before each test execution.
     /// </summary>
     [TestInitialize]
-    public void Init()
-    {
-        // Load the test environment configuration from the base module.
-        LoadConfiguration();
-
-        // Initialize the mock logger.
-        _mockLogger = new Mock<ILogger>();
-        _ = _mockLogger.Setup(logger => logger.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
-
-        // Initialize the Keycloak client using the configured base URL and mock logger.
-        _client = new KeycloakClient(TestEnvironment.BaseUrl, _mockLogger.Object);
-
-        // Assert that the authentication module is initialized correctly.
-        Assert.IsNotNull(_client.Auth);
-    }
+    public void Init() => Assert.IsNotNull(KeycloakRestClient.Auth);
 
     /// <summary>
     /// Validates that a resource owner password token can be successfully retrieved.
     /// </summary>
     [TestMethod]
-    public async Task A_ShouldGetResourceOwnerPasswordToken()
-    {
-        // Act
-        var tokenResponse = await _client.Auth.GetResourceOwnerPasswordTokenAsync(TestEnvironment.TestingRealm.Name,
-            new KcClientCredentials
-            {
-                ClientId = TestEnvironment.TestingRealm.PublicClient.ClientId
-            }, new KcUserLogin
-            {
-                Username = TestEnvironment.TestingRealm.User.Username,
-                Password = TestEnvironment.TestingRealm.User.Password
-            }).ConfigureAwait(false);
-
-        // Assert
-        KcCommonAssertion.AssertIdentityProviderTokenResponse(tokenResponse);
-
-        // Validate monitoring metrics for the successful request.
-        KcCommonAssertion.AssertResponseMonitoringMetrics(tokenResponse.MonitoringMetrics, HttpStatusCode.OK,
-            HttpMethod.Post);
-
-        // Store the retrieved access token for later use.
-        AccessToken = tokenResponse.Response;
-    }
+    public async Task A_ShouldGetResourceOwnerPasswordToken() =>
+        await GetRealmAdminToken(TestContext).ConfigureAwait(false);
 
     /// <summary>
     /// Validates that an access token can be successfully revoked.
@@ -107,14 +38,16 @@ public class KcAuthRevokeTokenTests : KcTestingModule
     [TestMethod]
     public async Task B_ShouldRevokeAccessToken()
     {
-        Assert.IsNotNull(AccessToken);
+        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+
+        Assert.IsNotNull(accessToken);
 
         // Act
-        var revokeAccessTokenResponse = await _client.Auth.RevokeAccessTokenAsync(TestEnvironment.TestingRealm.Name,
+        var revokeAccessTokenResponse = await KeycloakRestClient.Auth.RevokeAccessTokenAsync(TestEnvironment.TestingRealm.Name,
             new KcClientCredentials
             {
                 ClientId = TestEnvironment.TestingRealm.PublicClient.ClientId
-            }, AccessToken.AccessToken).ConfigureAwait(false);
+            }, accessToken.AccessToken).ConfigureAwait(false);
 
         // Assert
         Assert.IsNotNull(revokeAccessTokenResponse);
@@ -132,14 +65,16 @@ public class KcAuthRevokeTokenTests : KcTestingModule
     [TestMethod]
     public async Task B_ShouldRevokeRefreshToken()
     {
-        Assert.IsNotNull(AccessToken);
+        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+
+        Assert.IsNotNull(accessToken);
 
         // Act
-        var revokeAccessTokenResponse = await _client.Auth.RevokeRefreshTokenAsync(TestEnvironment.TestingRealm.Name,
+        var revokeAccessTokenResponse = await KeycloakRestClient.Auth.RevokeRefreshTokenAsync(TestEnvironment.TestingRealm.Name,
             new KcClientCredentials
             {
                 ClientId = TestEnvironment.TestingRealm.PublicClient.ClientId
-            }, AccessToken.RefreshToken).ConfigureAwait(false);
+            }, accessToken.RefreshToken).ConfigureAwait(false);
 
         // Assert
         Assert.IsNotNull(revokeAccessTokenResponse);

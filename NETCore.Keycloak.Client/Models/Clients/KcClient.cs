@@ -35,13 +35,13 @@ public class KcClient
     /// A list of attributes that can be given to the client.
     /// </summary>
     [JsonProperty("attributes")]
-    public IDictionary<string, object> Attributes { get; set; }
+    public IDictionary<string, object> Attributes { get; } = new Dictionary<string, object>();
 
     /// <summary>
     /// Override realm authentication flow bindings.
     /// </summary>
     [JsonProperty("authenticationFlowBindingOverrides")]
-    public IDictionary<string, object> AuthenticationFlowBindingOverrides { get; set; }
+    public IDictionary<string, object> AuthenticationFlowBindingOverrides { get; } = new Dictionary<string, object>();
 
     /// <summary>
     /// Enable/Disable fine-grained authorization support for a client.

@@ -279,11 +279,11 @@ public interface IKcClients
     /// <param name="realm">The Keycloak realm where the client resides.</param>
     /// <param name="accessToken">The access token used for authentication.</param>
     /// <param name="id">The ID of the client for which the example access token will be generated.</param>
+    /// <param name="userId">
+    /// User ID to associate with the example access token.
+    /// </param>
     /// <param name="scope">
     /// Optional scope to include in the example access token. If <c>null</c>, no specific scope is included.
-    /// </param>
-    /// <param name="userId">
-    /// Optional user ID to associate with the example access token. If <c>null</c>, no user is associated.
     /// </param>
     /// <param name="cancellationToken">
     /// Optional cancellation token to cancel the asynchronous operation.
@@ -296,7 +296,7 @@ public interface IKcClients
     /// Thrown if the realm, access token, or client ID is null or invalid.
     /// </exception>
     Task<KcResponse<KcAccessToken>> GenerateExampleAccessTokenAsync(string realm, string accessToken, string id,
-        string scope = null, string userId = null, CancellationToken cancellationToken = default);
+        string userId, string scope = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Generates an example ID token for a client in a specified Keycloak realm.
@@ -544,7 +544,7 @@ public interface IKcClients
     /// <exception cref="KcException">
     /// Thrown if the realm, access token, or client ID is null or invalid.
     /// </exception>
-    Task<KcResponse<object>> CountOfflineSessionsAsync(string realm, string accessToken, string id,
+    Task<KcResponse<KcCount>> CountOfflineSessionsAsync(string realm, string accessToken, string id,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -721,7 +721,7 @@ public interface IKcClients
     /// <exception cref="KcException">
     /// Thrown if the realm, access token, or client ID is null or invalid.
     /// </exception>
-    Task<KcResponse<object>> CountSessionsAsync(string realm, string accessToken, string id,
+    Task<KcResponse<KcCount>> CountSessionsAsync(string realm, string accessToken, string id,
         CancellationToken cancellationToken = default);
 
     /// <summary>

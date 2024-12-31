@@ -1,8 +1,4 @@
 using System.Net;
-using Microsoft.Extensions.Logging;
-using Moq;
-using NETCore.Keycloak.Client.HttpClients.Abstraction;
-using NETCore.Keycloak.Client.HttpClients.Implementation;
 using NETCore.Keycloak.Client.Models.Auth;
 using NETCore.Keycloak.Client.Tests.Abstraction;
 
@@ -17,34 +13,10 @@ namespace NETCore.Keycloak.Client.Tests.Modules.KcAuthTests;
 public class KcAuthClientCredentialsTests : KcTestingModule
 {
     /// <summary>
-    /// Mock instance of the <see cref="ILogger"/> for testing logging behavior during Keycloak operations.
-    /// </summary>
-    private Mock<ILogger> _mockLogger;
-
-    /// <summary>
-    /// Instance of the <see cref="IKeycloakClient"/> used to perform Keycloak authentication operations.
-    /// </summary>
-    private IKeycloakClient _client;
-
-    /// <summary>
     /// Sets up the test environment and initializes required components before each test execution.
     /// </summary>
     [TestInitialize]
-    public void Init()
-    {
-        // Load the test environment configuration from the base module.
-        LoadConfiguration();
-
-        // Initialize the mock logger.
-        _mockLogger = new Mock<ILogger>();
-        _ = _mockLogger.Setup(logger => logger.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
-
-        // Initialize the Keycloak client using the configured base URL and mock logger.
-        _client = new KeycloakClient(TestEnvironment.BaseUrl, _mockLogger.Object);
-
-        // Assert that the authentication module is initialized correctly.
-        Assert.IsNotNull(_client.Auth);
-    }
+    public void Init() => Assert.IsNotNull(KeycloakRestClient.Auth);
 
     /// <summary>
     /// Tests the successful retrieval of a client credentials token.
@@ -54,7 +26,7 @@ public class KcAuthClientCredentialsTests : KcTestingModule
     public async Task ShouldGetClientCredentialsToken()
     {
         // Act
-        var tokenResponse = await _client.Auth.GetClientCredentialsTokenAsync(
+        var tokenResponse = await KeycloakRestClient.Auth.GetClientCredentialsTokenAsync(
             TestEnvironment.TestingRealm.Name,
             new KcClientCredentials
             {
@@ -85,12 +57,12 @@ public class KcAuthClientCredentialsTests : KcTestingModule
     public async Task ShouldValidateClientCredentials()
     {
         _ = await Assert.ThrowsExceptionAsync<KcException>(
-                async () => await _client.Auth
+                async () => await KeycloakRestClient.Auth
                     .GetClientCredentialsTokenAsync(TestEnvironment.TestingRealm.Name, null).ConfigureAwait(false))
             .ConfigureAwait(false);
 
         _ = await Assert.ThrowsExceptionAsync<KcException>(
-                async () => await _client.Auth
+                async () => await KeycloakRestClient.Auth
                     .GetClientCredentialsTokenAsync(TestEnvironment.TestingRealm.Name, new KcClientCredentials())
                     .ConfigureAwait(false))
             .ConfigureAwait(false);
@@ -104,7 +76,7 @@ public class KcAuthClientCredentialsTests : KcTestingModule
     public async Task ShouldExecuteClientCredentialsWithError()
     {
         // Act
-        var tokenResponse = await _client.Auth.GetClientCredentialsTokenAsync(
+        var tokenResponse = await KeycloakRestClient.Auth.GetClientCredentialsTokenAsync(
             TestEnvironment.TestingRealm.Name,
             new KcClientCredentials
             {

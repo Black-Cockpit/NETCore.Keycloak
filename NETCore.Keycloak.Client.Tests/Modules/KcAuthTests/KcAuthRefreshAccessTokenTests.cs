@@ -1,8 +1,4 @@
 using System.Net;
-using Microsoft.Extensions.Logging;
-using Moq;
-using NETCore.Keycloak.Client.HttpClients.Abstraction;
-using NETCore.Keycloak.Client.HttpClients.Implementation;
 using NETCore.Keycloak.Client.Models.Auth;
 using NETCore.Keycloak.Client.Models.Tokens;
 using NETCore.Keycloak.Client.Tests.Abstraction;
@@ -19,16 +15,6 @@ namespace NETCore.Keycloak.Client.Tests.Modules.KcAuthTests;
 [TestCategory("Sequential")]
 public class KcAuthRefreshAccessTokenTests : KcTestingModule
 {
-    /// <summary>
-    /// Mock instance of the <see cref="ILogger"/> for testing logging behavior during Keycloak operations.
-    /// </summary>
-    private Mock<ILogger> _mockLogger;
-
-    /// <summary>
-    /// Instance of the <see cref="IKeycloakClient"/> used to perform Keycloak authentication operations.
-    /// </summary>
-    private IKeycloakClient _client;
-
     /// <summary>
     /// Gets or sets the current access token used during tests.
     /// The token is stored as an environment variable and serialized/deserialized as needed.
@@ -57,21 +43,7 @@ public class KcAuthRefreshAccessTokenTests : KcTestingModule
     /// Sets up the test environment and initializes required components before each test execution.
     /// </summary>
     [TestInitialize]
-    public void Init()
-    {
-        // Load the test environment configuration from the base module.
-        LoadConfiguration();
-
-        // Initialize the mock logger.
-        _mockLogger = new Mock<ILogger>();
-        _ = _mockLogger.Setup(logger => logger.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
-
-        // Initialize the Keycloak client using the configured base URL and mock logger.
-        _client = new KeycloakClient(TestEnvironment.BaseUrl, _mockLogger.Object);
-
-        // Assert that the authentication module is initialized correctly.
-        Assert.IsNotNull(_client.Auth);
-    }
+    public void Init() => Assert.IsNotNull(KeycloakRestClient.Auth);
 
     /// <summary>
     /// Validates that a resource owner password token can be successfully retrieved.
@@ -80,7 +52,7 @@ public class KcAuthRefreshAccessTokenTests : KcTestingModule
     public async Task A_ShouldGetResourceOwnerPasswordToken()
     {
         // Act
-        var tokenResponse = await _client.Auth.GetResourceOwnerPasswordTokenAsync(TestEnvironment.TestingRealm.Name,
+        var tokenResponse = await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(TestEnvironment.TestingRealm.Name,
             new KcClientCredentials
             {
                 ClientId = TestEnvironment.TestingRealm.PublicClient.ClientId
@@ -110,7 +82,7 @@ public class KcAuthRefreshAccessTokenTests : KcTestingModule
         Assert.IsNotNull(AccessToken);
 
         // Act
-        var tokenResponse = await _client.Auth.RefreshAccessTokenAsync(TestEnvironment.TestingRealm.Name,
+        var tokenResponse = await KeycloakRestClient.Auth.RefreshAccessTokenAsync(TestEnvironment.TestingRealm.Name,
             new KcClientCredentials
             {
                 ClientId = TestEnvironment.TestingRealm.PublicClient.ClientId
@@ -136,7 +108,7 @@ public class KcAuthRefreshAccessTokenTests : KcTestingModule
         Assert.IsNotNull(AccessToken);
 
         // Act
-        var tokenResponse = await _client.Auth.RefreshAccessTokenAsync(TestEnvironment.TestingRealm.Name,
+        var tokenResponse = await KeycloakRestClient.Auth.RefreshAccessTokenAsync(TestEnvironment.TestingRealm.Name,
             new KcClientCredentials
             {
                 ClientId = TestEnvironment.TestingRealm.PublicClient.ClientId

@@ -46,4 +46,16 @@ public abstract class KcBaseResponse<T>
     /// </value>
     [JsonProperty("errorMessage")]
     public string ErrorMessage { get; set; }
+
+    /// <summary>
+    /// Attempts to parse the response as an integer.
+    /// </summary>
+    /// <remarks>
+    /// If the response can be successfully parsed as an integer, the parsed value is returned.
+    /// Otherwise, <c>null</c> is returned.
+    /// </remarks>
+    /// <returns>
+    /// An <see cref="int"/> value if the response is successfully parsed; otherwise, <c>null</c>.
+    /// </returns>
+    public int? GetResponseAsInt() => int.TryParse(Response.ToString(), out var value) ? value : null;
 }

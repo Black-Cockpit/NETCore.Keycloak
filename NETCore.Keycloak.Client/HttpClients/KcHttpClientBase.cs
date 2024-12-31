@@ -83,7 +83,13 @@ public abstract class KcHttpClientBase
                     .ConfigureAwait(false)
             }
             : result.ResponseMessage.StatusCode == HttpStatusCode.NoContent
-                ? new KcResponse<T>()
+                ? new KcResponse<T>
+                {
+                    MonitoringMetrics = await KcHttpApiMonitoringMetrics
+                        .MapFromHttpRequestExecutionResult(result, cancellationToken)
+                        .ConfigureAwait(false),
+                    IsError = false
+                }
                 : new KcResponse<T>
                 {
                     Response = JsonConvert.DeserializeObject<T>(
