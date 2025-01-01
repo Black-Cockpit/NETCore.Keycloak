@@ -23,6 +23,15 @@ services:
     networks:
       - net_core_keycloak_tests_network
     restart: on-failure
+
+  net_core_keycloak_nginx:
+    container_name: net_core_keycloak_nginx
+    image: "nginx"
+    ports:
+      - "127.0.0.1:8899:80"
+    networks:
+      - net_core_keycloak_tests_network
+    restart: on-failure
     
 networks:
   net_core_keycloak_tests_network:

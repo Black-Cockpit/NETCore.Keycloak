@@ -27,7 +27,7 @@ public abstract class KcTestingModule
     /// <summary>
     /// Instance of the <see cref="IKeycloakClient"/> used to perform Keycloak authentication operations.
     /// </summary>
-    protected readonly IKeycloakClient KeycloakRestClient;
+    protected IKeycloakClient KeycloakRestClient;
 
     /// <summary>
     /// Represents the testing environment configuration for Keycloak integration tests.

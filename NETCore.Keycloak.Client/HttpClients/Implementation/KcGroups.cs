@@ -65,7 +65,7 @@ internal sealed class KcGroups(string baseUrl,
     }
 
     /// <inheritdoc cref="IKcGroups.CountAsync"/>
-    public async Task<KcResponse<object>> CountAsync(
+    public async Task<KcResponse<KcCount>> CountAsync(
         string realm,
         string accessToken,
         KcGroupFilter filter = null,
@@ -81,7 +81,7 @@ internal sealed class KcGroups(string baseUrl,
         var url = $"{BaseUrl}/{realm}/groups/count{filter.BuildQuery()}";
 
         // Process the request to retrieve the count of groups.
-        return await ProcessRequestAsync<object>(
+        return await ProcessRequestAsync<KcCount>(
             url,
             HttpMethod.Get,
             accessToken,

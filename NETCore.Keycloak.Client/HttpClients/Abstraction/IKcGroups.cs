@@ -77,7 +77,7 @@ public interface IKcGroups
     /// <exception cref="KcException">
     /// Thrown if the realm or access token is null or invalid.
     /// </exception>
-    Task<KcResponse<object>> CountAsync(string realm, string accessToken, KcGroupFilter filter = null,
+    Task<KcResponse<KcCount>> CountAsync(string realm, string accessToken, KcGroupFilter filter = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

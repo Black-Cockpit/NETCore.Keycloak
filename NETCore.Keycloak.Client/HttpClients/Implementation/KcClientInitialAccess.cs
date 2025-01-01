@@ -69,10 +69,7 @@ internal sealed class KcClientInitialAccess(string baseUrl,
         ValidateAccess(realm, accessToken);
 
         // Validate that the initial access token ID is not null or empty.
-        if ( string.IsNullOrWhiteSpace(id) )
-        {
-            throw new KcException($"{nameof(id)} is required");
-        }
+        ValidateRequiredString(nameof(id), id);
 
         // Construct the URL for deleting the initial access token in the specified realm.
         var url = $"{BaseUrl}/{realm}/clients-initial-access/{id}";

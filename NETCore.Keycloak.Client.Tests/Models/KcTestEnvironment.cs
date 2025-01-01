@@ -12,22 +12,25 @@ public class KcTestEnvironment
 {
     /// <summary>
     /// Gets or sets the base URL of the Keycloak server.
-    /// Example: "http://localhost:8080"
     /// </summary>
     [JsonProperty("baseUrl")]
     public string BaseUrl { get; set; }
 
     /// <summary>
+    /// Gets or sets the invalid base URL for testing error capturing.
+    /// </summary>
+    [JsonProperty("invalidBaseUrl")]
+    public string InvalidBaseUrl { get; set; }
+
+    /// <summary>
     /// Gets or sets the name of the authentication realm in Keycloak.
     /// Typically, this is the master realm used for administrative tasks.
-    /// Example: "master"
     /// </summary>
     [JsonProperty("auth_realm")]
     public string AuthRealm { get; set; }
 
     /// <summary>
     /// Gets or sets the client ID used for authentication in the Keycloak master realm.
-    /// Example: "admin-cli"
     /// </summary>
     [JsonProperty("client_id")]
     public string ClientId { get; set; }

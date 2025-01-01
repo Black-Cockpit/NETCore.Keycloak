@@ -10,7 +10,7 @@ public class KcCreateClientInitialAccess
 {
     /// <summary>
     /// Gets or sets the number of clients that can be created using the token.
-    /// Default value is 1.
+    /// The default value is 1.
     /// </summary>
     /// <value>
     /// An integer representing the number of clients that can be created.
@@ -20,12 +20,11 @@ public class KcCreateClientInitialAccess
 
     /// <summary>
     /// Gets or sets the expiration time for the token, in seconds since the Unix epoch.
-    /// Default value is one hour from the current time.
+    /// The default value is one hour from the current time.
     /// </summary>
     /// <value>
     /// An integer representing the token's expiration time.
     /// </value>
     [JsonProperty("expiration")]
-    public int? Expiration { get; set; } =
-        ( int ) DateTime.Now.AddHours(1).Subtract(DateTime.UnixEpoch).TotalSeconds;
+    public long? Expiration { get; set; } = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 }
