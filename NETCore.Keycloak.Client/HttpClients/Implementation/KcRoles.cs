@@ -396,6 +396,7 @@ internal sealed class KcRoles(string baseUrl,
         string realm,
         string accessToken,
         string name,
+        IEnumerable<KcRole> roles,
         CancellationToken cancellationToken = default)
     {
         // Validate the realm and access token inputs.
@@ -403,6 +404,15 @@ internal sealed class KcRoles(string baseUrl,
 
         // Validate that the role name is provided and not empty.
         ValidateRequiredString(nameof(name), name);
+
+        // Validate that the role collection is not null.
+        ValidateNotNull(nameof(roles), roles);
+
+        // If the role collection is empty, return a response indicating no operation was performed.
+        if ( !roles.Any() )
+        {
+            return new KcResponse<object>();
+        }
 
         // Construct the URL to delete the composite roles for the specified role name.
         var url = $"{BaseUrl}/{realm}/roles/{name}/composites";
@@ -413,6 +423,7 @@ internal sealed class KcRoles(string baseUrl,
             HttpMethod.Delete,
             accessToken,
             "Unable to delete realm composite role",
+            roles,
             cancellationToken: cancellationToken
         ).ConfigureAwait(false);
     }
@@ -422,6 +433,7 @@ internal sealed class KcRoles(string baseUrl,
         string realm,
         string accessToken,
         string id,
+        IEnumerable<KcRole> roles,
         CancellationToken cancellationToken = default)
     {
         // Validate the realm and access token inputs.
@@ -429,6 +441,15 @@ internal sealed class KcRoles(string baseUrl,
 
         // Validate that the role ID is provided and not empty.
         ValidateRequiredString(nameof(id), id);
+
+        // Validate that the role collection is not null.
+        ValidateNotNull(nameof(roles), roles);
+
+        // If the role collection is empty, return a response indicating no operation was performed.
+        if ( !roles.Any() )
+        {
+            return new KcResponse<object>();
+        }
 
         // Construct the URL to delete the composite roles for the specified role ID.
         var url = $"{BaseUrl}/{realm}/roles-by-id/{id}/composites";
@@ -439,6 +460,7 @@ internal sealed class KcRoles(string baseUrl,
             HttpMethod.Delete,
             accessToken,
             "Unable to delete realm composite role by role id",
+            roles,
             cancellationToken: cancellationToken
         ).ConfigureAwait(false);
     }

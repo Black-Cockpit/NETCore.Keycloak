@@ -4,6 +4,7 @@ using Moq;
 using NETCore.Keycloak.Client.HttpClients.Abstraction;
 using NETCore.Keycloak.Client.HttpClients.Implementation;
 using NETCore.Keycloak.Client.Models.Auth;
+using NETCore.Keycloak.Client.Models.Roles;
 using NETCore.Keycloak.Client.Models.Tokens;
 using NETCore.Keycloak.Client.Tests.Models;
 using NETCore.Keycloak.Client.Tests.Modules;
@@ -60,7 +61,7 @@ public abstract class KcTestingModule
     /// </summary>
     /// <param name="context">The context name used for managing environment variables.</param>
     /// <returns>A task representing the asynchronous operation, with a result of <see cref="KcIdentityProviderToken"/>.</returns>
-    protected async Task<KcIdentityProviderToken> GetRealmAdminToken(string context)
+    protected async Task<KcIdentityProviderToken> GetRealmAdminTokenAsync(string context)
     {
         Assert.IsFalse(string.IsNullOrWhiteSpace(context), "The context must not be null or empty.");
 
@@ -106,6 +107,60 @@ public abstract class KcTestingModule
             Assert.Fail($"Failed to deserialize admin token: {e.Message}");
             return null;
         }
+    }
+
+    /// <summary>
+    /// Creates a new realm role in the Keycloak system asynchronously, using the specified context.
+    /// </summary>
+    protected async Task CreateRealmRoleAsync(string context, KcRole role)
+    {
+        // Retrieve the realm administrator token
+        var accessToken = await GetRealmAdminTokenAsync(context).ConfigureAwait(false);
+        Assert.IsNotNull(accessToken);
+
+        // Ensure that the realm role object is not null
+        Assert.IsNotNull(role);
+
+        // Send the request to create the realm role
+        var createRoleResponse = await KeycloakRestClient.Roles
+            .CreateAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken, role).ConfigureAwait(false);
+
+        // Assert that the response from the operation is not null
+        Assert.IsNotNull(createRoleResponse);
+
+        // Assert that the response does not indicate an error
+        Assert.IsFalse(createRoleResponse.IsError);
+
+        // Validate the response monitoring metrics
+        KcCommonAssertion.AssertResponseMonitoringMetrics(createRoleResponse.MonitoringMetrics, HttpStatusCode.Created,
+            HttpMethod.Post);
+    }
+
+    /// <summary>
+    /// Retrieves a list of all realm roles in the Keycloak system asynchronously, using the specified context.
+    /// </summary>
+    protected async Task<IEnumerable<KcRole>> ListRealmRolesAsync(string context)
+    {
+        // Retrieve the realm administrator token
+        var accessToken = await GetRealmAdminTokenAsync(context).ConfigureAwait(false);
+
+        // Ensure that the access token is not null
+        Assert.IsNotNull(accessToken);
+
+        // Send the request to list realm roles
+        var listRolesResponse = await KeycloakRestClient.Roles
+            .ListAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken).ConfigureAwait(false);
+
+        // Assert that the response from the operation is not null
+        Assert.IsNotNull(listRolesResponse);
+
+        // Assert that the response does not indicate an error
+        Assert.IsFalse(listRolesResponse.IsError);
+
+        // Assert that the response contains valid data
+        Assert.IsNotNull(listRolesResponse.Response);
+
+        return listRolesResponse.Response;
     }
 
     /// <summary>

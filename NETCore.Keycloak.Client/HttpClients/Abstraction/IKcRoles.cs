@@ -255,6 +255,7 @@ public interface IKcRoles
     /// <param name="realm">The realm in which the role resides.</param>
     /// <param name="accessToken">The access token used for authorization.</param>
     /// <param name="name">The name of the role whose composites are being deleted.</param>
+    /// <param name="roles">The collection of composite roles to delete.</param>
     /// <param name="cancellationToken">The token used to cancel the operation.</param>
     /// <returns>
     /// A <see cref="KcResponse{T}"/> indicating success or failure of the operation.
@@ -263,7 +264,7 @@ public interface IKcRoles
     /// Thrown if the <paramref name="realm"/>, <paramref name="accessToken"/>, or <paramref name="name"/> parameters are invalid.
     /// </exception>
     Task<KcResponse<object>> DeleteCompositeAsync(string realm, string accessToken, string name,
-        CancellationToken cancellationToken = default);
+        IEnumerable<KcRole> roles, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes all composite roles associated with a specified realm role by its ID.
@@ -273,6 +274,7 @@ public interface IKcRoles
     /// <param name="realm">The realm in which the role resides.</param>
     /// <param name="accessToken">The access token used for authorization.</param>
     /// <param name="id">The ID of the role whose composites are being deleted.</param>
+    /// <param name="roles">The collection of composite roles to delete.</param>
     /// <param name="cancellationToken">The token used to cancel the operation.</param>
     /// <returns>
     /// A <see cref="KcResponse{T}"/> indicating success or failure of the operation.
@@ -281,7 +283,7 @@ public interface IKcRoles
     /// Thrown if the <paramref name="realm"/>, <paramref name="accessToken"/>, or <paramref name="id"/> parameters are invalid.
     /// </exception>
     Task<KcResponse<object>> DeleteCompositeByIdAsync(string realm, string accessToken, string id,
-        CancellationToken cancellationToken = default);
+        IEnumerable<KcRole> roles, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves the client-level composite roles associated with a specified realm role.

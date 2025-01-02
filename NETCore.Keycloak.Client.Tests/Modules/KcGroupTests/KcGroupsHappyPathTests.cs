@@ -58,7 +58,7 @@ public class KcGroupsHappyPathTests : KcTestingModule
     public async Task A_ShouldCreateAGroup()
     {
         // Retrieve an access token for the realm admin to perform the group creation.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Generate a mock group using Faker.
@@ -105,7 +105,7 @@ public class KcGroupsHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestGroup);
 
         // Retrieve an access token for the realm admin to perform the group listing.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to list groups matching the specified filter criteria.
@@ -139,7 +139,7 @@ public class KcGroupsHappyPathTests : KcTestingModule
     public async Task C_ShouldCountGroups()
     {
         // Retrieve an access token for the realm admin to perform the group count operation.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to count groups matching the specified filter criteria.
@@ -175,7 +175,7 @@ public class KcGroupsHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestGroup);
 
         // Retrieve an access token for the realm admin to perform the group retrieval.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to retrieve the group by its ID.
@@ -200,6 +200,163 @@ public class KcGroupsHappyPathTests : KcTestingModule
     }
 
     /// <summary>
+    /// Verifies that a group can be successfully updated in the Keycloak system.
+    /// </summary>
+    [TestMethod]
+    public async Task E_ShouldUpdateAGroup()
+    {
+        // Ensure that the test group is not null
+        Assert.IsNotNull(TestGroup);
+
+        var kcGroup = TestGroup;
+
+        // Retrieve the realm administrator token
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
+
+        // Ensure that the access token is not null
+        Assert.IsNotNull(accessToken);
+
+        // Add a new attribute to the test group
+        kcGroup.Attributes.Add("test2", ["0"]);
+
+        // Send the update request for the group
+        var updateGroupResponse = await KeycloakRestClient.Groups
+            .UpdateAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken, TestGroup.Id, TestGroup)
+            .ConfigureAwait(false);
+
+        // Assert that the response from the update operation is not null
+        Assert.IsNotNull(updateGroupResponse);
+
+        // Assert that the response does not indicate an error
+        Assert.IsFalse(updateGroupResponse.IsError);
+
+        // Validate the response monitoring metrics
+        KcCommonAssertion.AssertResponseMonitoringMetrics(updateGroupResponse.MonitoringMetrics,
+            HttpStatusCode.NoContent, HttpMethod.Put);
+
+        TestGroup = kcGroup;
+    }
+
+    /// <summary>
+    /// Verifies that child groups can be successfully created and added to a parent group in the Keycloak system.
+    /// </summary>
+    [TestMethod]
+    public async Task G_ShouldCreateGroupChildren()
+    {
+        // Ensure that the test group is not null
+        Assert.IsNotNull(TestGroup);
+
+        // Retrieve the realm administrator token
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
+
+        // Ensure that the access token is not null
+        Assert.IsNotNull(accessToken);
+
+        // Create a faker instance to generate random data
+        var faker = new Faker();
+
+        // Add a new child group with a randomly generated name to the parent group's subgroups
+        TestGroup.Subgroups = new List<KcGroup>
+        {
+            new()
+            {
+                Name = faker.Random.Word().ToLower(CultureInfo.CurrentCulture)
+                    .Replace(" ", string.Empty, StringComparison.Ordinal)
+            }
+        };
+
+        // Send the request to create or set the child group
+        var setOrCreateChildrenResponse = await KeycloakRestClient.Groups
+            .SetOrCreateChildAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken, TestGroup.Id, TestGroup)
+            .ConfigureAwait(false);
+
+        // Assert that the response from the operation is not null
+        Assert.IsNotNull(setOrCreateChildrenResponse);
+
+        // Assert that the response does not indicate an error
+        Assert.IsFalse(setOrCreateChildrenResponse.IsError);
+
+        // Validate the response monitoring metrics
+        KcCommonAssertion.AssertResponseMonitoringMetrics(setOrCreateChildrenResponse.MonitoringMetrics,
+            HttpStatusCode.NoContent, HttpMethod.Post);
+    }
+
+    /// <summary>
+    /// Verifies that the authorization permission management settings of a group can be retrieved successfully in the Keycloak system.
+    /// </summary>
+    [TestMethod]
+    public async Task I_ShouldGetGroupAuthorizationPermissionManagement()
+    {
+        // Ensure that the test group is not null
+        Assert.IsNotNull(TestGroup);
+
+        // Retrieve the realm administrator token
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
+
+        // Ensure that the access token is not null
+        Assert.IsNotNull(accessToken);
+
+        // Send the request to retrieve the group's authorization permission management settings
+        var getGroupAuthorizationPermissionManagementResponse = await KeycloakRestClient.Groups
+            .GetAuthorizationManagementPermissionAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken,
+                TestGroup.Id).ConfigureAwait(false);
+
+        // Assert that the response from the operation is not null
+        Assert.IsNotNull(getGroupAuthorizationPermissionManagementResponse);
+
+        // Assert that the response does not indicate an error
+        Assert.IsFalse(getGroupAuthorizationPermissionManagementResponse.IsError);
+
+        // Assert that the response contains valid data
+        Assert.IsNotNull(getGroupAuthorizationPermissionManagementResponse.Response);
+
+        // Assert that the authorization permission management is not enabled
+        Assert.IsFalse(getGroupAuthorizationPermissionManagementResponse.Response.Enabled);
+
+        // Validate the response monitoring metrics
+        KcCommonAssertion.AssertResponseMonitoringMetrics(
+            getGroupAuthorizationPermissionManagementResponse.MonitoringMetrics,
+            HttpStatusCode.OK, HttpMethod.Get);
+    }
+
+    /// <summary>
+    /// Verifies that the members of a group can be retrieved successfully from the Keycloak system.
+    /// </summary>
+    [TestMethod]
+    public async Task J_ShouldGetGroupMembers()
+    {
+        // Ensure that the test group is not null
+        Assert.IsNotNull(TestGroup);
+
+        // Retrieve the realm administrator token
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
+
+        // Ensure that the access token is not null
+        Assert.IsNotNull(accessToken);
+
+        // Send the request to retrieve the members of the group
+        var groupMembersResponse = await KeycloakRestClient.Groups
+            .GetMembersAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken, TestGroup.Id)
+            .ConfigureAwait(false);
+
+        // Assert that the response from the operation is not null
+        Assert.IsNotNull(groupMembersResponse);
+
+        // Assert that the response does not indicate an error
+        Assert.IsFalse(groupMembersResponse.IsError);
+
+        // Assert that the response contains valid data
+        Assert.IsNotNull(groupMembersResponse.Response);
+
+        // Assert that the group has no members
+        Assert.IsFalse(groupMembersResponse.Response.Any());
+
+        // Validate the response monitoring metrics
+        KcCommonAssertion.AssertResponseMonitoringMetrics(groupMembersResponse.MonitoringMetrics, HttpStatusCode.OK,
+            HttpMethod.Get);
+    }
+
+    /// <summary>
     /// Validates the functionality to delete a group in the Keycloak system.
     /// </summary>
     [TestMethod]
@@ -209,7 +366,7 @@ public class KcGroupsHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestGroup);
 
         // Retrieve an access token for the realm admin to perform the group deletion.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to delete the specified group.

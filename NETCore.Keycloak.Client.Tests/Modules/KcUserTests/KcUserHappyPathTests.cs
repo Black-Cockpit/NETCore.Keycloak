@@ -86,7 +86,7 @@ public class KcUserHappyPathTests : KcTestingModule
     public async Task A_ShouldCreateUser()
     {
         // Retrieve an access token for the realm admin to perform the user creation.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Generate a mock user using the Faker instance.
@@ -121,7 +121,7 @@ public class KcUserHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestUser);
 
         // Retrieve an access token for the realm admin to perform the user listing.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to list users matching the specified filter criteria.
@@ -160,7 +160,7 @@ public class KcUserHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestUser);
 
         // Retrieve an access token for the realm admin to perform the user retrieval.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to retrieve the user details by their ID.
@@ -194,7 +194,7 @@ public class KcUserHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestUser);
 
         // Retrieve an access token for the realm admin to perform the user update.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Modify the user data to be updated.
@@ -224,7 +224,7 @@ public class KcUserHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestUser);
 
         // Retrieve an access token for the realm admin to perform the user existence check.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to check if a user exists by their email address.
@@ -254,7 +254,7 @@ public class KcUserHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestUser);
 
         // Retrieve an access token for the realm admin to perform the user count retrieval.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to count users matching the specified filter criteria.
@@ -293,7 +293,7 @@ public class KcUserHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestUser);
 
         // Retrieve an access token for the realm admin to perform the credential retrieval.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to retrieve credentials associated with the user.
@@ -327,7 +327,7 @@ public class KcUserHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestCredentials);
 
         // Retrieve an access token for the realm admin to perform the label update.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to update the label of the user's credential.
@@ -355,7 +355,7 @@ public class KcUserHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestCredentials);
 
         // Retrieve an access token for the realm admin to perform the credential deletion.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to delete the user's credential.
@@ -382,7 +382,7 @@ public class KcUserHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestUser);
 
         // Retrieve an access token for the realm admin to perform the group retrieval.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to retrieve groups associated with the user.
@@ -413,7 +413,7 @@ public class KcUserHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestUser);
 
         // Retrieve an access token for the realm admin to perform the group count retrieval.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to count the groups associated with the user.
@@ -445,7 +445,7 @@ public class KcUserHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestUser);
 
         // Retrieve an access token for the realm admin to perform the password reset.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to reset the user's password with new credentials.
@@ -478,7 +478,7 @@ public class KcUserHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestUser);
 
         // Retrieve an access token for the realm admin to perform the session retrieval.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to retrieve active sessions for the user.
@@ -509,7 +509,7 @@ public class KcUserHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestUser);
 
         // Retrieve an access token for the realm admin to perform the logout operation.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to log out the user from all active sessions.
@@ -536,7 +536,7 @@ public class KcUserHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestUser);
 
         // Retrieve an access token for the realm admin to perform the user deletion.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to delete the specified user.

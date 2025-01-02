@@ -30,7 +30,7 @@ public class KcAuthRevokeTokenTests : KcTestingModule
     /// </summary>
     [TestMethod]
     public async Task A_ShouldGetResourceOwnerPasswordToken() =>
-        await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
 
     /// <summary>
     /// Validates that an access token can be successfully revoked.
@@ -38,7 +38,7 @@ public class KcAuthRevokeTokenTests : KcTestingModule
     [TestMethod]
     public async Task B_ShouldRevokeAccessToken()
     {
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
 
         Assert.IsNotNull(accessToken);
 
@@ -65,7 +65,7 @@ public class KcAuthRevokeTokenTests : KcTestingModule
     [TestMethod]
     public async Task B_ShouldRevokeRefreshToken()
     {
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
 
         Assert.IsNotNull(accessToken);
 

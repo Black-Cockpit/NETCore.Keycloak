@@ -95,7 +95,7 @@ public class KcClientHappyPathTests : KcTestingModule
     public async Task A_ShouldCreateClient()
     {
         // Retrieve the realm admin token for authentication.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
 
         Assert.IsNotNull(accessToken);
 
@@ -130,7 +130,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve the realm admin token for authentication.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
 
         Assert.IsNotNull(accessToken);
 
@@ -162,7 +162,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve the realm admin token for authentication.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
 
         Assert.IsNotNull(accessToken);
 
@@ -192,7 +192,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve an access token for the realm admin to perform the update.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Update the name property of the test client.
@@ -222,7 +222,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve an access token for the realm admin to perform the secret generation.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to generate a new secret for the test client.
@@ -253,7 +253,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve an access token for the realm admin to perform the secret retrieval.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to retrieve the client's secret.
@@ -284,7 +284,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve an access token for the realm admin to attempt to retrieve a rotated secret.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to attempt retrieval of the client's rotated secret.
@@ -311,7 +311,7 @@ public class KcClientHappyPathTests : KcTestingModule
     public async Task H_ShouldNotInvalidateClientRotatedSecret()
     {
         // Retrieve an access token for the realm admin to attempt secret invalidation.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to attempt invalidation of the client's rotated secret.
@@ -339,7 +339,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve an access token for the realm admin to perform the default scopes retrieval.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to retrieve the default scopes for the client.
@@ -376,7 +376,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClientScope);
 
         // Retrieve an access token for the realm admin to perform the default scope deletion.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to delete the specified default scope from the client.
@@ -404,7 +404,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClientScope);
 
         // Retrieve an access token for the realm admin to perform the default scope addition.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to add the specified default scope to the client.
@@ -431,7 +431,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve an access token for the realm admin to perform the protocol mappers retrieval.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to retrieve protocol mappers associated with the client.
@@ -460,7 +460,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve an access token for the realm admin to perform the authorization permissions retrieval.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to retrieve authorization management permissions for the client.
@@ -492,7 +492,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve an access token for the realm admin to perform the authorization permissions setting attempt.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Attempt to set authorization management permissions for the test client.
@@ -527,7 +527,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve an access token for the realm admin to perform the offline sessions count.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to count offline sessions associated with the client.
@@ -558,7 +558,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve an access token for the realm admin to perform the offline sessions retrieval.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to retrieve offline sessions associated with the client.
@@ -589,7 +589,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve an access token for the realm admin to perform the user sessions retrieval.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to retrieve user sessions associated with the client.
@@ -620,7 +620,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve an access token for the realm admin to perform the optional scopes retrieval.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to retrieve the optional scopes for the client.
@@ -657,7 +657,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClientScope);
 
         // Retrieve an access token for the realm admin to perform the optional scope deletion.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to delete the specified optional scope from the client.
@@ -686,7 +686,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClientScope);
 
         // Retrieve an access token for the realm admin to perform the optional scope addition.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to add the specified optional scope to the client.
@@ -714,7 +714,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve an access token for the realm admin to perform the registration access token retrieval.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to retrieve the registration access token for the client.
@@ -745,7 +745,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve an access token for the realm admin to perform the session count retrieval.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to count active sessions associated with the client.
@@ -775,7 +775,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(TestClient);
 
         // Retrieve the realm admin token for authentication.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
 
         Assert.IsNotNull(accessToken);
 

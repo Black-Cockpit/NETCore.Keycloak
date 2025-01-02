@@ -15,7 +15,7 @@ public class KcRole
     /// A dictionary containing key-value pairs of role attributes.
     /// </value>
     [JsonProperty("attributes")]
-    public IDictionary<string, object> Attributes { get; set; }
+    public IDictionary<string, IEnumerable<string>> Attributes { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the role is a client role.

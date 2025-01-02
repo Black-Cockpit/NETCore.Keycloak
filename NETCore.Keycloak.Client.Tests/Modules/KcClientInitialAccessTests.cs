@@ -58,7 +58,7 @@ public class KcClientInitialAccessTests : KcTestingModule
     public async Task A_ShouldCreateClientInitialAccess()
     {
         // Retrieve an access token for the realm admin to perform the client initial access token creation.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to create a client initial access token.
@@ -93,7 +93,7 @@ public class KcClientInitialAccessTests : KcTestingModule
     public async Task B_ShouldListClientInitialAccess()
     {
         // Retrieve an access token for the realm admin to perform the client initial access token listing.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to list client initial access tokens.
@@ -127,7 +127,7 @@ public class KcClientInitialAccessTests : KcTestingModule
         Assert.IsNotNull(TestClientInitialAccess);
 
         // Retrieve an access token for the realm admin to perform the client initial access token deletion.
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
         // Execute the operation to delete the specified client initial access token.

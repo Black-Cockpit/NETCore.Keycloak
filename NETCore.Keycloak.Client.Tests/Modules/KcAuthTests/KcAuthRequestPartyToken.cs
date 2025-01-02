@@ -28,7 +28,7 @@ public class KcAuthRequestPartyToken : KcTestingModule
     /// </summary>
     [TestMethod]
     public async Task A_ShouldGetResourceOwnerPasswordToken() =>
-        await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
 
     /// <summary>
     /// Validates that a Request Party Token (RPT) request results in a forbidden error
@@ -37,7 +37,7 @@ public class KcAuthRequestPartyToken : KcTestingModule
     [TestMethod]
     public async Task B_ShouldGetRequestPartyTokenWithForbidden()
     {
-        var accessToken = await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
 
         // Ensure the access token is available.
         Assert.IsNotNull(accessToken);

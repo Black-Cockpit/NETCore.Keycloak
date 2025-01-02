@@ -29,7 +29,7 @@ public class KcAuthResourceOwnerPasswordTests : KcTestingModule
     /// </summary>
     [TestMethod]
     public async Task ShouldGetResourceOwnerPasswordToken() =>
-        await GetRealmAdminToken(TestContext).ConfigureAwait(false);
+        await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
 
     /// <summary>
     /// Tests validation of user login parameters in the Resource Owner Password flow.
