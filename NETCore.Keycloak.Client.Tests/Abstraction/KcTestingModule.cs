@@ -1,4 +1,5 @@
 using System.Net;
+using Bogus;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NETCore.Keycloak.Client.HttpClients.Abstraction;
@@ -6,6 +7,8 @@ using NETCore.Keycloak.Client.HttpClients.Implementation;
 using NETCore.Keycloak.Client.Models.Auth;
 using NETCore.Keycloak.Client.Models.Roles;
 using NETCore.Keycloak.Client.Models.Tokens;
+using NETCore.Keycloak.Client.Models.Users;
+using NETCore.Keycloak.Client.Tests.MockData;
 using NETCore.Keycloak.Client.Tests.Models;
 using NETCore.Keycloak.Client.Tests.Modules;
 using Newtonsoft.Json;
@@ -161,6 +164,62 @@ public abstract class KcTestingModule
         Assert.IsNotNull(listRolesResponse.Response);
 
         return listRolesResponse.Response;
+    }
+
+    /// <summary>
+    /// Creates a new user in the specified Keycloak realm and retrieves the created user based on the provided context.
+    /// </summary>
+    public async Task<KcUser> CreateAndGetRealmUserAsync(string context)
+    {
+        // Create a faker instance for generating random data
+        var faker = new Faker();
+
+        // Generate a new user using mock data
+        var user = KcUserMocks.GenerateUser(faker);
+
+        // Ensure the generated user is not null
+        Assert.IsNotNull(user);
+
+        // Retrieve an access token for the realm admin to perform the user creation
+        var accessToken = await GetRealmAdminTokenAsync(context).ConfigureAwait(false);
+        Assert.IsNotNull(accessToken);
+
+        // Execute the operation to create the user in the specified realm
+        var createUserResponse = await KeycloakRestClient.Users
+            .CreateAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken, user)
+            .ConfigureAwait(false);
+
+        // Validate the response from the user creation operation
+        Assert.IsNotNull(createUserResponse);
+        Assert.IsFalse(createUserResponse.IsError);
+
+        // Validate the monitoring metrics for the successful user creation request
+        KcCommonAssertion.AssertResponseMonitoringMetrics(createUserResponse.MonitoringMetrics, HttpStatusCode.Created,
+            HttpMethod.Post);
+
+        // Execute the operation to list users matching the specified filter criteria
+        var listUsersResponse = await KeycloakRestClient.Users.ListUserAsync(
+            TestEnvironment.TestingRealm.Name,
+            accessToken.AccessToken,
+            new KcUserFilter
+            {
+                Email = user.Email,
+                Exact = true
+            }).ConfigureAwait(false);
+
+        // Validate the response from the user listing operation
+        Assert.IsNotNull(listUsersResponse);
+        Assert.IsFalse(listUsersResponse.IsError);
+        Assert.IsNotNull(listUsersResponse.Response);
+
+        // Ensure that the response contains exactly one user matching the filter criteria
+        Assert.IsTrue(listUsersResponse.Response.Count() == 1);
+
+        // Validate the monitoring metrics for the successful user listing request
+        KcCommonAssertion.AssertResponseMonitoringMetrics(listUsersResponse.MonitoringMetrics, HttpStatusCode.OK,
+            HttpMethod.Get);
+
+        return listUsersResponse.Response.First();
     }
 
     /// <summary>

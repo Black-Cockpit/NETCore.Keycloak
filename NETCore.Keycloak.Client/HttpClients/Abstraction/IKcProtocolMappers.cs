@@ -308,7 +308,7 @@ public interface IKcProtocolMappers
     /// <param name="realm">The Keycloak realm where the client resides.</param>
     /// <param name="accessToken">The access token used for authentication.</param>
     /// <param name="clientId">The unique identifier of the client.</param>
-    /// <param name="protocol">The protocol type to filter the protocol mappers by (e.g., OpenID Connect or SAML).</param>
+    /// <param name="protocol">The protocol types to filter the protocol mappers by (e.g., OpenID Connect or SAML).</param>
     /// <param name="cancellationToken">
     /// Optional cancellation token to cancel the asynchronous operation.
     /// </param>

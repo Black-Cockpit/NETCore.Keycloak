@@ -27,7 +27,7 @@ public interface IKcClientScopes
     /// <exception cref="KcException">
     /// Thrown if the realm, access token, or client scope object is null or invalid.
     /// </exception>
-    Task<KcResponse<KcClientScope>> CreateAsync(string realm, string accessToken, KcClientScope scope,
+    Task<KcResponse<object>> CreateAsync(string realm, string accessToken, KcClientScope scope,
         CancellationToken cancellationToken = default);
 
     /// <summary>

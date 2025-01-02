@@ -10,7 +10,7 @@ internal sealed class KcClientScopes(string baseUrl,
     ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcClientScopes
 {
     /// <inheritdoc cref="IKcClientScopes.CreateAsync"/>
-    public async Task<KcResponse<KcClientScope>> CreateAsync(
+    public async Task<KcResponse<object>> CreateAsync(
         string realm,
         string accessToken,
         KcClientScope scope,
@@ -26,7 +26,7 @@ internal sealed class KcClientScopes(string baseUrl,
         var url = $"{BaseUrl}/{realm}/client-scopes";
 
         // Process the request to create the client scope.
-        return await ProcessRequestAsync<KcClientScope>(
+        return await ProcessRequestAsync<object>(
             url,
             HttpMethod.Post,
             accessToken,
