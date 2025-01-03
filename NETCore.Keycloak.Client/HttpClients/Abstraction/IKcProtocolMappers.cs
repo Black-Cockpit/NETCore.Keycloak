@@ -55,7 +55,7 @@ public interface IKcProtocolMappers
     /// <exception cref="KcException">
     /// Thrown if the realm, access token, client scope ID, or protocol mapper is null or invalid.
     /// </exception>
-    Task<KcResponse<KcProtocolMapper>> AddMapperAsync(string realm, string accessToken, string clientScopeId,
+    Task<KcResponse<object>> AddMapperAsync(string realm, string accessToken, string clientScopeId,
         KcProtocolMapper protocolMapper, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -123,7 +123,7 @@ public interface IKcProtocolMappers
     /// <exception cref="KcException">
     /// Thrown if the realm, access token, client scope ID, mapper ID, or protocol mapper configuration is null or invalid.
     /// </exception>
-    Task<KcResponse<KcProtocolMapper>> UpdateMapperAsync(string realm, string accessToken, string clientScopeId,
+    Task<KcResponse<object>> UpdateMapperAsync(string realm, string accessToken, string clientScopeId,
         string mapperId, KcProtocolMapper protocolMapper, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -210,7 +210,7 @@ public interface IKcProtocolMappers
     /// <exception cref="KcException">
     /// Thrown if the realm, access token, client ID, or protocol mapper is null or invalid.
     /// </exception>
-    Task<KcResponse<KcProtocolMapper>> AddClientMapperAsync(string realm, string accessToken, string clientId,
+    Task<KcResponse<object>> AddClientMapperAsync(string realm, string accessToken, string clientId,
         KcProtocolMapper kcProtocolMapper, CancellationToken cancellationToken = default);
 
     /// <summary>

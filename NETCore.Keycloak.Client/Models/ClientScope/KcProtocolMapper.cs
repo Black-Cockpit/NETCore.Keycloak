@@ -54,5 +54,5 @@ public class KcProtocolMapper
     /// An object representing the protocol mapper's configuration.
     /// </value>
     [JsonProperty("config")]
-    public object Config { get; set; }
+    public IDictionary<string, string> Config { get; set; }
 }

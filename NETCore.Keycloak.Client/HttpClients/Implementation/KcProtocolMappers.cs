@@ -48,7 +48,7 @@ internal sealed class KcProtocolMappers(string baseUrl,
     }
 
     /// <inheritdoc cref="IKcProtocolMappers.AddMapperAsync"/>
-    public async Task<KcResponse<KcProtocolMapper>> AddMapperAsync(
+    public async Task<KcResponse<object>> AddMapperAsync(
         string realm,
         string accessToken,
         string clientScopeId,
@@ -68,7 +68,7 @@ internal sealed class KcProtocolMappers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/client-scopes/{clientScopeId}/protocol-mappers/models";
 
         // Process the request to add the protocol mapper.
-        return await ProcessRequestAsync<KcProtocolMapper>(
+        return await ProcessRequestAsync<object>(
             url,
             HttpMethod.Post,
             accessToken,
@@ -135,7 +135,7 @@ internal sealed class KcProtocolMappers(string baseUrl,
     }
 
     /// <inheritdoc cref="IKcProtocolMappers.UpdateMapperAsync"/>
-    public async Task<KcResponse<KcProtocolMapper>> UpdateMapperAsync(
+    public async Task<KcResponse<object>> UpdateMapperAsync(
         string realm,
         string accessToken,
         string clientScopeId,
@@ -159,7 +159,7 @@ internal sealed class KcProtocolMappers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/client-scopes/{clientScopeId}/protocol-mappers/models/{mapperId}";
 
         // Process the request to update the protocol mapper.
-        return await ProcessRequestAsync<KcProtocolMapper>(
+        return await ProcessRequestAsync<object>(
             url,
             HttpMethod.Put,
             accessToken,
@@ -267,7 +267,7 @@ internal sealed class KcProtocolMappers(string baseUrl,
     }
 
     /// <inheritdoc cref="IKcProtocolMappers.AddClientMapperAsync"/>
-    public async Task<KcResponse<KcProtocolMapper>> AddClientMapperAsync(
+    public async Task<KcResponse<object>> AddClientMapperAsync(
         string realm,
         string accessToken,
         string clientId,
@@ -287,7 +287,7 @@ internal sealed class KcProtocolMappers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/clients/{clientId}/protocol-mappers/models";
 
         // Process the request to add the client protocol mapper.
-        return await ProcessRequestAsync<KcProtocolMapper>(
+        return await ProcessRequestAsync<object>(
             url,
             HttpMethod.Post,
             accessToken,

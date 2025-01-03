@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using Bogus;
 using Microsoft.Extensions.Logging;
@@ -5,6 +6,9 @@ using Moq;
 using NETCore.Keycloak.Client.HttpClients.Abstraction;
 using NETCore.Keycloak.Client.HttpClients.Implementation;
 using NETCore.Keycloak.Client.Models.Auth;
+using NETCore.Keycloak.Client.Models.Clients;
+using NETCore.Keycloak.Client.Models.ClientScope;
+using NETCore.Keycloak.Client.Models.KcEnum;
 using NETCore.Keycloak.Client.Models.Roles;
 using NETCore.Keycloak.Client.Models.Tokens;
 using NETCore.Keycloak.Client.Models.Users;
@@ -169,7 +173,7 @@ public abstract class KcTestingModule
     /// <summary>
     /// Creates a new user in the specified Keycloak realm and retrieves the created user based on the provided context.
     /// </summary>
-    public async Task<KcUser> CreateAndGetRealmUserAsync(string context)
+    protected async Task<KcUser> CreateAndGetRealmUserAsync(string context)
     {
         // Create a faker instance for generating random data
         var faker = new Faker();
@@ -220,6 +224,98 @@ public abstract class KcTestingModule
             HttpMethod.Get);
 
         return listUsersResponse.Response.First();
+    }
+
+    /// <summary>
+    /// Asynchronously creates a Keycloak client with generated data and retrieves the created client details.
+    /// </summary>
+    protected async Task<KcClient> CreateAndGetClientAsync(string context)
+    {
+        // Retrieve the realm admin token for authentication.
+        var accessToken = await GetRealmAdminTokenAsync(context).ConfigureAwait(false);
+        Assert.IsNotNull(accessToken);
+
+        // Use Faker to generate realistic test data for the Keycloak client.
+        var faker = new Faker();
+
+        // Define the Keycloak client object with properties and attributes.
+        var kClient = KcClientMocks.GenerateClient(faker);
+        Assert.IsNotNull(kClient);
+
+        // Create the Keycloak client via the REST API.
+        var clientResponse = await KeycloakRestClient.Clients
+            .CreateAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken, kClient).ConfigureAwait(false);
+        Assert.IsNotNull(clientResponse);
+        Assert.IsFalse(clientResponse.IsError);
+
+        // Validate monitoring metrics for the successful request.
+        KcCommonAssertion.AssertResponseMonitoringMetrics(clientResponse.MonitoringMetrics, HttpStatusCode.Created,
+            HttpMethod.Post);
+
+        // List clients matching the created client's name.
+        var clientsResponse = await KeycloakRestClient.Clients
+            .ListAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken, new KcClientFilter
+            {
+                Search = kClient.Name
+            }).ConfigureAwait(false);
+        Assert.IsNotNull(clientsResponse);
+        Assert.IsFalse(clientsResponse.IsError);
+        Assert.IsNotNull(clientsResponse.Response);
+        Assert.IsTrue(clientsResponse.Response.Any(client => client.ClientId == kClient.ClientId));
+
+        // Validate monitoring metrics for the successful request.
+        KcCommonAssertion.AssertResponseMonitoringMetrics(clientsResponse.MonitoringMetrics, HttpStatusCode.OK,
+            HttpMethod.Get);
+
+        return clientsResponse.Response.FirstOrDefault(client => client.ClientId == kClient.ClientId);
+    }
+
+    /// <summary>
+    /// Asynchronously creates a Keycloak client scope with generated data and retrieves the created client scope details.
+    /// </summary>
+    protected async Task<KcClientScope> CreateAndGetClientScopeAsync(string context)
+    {
+        // Retrieve the realm administrator token
+        var accessToken = await GetRealmAdminTokenAsync(context).ConfigureAwait(false);
+        Assert.IsNotNull(accessToken);
+
+        // Create a faker instance to generate random data
+        var faker = new Faker();
+
+        // Define the client scope to be created
+        var clientScope = new KcClientScope
+        {
+            Description = faker.Random.Words(3),
+            Name = faker.Random.Word().ToLower(CultureInfo.CurrentCulture)
+                .Replace(" ", string.Empty, StringComparison.Ordinal),
+            Protocol = KcProtocol.OpenidConnect
+        };
+
+        // Send the request to create the client scope
+        var createClientScopeResponse = await KeycloakRestClient.ClientScopes
+            .CreateAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken, clientScope).ConfigureAwait(false);
+        Assert.IsNotNull(createClientScopeResponse);
+        Assert.IsFalse(createClientScopeResponse.IsError);
+
+        // Validate the response monitoring metrics
+        KcCommonAssertion.AssertResponseMonitoringMetrics(createClientScopeResponse.MonitoringMetrics,
+            HttpStatusCode.Created, HttpMethod.Post);
+
+        // Send the request to list client scopes
+        var listClientScopesResponse = await KeycloakRestClient.ClientScopes
+            .ListAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken).ConfigureAwait(false);
+        Assert.IsNotNull(listClientScopesResponse);
+        Assert.IsFalse(listClientScopesResponse.IsError);
+        Assert.IsNotNull(listClientScopesResponse.Response);
+
+        // Assert that the test client scope is present in the list
+        Assert.IsTrue(listClientScopesResponse.Response.Any(scope => scope.Name == clientScope.Name));
+
+        // Validate the response monitoring metrics
+        KcCommonAssertion.AssertResponseMonitoringMetrics(listClientScopesResponse.MonitoringMetrics,
+            HttpStatusCode.OK, HttpMethod.Get);
+
+        return listClientScopesResponse.Response.First(scope => scope.Name == clientScope.Name);
     }
 
     /// <summary>
