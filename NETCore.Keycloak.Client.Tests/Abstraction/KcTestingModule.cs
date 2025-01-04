@@ -8,6 +8,8 @@ using NETCore.Keycloak.Client.HttpClients.Implementation;
 using NETCore.Keycloak.Client.Models.Auth;
 using NETCore.Keycloak.Client.Models.Clients;
 using NETCore.Keycloak.Client.Models.ClientScope;
+using NETCore.Keycloak.Client.Models.Common;
+using NETCore.Keycloak.Client.Models.Groups;
 using NETCore.Keycloak.Client.Models.KcEnum;
 using NETCore.Keycloak.Client.Models.Roles;
 using NETCore.Keycloak.Client.Models.Tokens;
@@ -144,6 +146,58 @@ public abstract class KcTestingModule
     }
 
     /// <summary>
+    /// Asynchronously creates a Keycloak realm role and retrieves its details.
+    /// </summary>
+    protected async Task<KcRole> CreateAndGetRealmRoleAsync(string context)
+    {
+        // Retrieve the realm administrator token
+        var accessToken = await GetRealmAdminTokenAsync(context).ConfigureAwait(false);
+        Assert.IsNotNull(accessToken);
+
+        // Generate a new realm role with a random name and predefined attributes
+        var kcRole = KcRoleMocks.Generate();
+
+        // Send the request to create the realm role
+        var createRoleResponse = await KeycloakRestClient.Roles
+            .CreateAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken, kcRole).ConfigureAwait(false);
+
+        // Assert that the response from the operation is not null
+        Assert.IsNotNull(createRoleResponse);
+
+        // Assert that the response does not indicate an error
+        Assert.IsFalse(createRoleResponse.IsError);
+
+        // Validate the response monitoring metrics
+        KcCommonAssertion.AssertResponseMonitoringMetrics(createRoleResponse.MonitoringMetrics, HttpStatusCode.Created,
+            HttpMethod.Post);
+
+        // Send the request to list realm roles, filtering by the test role's name
+        var listRolesResponse = await KeycloakRestClient.Roles
+            .ListAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken, new KcFilter
+            {
+                Search = kcRole.Name
+            }).ConfigureAwait(false);
+
+        // Assert that the response from the operation is not null
+        Assert.IsNotNull(listRolesResponse);
+
+        // Assert that the response does not indicate an error
+        Assert.IsFalse(listRolesResponse.IsError);
+
+        // Assert that the response contains valid data
+        Assert.IsNotNull(listRolesResponse.Response);
+
+        // Assert that the test role is present in the response
+        Assert.IsTrue(listRolesResponse.Response.Any(role => role.Name == kcRole.Name));
+
+        // Validate the response monitoring metrics
+        KcCommonAssertion.AssertResponseMonitoringMetrics(listRolesResponse.MonitoringMetrics, HttpStatusCode.OK,
+            HttpMethod.Get);
+
+        return listRolesResponse.Response.First(role => role.Name == kcRole.Name);
+    }
+
+    /// <summary>
     /// Retrieves a list of all realm roles in the Keycloak system asynchronously, using the specified context.
     /// </summary>
     protected async Task<IEnumerable<KcRole>> ListRealmRolesAsync(string context)
@@ -171,15 +225,79 @@ public abstract class KcTestingModule
     }
 
     /// <summary>
+    /// Asynchronously creates a client role in the Keycloak realm and retrieves its details.
+    /// </summary>
+    protected async Task<KcRole> CreateAndGetClientRoleAsync(string context, KcClient client)
+    {
+        // Ensure that the test client exists
+        Assert.IsNotNull(client);
+
+        // Retrieve the realm administrator token
+        var accessToken = await GetRealmAdminTokenAsync(context).ConfigureAwait(false);
+
+        // Ensure that the access token is not null
+        Assert.IsNotNull(accessToken);
+
+        // Generate a new client role for testing
+        var kcRole = KcRoleMocks.Generate();
+
+        // Ensure that the generated role is not null
+        Assert.IsNotNull(kcRole);
+
+        // Send the request to create the client role
+        var clientRoleResponse = await KeycloakRestClient.Roles
+            .CreateClientRoleAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken, client.Id, kcRole)
+            .ConfigureAwait(false);
+
+        // Ensure that the response is not null
+        Assert.IsNotNull(clientRoleResponse);
+
+        // Ensure the response does not indicate an error
+        Assert.IsFalse(clientRoleResponse.IsError);
+
+        // Ensure that the response content is null as expected for this type of request
+        Assert.IsNull(clientRoleResponse.Response);
+
+        // Validate monitoring metrics for the request
+        KcCommonAssertion.AssertResponseMonitoringMetrics(clientRoleResponse.MonitoringMetrics, HttpStatusCode.Created,
+            HttpMethod.Post);
+
+        // Send the request to list client roles filtered by the role's name
+        var listClientRolesResponse = await KeycloakRestClient.Roles
+            .ListClientRoleAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken, client.Id, new KcFilter
+            {
+                Search = kcRole.Name
+            }).ConfigureAwait(false);
+
+        // Ensure that the response is not null
+        Assert.IsNotNull(listClientRolesResponse);
+
+        // Ensure the response does not indicate an error
+        Assert.IsFalse(listClientRolesResponse.IsError);
+
+        // Ensure that the response contains a list of client roles
+        Assert.IsNotNull(listClientRolesResponse.Response);
+
+        // Ensure that the test role is present in the response
+        Assert.IsTrue(listClientRolesResponse.Response.Any(role => role.Name == kcRole.Name));
+
+        // Validate monitoring metrics for the request
+        KcCommonAssertion.AssertResponseMonitoringMetrics(listClientRolesResponse.MonitoringMetrics, HttpStatusCode.OK,
+            HttpMethod.Get);
+
+        return listClientRolesResponse.Response.First(role => role.Name == kcRole.Name);
+    }
+
+    /// <summary>
     /// Creates a new user in the specified Keycloak realm and retrieves the created user based on the provided context.
     /// </summary>
-    protected async Task<KcUser> CreateAndGetRealmUserAsync(string context)
+    protected async Task<KcUser> CreateAndGetRealmUserAsync(string context, string password = null)
     {
         // Create a faker instance for generating random data
         var faker = new Faker();
 
         // Generate a new user using mock data
-        var user = KcUserMocks.GenerateUser(faker);
+        var user = KcUserMocks.GenerateUser(faker, password);
 
         // Ensure the generated user is not null
         Assert.IsNotNull(user);
@@ -316,6 +434,68 @@ public abstract class KcTestingModule
             HttpStatusCode.OK, HttpMethod.Get);
 
         return listClientScopesResponse.Response.First(scope => scope.Name == clientScope.Name);
+    }
+
+    /// <summary>
+    /// Asynchronously creates a group in the Keycloak realm and retrieves its details.
+    /// </summary>
+    protected async Task<KcGroup> CreateAndGetGroupAsync(string context)
+    {
+        // Retrieve an access token for the realm admin to perform the group creation.
+        var accessToken = await GetRealmAdminTokenAsync(context).ConfigureAwait(false);
+        Assert.IsNotNull(accessToken);
+
+        // Generate a mock group using Faker.
+        var faker = new Faker();
+        var kcGroup = new KcGroup
+        {
+            Name = faker.Random.Word().ToLower(CultureInfo.CurrentCulture)
+                .Replace(" ", string.Empty, StringComparison.Ordinal),
+            Attributes = new Dictionary<string, IEnumerable<string>>
+            {
+                {
+                    "test", [
+                        "0"
+                    ]
+                }
+            }
+        };
+
+        // Execute the operation to create the group.
+        var createGroupResponse = await KeycloakRestClient.Groups.CreateAsync(
+            TestEnvironment.TestingRealm.Name,
+            accessToken.AccessToken,
+            kcGroup).ConfigureAwait(false);
+
+        // Validate the response from the group creation operation.
+        Assert.IsNotNull(createGroupResponse);
+        Assert.IsFalse(createGroupResponse.IsError);
+
+        // Validate the monitoring metrics for the successful group creation request.
+        KcCommonAssertion.AssertResponseMonitoringMetrics(createGroupResponse.MonitoringMetrics,
+            HttpStatusCode.Created, HttpMethod.Post);
+
+        // Execute the operation to list groups matching the specified filter criteria.
+        var listGroupsResponse = await KeycloakRestClient.Groups
+            .ListAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken, new KcGroupFilter
+            {
+                Exact = true,
+                Search = kcGroup.Name
+            }).ConfigureAwait(false);
+
+        // Validate the response from the group listing operation.
+        Assert.IsNotNull(listGroupsResponse);
+        Assert.IsFalse(listGroupsResponse.IsError);
+        Assert.IsNotNull(listGroupsResponse.Response);
+
+        // Ensure that the test group is included in the results.
+        Assert.IsTrue(listGroupsResponse.Response.Any(group => group.Name == kcGroup.Name));
+
+        // Validate the monitoring metrics for the successful group listing request.
+        KcCommonAssertion.AssertResponseMonitoringMetrics(listGroupsResponse.MonitoringMetrics,
+            HttpStatusCode.OK, HttpMethod.Get);
+
+        return listGroupsResponse.Response.First();
     }
 
     /// <summary>

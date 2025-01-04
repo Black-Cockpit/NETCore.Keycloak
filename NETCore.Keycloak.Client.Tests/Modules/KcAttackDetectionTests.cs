@@ -19,6 +19,9 @@ public class KcAttackDetectionTests : KcTestingModule
     /// </summary>
     private const string TestContext = "GlobalContext";
 
+    /// <summary>
+    /// Represents the test Keycloak user used in the current test execution.
+    /// </summary>
     private static KcUser TestUser
     {
         get

@@ -389,8 +389,8 @@ internal sealed class KcClients(string baseUrl,
         string realm,
         string accessToken,
         string id,
+        string userId,
         string scope = null,
-        string userId = null,
         CancellationToken cancellationToken = default)
     {
         // Validate the realm and access token inputs.
@@ -398,6 +398,9 @@ internal sealed class KcClients(string baseUrl,
 
         // Validate that the client ID is not null or empty.
         ValidateRequiredString(nameof(id), id);
+
+        // Validate that the user ID is not null or empty.
+        ValidateRequiredString(nameof(userId), userId);
 
         // Build the URL for generating the example ID token.
         var appendedToUrl = false;
@@ -410,11 +413,8 @@ internal sealed class KcClients(string baseUrl,
             appendedToUrl = true;
         }
 
-        // Append the optional user ID to the URL if provided.
-        if ( !string.IsNullOrWhiteSpace(userId) )
-        {
-            _ = urlBuilder.Append(appendedToUrl ? $"&userId={userId}" : $"?userId={userId}");
-        }
+        // Append the user ID to the URL if provided.
+        _ = urlBuilder.Append(appendedToUrl ? $"&userId={userId}" : $"?userId={userId}");
 
         // Process the request to generate the example ID token.
         return await ProcessRequestAsync<KcAccessToken>(
@@ -427,12 +427,12 @@ internal sealed class KcClients(string baseUrl,
     }
 
     /// <inheritdoc cref="IKcClients.GenerateExampleUserInfoAsync"/>
-    public async Task<KcResponse<object>> GenerateExampleUserInfoAsync(
+    public async Task<KcResponse<IDictionary<string, string>>> GenerateExampleUserInfoAsync(
         string realm,
         string accessToken,
         string id,
+        string userId,
         string scope = null,
-        string userId = null,
         CancellationToken cancellationToken = default)
     {
         // Validate the realm and access token inputs.
@@ -440,6 +440,9 @@ internal sealed class KcClients(string baseUrl,
 
         // Validate that the client ID is not null or empty.
         ValidateRequiredString(nameof(id), id);
+
+        // Validate that the user ID is not null or empty.
+        ValidateRequiredString(nameof(userId), userId);
 
         // Build the URL for generating the example user info.
         var appendedToUrl = false;
@@ -452,14 +455,11 @@ internal sealed class KcClients(string baseUrl,
             appendedToUrl = true;
         }
 
-        // Append the optional user ID to the URL if provided.
-        if ( !string.IsNullOrWhiteSpace(userId) )
-        {
-            _ = urlBuilder.Append(appendedToUrl ? $"&userId={userId}" : $"?userId={userId}");
-        }
+        // Append the user ID to the URL if provided.
+        _ = urlBuilder.Append(appendedToUrl ? $"&userId={userId}" : $"?userId={userId}");
 
         // Process the request to generate the example user info.
-        return await ProcessRequestAsync<object>(
+        return await ProcessRequestAsync<IDictionary<string, string>>(
             urlBuilder.ToString(),
             HttpMethod.Get,
             accessToken,

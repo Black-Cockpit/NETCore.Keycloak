@@ -550,7 +550,6 @@ public class KcUserHappyPathTests : KcTestingModule
 
         // Validate the monitoring metrics for the successful user deletion request.
         KcCommonAssertion.AssertResponseMonitoringMetrics(deleteUserResponse.MonitoringMetrics,
-            HttpStatusCode.NoContent,
-            HttpMethod.Delete);
+            HttpStatusCode.NoContent, HttpMethod.Delete);
     }
 }

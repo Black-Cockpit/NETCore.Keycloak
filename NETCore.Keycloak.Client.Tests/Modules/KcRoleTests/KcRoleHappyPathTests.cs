@@ -92,7 +92,7 @@ public class KcRoleHappyPathTests : KcTestingModule
         // Ensure that the realm role object is not null
         Assert.IsNotNull(kcRole);
 
-        // Create an ensure the realm role is created
+        // Create and ensure the realm role is created
         await CreateRealmRoleAsync(TestContext, kcRole).ConfigureAwait(false);
 
         // Assign the created role to the TestRole property

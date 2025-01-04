@@ -26,7 +26,7 @@ public static class KcRoleMocks
         // Generate a new realm role with a random name and predefined attributes
         var kcRole = new KcRole
         {
-            Name = faker.Random.Word().ToLower(CultureInfo.CurrentCulture)
+            Name = faker.Random.Words(2).ToLower(CultureInfo.CurrentCulture)
                 .Replace(" ", string.Empty, StringComparison.Ordinal),
             Attributes = new Dictionary<string, IEnumerable<string>>
             {

@@ -274,7 +274,7 @@ public interface IKcClients
     /// <summary>
     /// Generates an example access token for a client in a specified Keycloak realm.
     ///
-    /// GET /{realm}/clients/{id}/evaluate-scopes/generate-example-access-token
+    /// GET /{realm}/clients/{client-uuid}/evaluate-scopes/generate-example-access-token
     /// </summary>
     /// <param name="realm">The Keycloak realm where the client resides.</param>
     /// <param name="accessToken">The access token used for authentication.</param>
@@ -301,16 +301,14 @@ public interface IKcClients
     /// <summary>
     /// Generates an example ID token for a client in a specified Keycloak realm.
     ///
-    /// GET /{realm}/clients/{id}/evaluate-scopes/generate-example-id-token
+    /// GET /{realm}/clients/{client-uuid}/evaluate-scopes/generate-example-id-token
     /// </summary>
     /// <param name="realm">The Keycloak realm where the client resides.</param>
     /// <param name="accessToken">The access token used for authentication.</param>
     /// <param name="id">The ID of the client for which the example ID token will be generated.</param>
+    /// <param name="userId"> user ID to associate with the example ID token.</param>
     /// <param name="scope">
     /// Optional scope to include in the example ID token. If <c>null</c>, no specific scope is included.
-    /// </param>
-    /// <param name="userId">
-    /// Optional user ID to associate with the example ID token. If <c>null</c>, no user is associated.
     /// </param>
     /// <param name="cancellationToken">
     /// Optional cancellation token to cancel the asynchronous operation.
@@ -323,21 +321,19 @@ public interface IKcClients
     /// Thrown if the realm, access token, or client ID is null or invalid.
     /// </exception>
     Task<KcResponse<KcAccessToken>> GenerateExampleIdTokenAsync(string realm, string accessToken, string id,
-        string scope = null, string userId = null, CancellationToken cancellationToken = default);
+        string userId, string scope = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Generates example user info for a client in a specified Keycloak realm.
     ///
-    /// GET /{realm}/clients/{id}/evaluate-scopes/generate-example-userinfo
+    /// GET /{realm}/clients/{client-uuid}/evaluate-scopes/generate-example-userinfo
     /// </summary>
     /// <param name="realm">The Keycloak realm where the client resides.</param>
     /// <param name="accessToken">The access token used for authentication.</param>
     /// <param name="id">The ID of the client for which the example user info will be generated.</param>
+    /// <param name="userId">The User ID to associate with the example user info.</param>
     /// <param name="scope">
     /// Optional scope to include in the example user info. If <c>null</c>, no specific scope is included.
-    /// </param>
-    /// <param name="userId">
-    /// Optional user ID to associate with the example user info. If <c>null</c>, no user is associated.
     /// </param>
     /// <param name="cancellationToken">
     /// Optional cancellation token to cancel the asynchronous operation.
@@ -349,8 +345,8 @@ public interface IKcClients
     /// <exception cref="KcException">
     /// Thrown if the realm, access token, or client ID is null or invalid.
     /// </exception>
-    Task<KcResponse<object>> GenerateExampleUserInfoAsync(string realm, string accessToken, string id,
-        string scope = null, string userId = null, CancellationToken cancellationToken = default);
+    Task<KcResponse<IDictionary<string, string>>> GenerateExampleUserInfoAsync(string realm, string accessToken,
+        string id, string userId, string scope = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves the protocol mappers associated with a client in a specified Keycloak realm.

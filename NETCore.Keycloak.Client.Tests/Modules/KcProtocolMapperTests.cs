@@ -8,7 +8,7 @@ using NETCore.Keycloak.Client.Tests.Abstraction;
 using NETCore.Keycloak.Client.Tests.MockData;
 using Newtonsoft.Json;
 
-namespace NETCore.Keycloak.Client.Tests.Modules.KcProtocolMapperTests;
+namespace NETCore.Keycloak.Client.Tests.Modules;
 
 /// <summary>
 /// Contains tests for validating the Keycloak protocol mapper API functionalities under expected scenarios.
@@ -74,7 +74,7 @@ public class KcProtocolMapperTests : KcTestingModule
     }
 
     /// <summary>
-    /// Gets or sets the Keycloak client scope used for testing in happy path scenarios.
+    /// Gets or sets the Keycloak client scope used for testing.
     /// </summary>
     private static KcClientScope TestClientScope
     {
@@ -99,11 +99,15 @@ public class KcProtocolMapperTests : KcTestingModule
     }
 
     /// <summary>
-    /// Sets up the test environment before each test execution.
-    /// Ensures that the Keycloak protocol mapper module is correctly initialized and available for use.
+    /// Initializes the Keycloak REST client components before each test execution.
     /// </summary>
     [TestInitialize]
-    public void Init() => Assert.IsNotNull(KeycloakRestClient.ProtocolMappers);
+    public void Init()
+    {
+        Assert.IsNotNull(KeycloakRestClient.ProtocolMappers);
+        Assert.IsNotNull(KeycloakRestClient.ClientScopes);
+        Assert.IsNotNull(KeycloakRestClient.Clients);
+    }
 
     /// <summary>
     /// Tests the creation of a Keycloak client scope and verifies that it is created successfully.
