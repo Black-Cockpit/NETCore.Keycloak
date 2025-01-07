@@ -409,6 +409,86 @@ public class KcClientRoleTests : KcTestingModule
     }
 
     /// <summary>
+    /// Tests retrieving client-level composite roles by name in the Keycloak realm.
+    /// </summary>
+    [TestMethod]
+    public async Task HA_ShouldGetClientLevelCompositesByName()
+    {
+        // Ensure that the test client, role, and composite roles exist
+        Assert.IsNotNull(TestClient);
+        Assert.IsNotNull(TestRole);
+        Assert.IsNotNull(TestCompositeRoles);
+
+        // Ensure that the composite roles collection is not empty
+        Assert.IsTrue(TestCompositeRoles.Any());
+
+        // Retrieve the realm administrator token
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
+
+        // Ensure that the access token is not null
+        Assert.IsNotNull(accessToken);
+
+        // Send the request to retrieve client-level composite roles by the first composite role's name
+        var listCompositeRolesResponse = await KeycloakRestClient.Roles
+            .GetClientLevelCompositesAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken,
+                TestCompositeRoles.First().Name, TestClient.Id).ConfigureAwait(false);
+
+        // Ensure that the response is not null and does not indicate an error
+        Assert.IsNotNull(listCompositeRolesResponse);
+        Assert.IsFalse(listCompositeRolesResponse.IsError);
+
+        // Ensure that the response contains a list of roles
+        Assert.IsNotNull(listCompositeRolesResponse.Response);
+
+        // Verify that the expected role is not present in the retrieved composite roles (as expected)
+        Assert.IsFalse(listCompositeRolesResponse.Response.Any(role => role.Name == TestRole.Name));
+
+        // Validate monitoring metrics for the request
+        KcCommonAssertion.AssertResponseMonitoringMetrics(listCompositeRolesResponse.MonitoringMetrics,
+            HttpStatusCode.OK, HttpMethod.Get);
+    }
+
+    /// <summary>
+    /// Tests retrieving client-level composite roles by ID in the Keycloak realm.
+    /// </summary>
+    [TestMethod]
+    public async Task HB_ShouldGetClientLevelCompositesById()
+    {
+        // Ensure that the test client, role, and composite roles exist
+        Assert.IsNotNull(TestClient);
+        Assert.IsNotNull(TestRole);
+        Assert.IsNotNull(TestCompositeRoles);
+
+        // Ensure that the composite roles collection is not empty
+        Assert.IsTrue(TestCompositeRoles.Any());
+
+        // Retrieve the realm administrator token
+        var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
+
+        // Ensure that the access token is not null
+        Assert.IsNotNull(accessToken);
+
+        // Send the request to retrieve client-level composite roles by the first composite role's ID
+        var listCompositeRolesResponse = await KeycloakRestClient.Roles
+            .GetClientLevelCompositesByIdAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken,
+                TestCompositeRoles.First().Id, TestClient.Id).ConfigureAwait(false);
+
+        // Ensure that the response is not null and does not indicate an error
+        Assert.IsNotNull(listCompositeRolesResponse);
+        Assert.IsFalse(listCompositeRolesResponse.IsError);
+
+        // Ensure that the response contains a list of roles
+        Assert.IsNotNull(listCompositeRolesResponse.Response);
+
+        // Verify that the expected role is not present in the retrieved composite roles (as expected)
+        Assert.IsFalse(listCompositeRolesResponse.Response.Any(role => role.Name == TestRole.Name));
+
+        // Validate monitoring metrics for the request
+        KcCommonAssertion.AssertResponseMonitoringMetrics(listCompositeRolesResponse.MonitoringMetrics,
+            HttpStatusCode.OK, HttpMethod.Get);
+    }
+
+    /// <summary>
     /// Tests deleting a client role and its associated composite roles from the Keycloak realm.
     /// </summary>
     [TestMethod]

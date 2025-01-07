@@ -78,7 +78,15 @@ internal sealed class KcAuth(string baseUrl,
             return new KcResponse<KcIdentityProviderToken>
             {
                 IsError = true,
-                Exception = e
+                Exception = e,
+                ErrorMessage = e.Message,
+                MonitoringMetrics = new KcHttpApiMonitoringMetrics
+                {
+                    HttpMethod = HttpMethod.Post,
+                    Error = e.Message,
+                    Url = new Uri(tokenEndpoint),
+                    RequestException = e
+                }
             };
         }
     }
@@ -177,7 +185,15 @@ internal sealed class KcAuth(string baseUrl,
             return new KcResponse<KcIdentityProviderToken>
             {
                 IsError = true,
-                Exception = e
+                Exception = e,
+                ErrorMessage = e.Message,
+                MonitoringMetrics = new KcHttpApiMonitoringMetrics
+                {
+                    HttpMethod = HttpMethod.Post,
+                    Error = e.Message,
+                    Url = new Uri(tokenEndpoint),
+                    RequestException = e
+                }
             };
         }
     }
@@ -313,7 +329,15 @@ internal sealed class KcAuth(string baseUrl,
             return new KcResponse<KcIdentityProviderToken>
             {
                 IsError = true,
-                Exception = e
+                Exception = e,
+                ErrorMessage = e.Message,
+                MonitoringMetrics = new KcHttpApiMonitoringMetrics
+                {
+                    HttpMethod = HttpMethod.Post,
+                    Error = e.Message,
+                    Url = new Uri(tokenEndpoint),
+                    RequestException = e
+                }
             };
         }
     }
@@ -401,7 +425,15 @@ internal sealed class KcAuth(string baseUrl,
             return new KcResponse<bool>
             {
                 IsError = true,
-                Exception = e
+                Exception = e,
+                ErrorMessage = e.Message,
+                MonitoringMetrics = new KcHttpApiMonitoringMetrics
+                {
+                    HttpMethod = HttpMethod.Post,
+                    Error = e.Message,
+                    Url = new Uri(tokenRevocationEndpoint),
+                    RequestException = e
+                }
             };
         }
     }
@@ -489,7 +521,15 @@ internal sealed class KcAuth(string baseUrl,
             return new KcResponse<bool>
             {
                 IsError = true,
-                Exception = e
+                Exception = e,
+                ErrorMessage = e.Message,
+                MonitoringMetrics = new KcHttpApiMonitoringMetrics
+                {
+                    HttpMethod = HttpMethod.Post,
+                    Error = e.Message,
+                    Url = new Uri(tokenRevocationEndpoint),
+                    RequestException = e
+                }
             };
         }
     }
@@ -571,7 +611,15 @@ internal sealed class KcAuth(string baseUrl,
             return new KcResponse<KcIdentityProviderToken>
             {
                 IsError = true,
-                Exception = e
+                Exception = e,
+                ErrorMessage = e.Message,
+                MonitoringMetrics = new KcHttpApiMonitoringMetrics
+                {
+                    HttpMethod = HttpMethod.Post,
+                    Error = e.Message,
+                    Url = new Uri(tokenEndpoint),
+                    RequestException = e
+                }
             };
         }
     }

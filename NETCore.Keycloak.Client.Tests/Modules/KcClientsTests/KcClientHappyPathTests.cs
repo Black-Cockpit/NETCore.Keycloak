@@ -103,7 +103,7 @@ public class KcClientHappyPathTests : KcTestingModule
         var faker = new Faker();
 
         // Define the Keycloak client object with properties and attributes.
-        var kClient = KcClientMocks.GenerateClient(faker);
+        var kClient = KcClientMocks.GeneratePublicClient(faker);
 
         Assert.IsNotNull(kClient);
 

@@ -121,10 +121,11 @@ public class KcAuthClientCredentialsTests : KcTestingModule
 
         // Assert: Validate the response indicating an error and the presence of an exception.
         Assert.IsNotNull(tokenResponse);
+        Assert.IsNotNull(tokenResponse.ErrorMessage);
+        Assert.IsNotNull(tokenResponse.Exception);
         Assert.IsTrue(tokenResponse.IsError);
 
-        // Validate the monitoring metrics for the failed request.
-        KcCommonAssertion.AssertResponseMonitoringMetrics(tokenResponse.MonitoringMetrics, HttpStatusCode.NotFound,
-            HttpMethod.Post, true);
+        // Validate monitoring metrics for the failed request.
+        KcCommonAssertion.AssertResponseMonitoringMetrics(tokenResponse.MonitoringMetrics, null, HttpMethod.Post, true);
     }
 }

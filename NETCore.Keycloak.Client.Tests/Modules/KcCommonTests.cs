@@ -87,4 +87,32 @@ public class KcCommonTests : KcTestingModule
         // Validate the monitoring metrics for the failed request.
         KcCommonAssertion.AssertResponseMonitoringMetrics(tokenResponse.MonitoringMetrics, null, HttpMethod.Post, true);
     }
+
+    /// <summary>
+    /// Validates the behavior of the Keycloak client when a request results in a deserialization error.
+    /// </summary>
+    [TestMethod]
+    public async Task ShouldExecuteRequestAndCaptureDeserializationError()
+    {
+        // Initialize the mock logger.
+        var mockLogger = new Mock<ILogger>();
+        _ = mockLogger.Setup(logger => logger.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
+
+        // Arrange: Initialize the Keycloak client with an invalid base URL.
+        var keycloakRestClient = new KeycloakClient(TestEnvironment.InvalidBaseUrl, mockLogger.Object);
+
+        // Act: Attempt to list users using the invalid base URL.
+        var userListResponse = await keycloakRestClient.Users.ListUserAsync(
+            TestEnvironment.TestingRealm.Name, "RandomToken").ConfigureAwait(false);
+
+        // Assert: Validate the response indicating an error and the presence of an exception.
+        Assert.IsNotNull(userListResponse);
+        Assert.IsNotNull(userListResponse.ErrorMessage);
+        Assert.IsNotNull(userListResponse.Exception);
+        Assert.IsTrue(userListResponse.IsError);
+
+        // Validate monitoring metrics for the failed request.
+        KcCommonAssertion.AssertResponseMonitoringMetrics(userListResponse.MonitoringMetrics, null, HttpMethod.Get,
+            true);
+    }
 }

@@ -35,10 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="ansible\"/>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="Assets/testing_environment.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

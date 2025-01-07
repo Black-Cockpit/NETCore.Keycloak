@@ -1,4 +1,7 @@
 using System.Net;
+using Microsoft.Extensions.Logging;
+using Moq;
+using NETCore.Keycloak.Client.HttpClients.Implementation;
 using NETCore.Keycloak.Client.Models.Auth;
 using NETCore.Keycloak.Client.Models.Tokens;
 using NETCore.Keycloak.Client.Tests.Abstraction;
@@ -52,7 +55,8 @@ public class KcAuthRefreshAccessTokenTests : KcTestingModule
     public async Task A_ShouldGetResourceOwnerPasswordToken()
     {
         // Act
-        var tokenResponse = await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(TestEnvironment.TestingRealm.Name,
+        var tokenResponse = await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(
+            TestEnvironment.TestingRealm.Name,
             new KcClientCredentials
             {
                 ClientId = TestEnvironment.TestingRealm.PublicClient.ClientId
@@ -122,5 +126,37 @@ public class KcAuthRefreshAccessTokenTests : KcTestingModule
         // Validate monitoring metrics for the failed request.
         KcCommonAssertion.AssertResponseMonitoringMetrics(tokenResponse.MonitoringMetrics, HttpStatusCode.BadRequest,
             HttpMethod.Post, true);
+    }
+
+    /// <summary>
+    /// Validates the behavior of the Keycloak client when a request results in a deserialization error.
+    /// </summary>
+    [TestMethod]
+    public async Task ShouldExecuteRequestAndCaptureDeserializationError()
+    {
+        // Initialize the mock logger.
+        var mockLogger = new Mock<ILogger>();
+        _ = mockLogger.Setup(logger => logger.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
+
+        // Arrange: Initialize the Keycloak client with an invalid base URL.
+        KeycloakRestClient = new KeycloakClient(TestEnvironment.InvalidBaseUrl, mockLogger.Object);
+
+        Assert.IsNotNull(AccessToken);
+
+        // Act: Attempt to refresh access token using the invalid base URL.
+        var tokenResponse = await KeycloakRestClient.Auth.RefreshAccessTokenAsync(TestEnvironment.TestingRealm.Name,
+            new KcClientCredentials
+            {
+                ClientId = TestEnvironment.TestingRealm.PublicClient.ClientId
+            }, AccessToken.RefreshToken).ConfigureAwait(false);
+
+        // Assert: Validate the response indicating an error and the presence of an exception.
+        Assert.IsNotNull(tokenResponse);
+        Assert.IsNotNull(tokenResponse.ErrorMessage);
+        Assert.IsNotNull(tokenResponse.Exception);
+        Assert.IsTrue(tokenResponse.IsError);
+
+        // Validate monitoring metrics for the failed request.
+        KcCommonAssertion.AssertResponseMonitoringMetrics(tokenResponse.MonitoringMetrics, null, HttpMethod.Post, true);
     }
 }

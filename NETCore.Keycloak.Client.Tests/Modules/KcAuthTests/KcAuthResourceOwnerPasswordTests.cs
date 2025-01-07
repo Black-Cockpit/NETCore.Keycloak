@@ -1,3 +1,6 @@
+using Microsoft.Extensions.Logging;
+using Moq;
+using NETCore.Keycloak.Client.HttpClients.Implementation;
 using NETCore.Keycloak.Client.Models.Auth;
 using NETCore.Keycloak.Client.Tests.Abstraction;
 
@@ -40,7 +43,8 @@ public class KcAuthResourceOwnerPasswordTests : KcTestingModule
     {
         // Assert that null login details throw an exception.
         _ = await Assert.ThrowsExceptionAsync<KcException>(
-                async () => await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(TestEnvironment.TestingRealm.Name,
+                async () => await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(
+                    TestEnvironment.TestingRealm.Name,
                     new KcClientCredentials
                     {
                         ClientId = TestEnvironment.TestingRealm.PublicClient.ClientId
@@ -49,7 +53,8 @@ public class KcAuthResourceOwnerPasswordTests : KcTestingModule
 
         // Assert that an empty login object throws an exception.
         _ = await Assert.ThrowsExceptionAsync<KcException>(
-                async () => await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(TestEnvironment.TestingRealm.Name,
+                async () => await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(
+                    TestEnvironment.TestingRealm.Name,
                     new KcClientCredentials
                     {
                         ClientId = TestEnvironment.TestingRealm.PublicClient.ClientId
@@ -58,7 +63,8 @@ public class KcAuthResourceOwnerPasswordTests : KcTestingModule
 
         // Assert that a login object with only a username throws an exception.
         _ = await Assert.ThrowsExceptionAsync<KcException>(
-                async () => await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(TestEnvironment.TestingRealm.Name,
+                async () => await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(
+                    TestEnvironment.TestingRealm.Name,
                     new KcClientCredentials
                     {
                         ClientId = TestEnvironment.TestingRealm.PublicClient.ClientId
@@ -70,7 +76,8 @@ public class KcAuthResourceOwnerPasswordTests : KcTestingModule
 
         // Assert that a login object with only a password throws an exception.
         _ = await Assert.ThrowsExceptionAsync<KcException>(
-                async () => await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(TestEnvironment.TestingRealm.Name,
+                async () => await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(
+                    TestEnvironment.TestingRealm.Name,
                     new KcClientCredentials
                     {
                         ClientId = TestEnvironment.TestingRealm.PublicClient.ClientId
@@ -79,5 +86,41 @@ public class KcAuthResourceOwnerPasswordTests : KcTestingModule
                         Password = TestEnvironment.TestingRealm.User.Password
                     }).ConfigureAwait(false))
             .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Validates the behavior of the Keycloak client when a request results in a deserialization error.
+    /// </summary>
+    [TestMethod]
+    public async Task ShouldExecuteRequestAndCaptureDeserializationError()
+    {
+        // Initialize the mock logger.
+        var mockLogger = new Mock<ILogger>();
+        _ = mockLogger.Setup(logger => logger.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
+
+        // Arrange: Initialize the Keycloak client with an invalid base URL.
+        KeycloakRestClient = new KeycloakClient(TestEnvironment.InvalidBaseUrl, mockLogger.Object);
+
+        // Act: Attempt to get access token with resource owner password grant type using the invalid base URL.
+        var tokenResponse = await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(
+            TestEnvironment.TestingRealm.Name,
+            new KcClientCredentials
+            {
+                ClientId = TestEnvironment.TestingRealm.PublicClient.ClientId
+            }, new KcUserLogin
+            {
+                Username = TestEnvironment.TestingRealm.User.Username,
+                Password = TestEnvironment.TestingRealm.User.Password
+            }).ConfigureAwait(false);
+
+        // Assert: Validate the response indicating an error and the presence of an exception.
+        Assert.IsNotNull(tokenResponse);
+        Assert.IsNotNull(tokenResponse.ErrorMessage);
+        Assert.IsNotNull(tokenResponse.Exception);
+        Assert.IsTrue(tokenResponse.IsError);
+
+        // Validate monitoring metrics for the failed request.
+        KcCommonAssertion.AssertResponseMonitoringMetrics(tokenResponse.MonitoringMetrics, null,
+            HttpMethod.Post, true);
     }
 }

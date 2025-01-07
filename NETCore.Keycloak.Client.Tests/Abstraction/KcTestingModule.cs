@@ -291,13 +291,14 @@ public abstract class KcTestingModule
     /// <summary>
     /// Creates a new user in the specified Keycloak realm and retrieves the created user based on the provided context.
     /// </summary>
-    protected async Task<KcUser> CreateAndGetRealmUserAsync(string context, string password = null)
+    protected async Task<KcUser> CreateAndGetRealmUserAsync(string context, string password = null,
+        IDictionary<string, object> attributes = null)
     {
         // Create a faker instance for generating random data
         var faker = new Faker();
 
         // Generate a new user using mock data
-        var user = KcUserMocks.GenerateUser(faker, password);
+        var user = KcUserMocks.GenerateUser(faker, password, attributes);
 
         // Ensure the generated user is not null
         Assert.IsNotNull(user);
@@ -357,7 +358,7 @@ public abstract class KcTestingModule
         var faker = new Faker();
 
         // Define the Keycloak client object with properties and attributes.
-        var kClient = KcClientMocks.GenerateClient(faker);
+        var kClient = KcClientMocks.GeneratePublicClient(faker);
         Assert.IsNotNull(kClient);
 
         // Create the Keycloak client via the REST API.

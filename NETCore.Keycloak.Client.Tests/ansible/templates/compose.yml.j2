@@ -31,6 +31,8 @@ services:
       - "127.0.0.1:8899:80"
     networks:
       - net_core_keycloak_tests_network
+    volumes:
+      - "{{ containers_dir }}/volumes/nginx/:/etc/nginx/conf.d"
     restart: on-failure
     
 networks:

@@ -1,0 +1,42 @@
+# Create attribute scope
+- name: "Create realm {{ realm }} attributes client scope"
+  community.general.keycloak_clientscope:
+    auth_client_id: "{{ keycloak.client_id }}"
+    auth_keycloak_url: "{{ keycloak.auth_url }}"
+    auth_realm: "{{ keycloak.auth_realm }}"
+    auth_username: "{{ keycloak.username }}"
+    auth_password: "{{ keycloak.password }}"
+    realm: "{{ realm }}"
+    name: attributes
+    state: present
+    description: user attributes
+    protocol: openid-connect
+    attributes:
+      include.in.token.scope: 'true'
+      display.on.consent.screen: 'false'
+      gui.order: ''
+      consent.screen.text: ''
+    protocol_mappers:
+      - protocol: openid-connect
+        name: account_owner
+        protocolMapper: oidc-usermodel-attribute-mapper
+        config:
+          aggregate.attrs: 'false'
+          userinfo.token.claim: 'false'
+          multivalued: 'false'
+          user.attribute: account_owner
+          id.token.claim: 'false'
+          access.token.claim: 'true'
+          claim.name: account_owner
+      - protocol: openid-connect
+        name: business_account_owner
+        protocolMapper: oidc-usermodel-attribute-mapper
+        config:
+          aggregate.attrs: 'false'
+          userinfo.token.claim: 'false'
+          multivalued: 'false'
+          user.attribute: business_account_owner
+          id.token.claim: 'false'
+          access.token.claim: 'true'
+          claim.name: business_account_owner
+  retries: 5

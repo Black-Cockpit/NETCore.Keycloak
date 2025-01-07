@@ -2,7 +2,7 @@
 # Ensures the containers directory is created with the specified properties.
 - name: Create containers directory
   file:
-    path: "{{ containers_dir }}"
+    path: "{{ containers_dir }}/volumes/nginx"
     state: directory
     recurse: true
     force: true
@@ -18,3 +18,11 @@
     - compose.yml
     - keycloak.env
     - postgres.env
+
+# Copy nginx configuration to volumes
+# Nginx configuration file will be used as fake endpoints during the tests
+- name: Copy nginx configuration to volumes
+  copy:
+    src: "files/nginx.default.conf"
+    dest: "{{ containers_dir }}/volumes/nginx/default.conf"
+    mode: "0644"

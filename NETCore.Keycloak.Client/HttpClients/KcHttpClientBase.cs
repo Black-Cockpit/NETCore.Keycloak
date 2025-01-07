@@ -233,7 +233,15 @@ public abstract class KcHttpClientBase
             return new KcResponse<T>
             {
                 IsError = true, // Mark the response as an error.
-                Exception = e // Attach the exception for debugging purposes.
+                Exception = e, // Attach the exception for debugging purposes.
+                ErrorMessage = e.Message,
+                MonitoringMetrics = new KcHttpApiMonitoringMetrics
+                {
+                    HttpMethod = method,
+                    Url = new Uri(url),
+                    Error = e.Message,
+                    RequestException = e
+                }
             };
         }
     }

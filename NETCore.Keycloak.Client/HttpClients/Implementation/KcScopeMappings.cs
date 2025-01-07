@@ -99,6 +99,15 @@ internal sealed class KcScopeMappings(string baseUrl,
         // Validate that the clientId parameter is not null, empty, or whitespace.
         ValidateRequiredString(nameof(clientId), clientId);
 
+        // Validate that the role collection is not null.
+        ValidateNotNull(nameof(roles), roles);
+
+        // Return an empty response if no roles are provided.
+        if ( !roles.Any() )
+        {
+            return new KcResponse<object>();
+        }
+
         // Construct the URL to remove roles from the specified client scope.
         var url = $"{BaseUrl}/{realm}/client-scopes/{scopeId}/scope-mappings/clients/{clientId}";
 
@@ -108,6 +117,7 @@ internal sealed class KcScopeMappings(string baseUrl,
             HttpMethod.Delete,
             accessToken,
             "Unable to remove client-level roles from the client’s scope",
+            roles,
             cancellationToken: cancellationToken
         ).ConfigureAwait(false);
     }
@@ -254,6 +264,15 @@ internal sealed class KcScopeMappings(string baseUrl,
         // Validate that the scopeId parameter is not null, empty, or whitespace.
         ValidateRequiredString(nameof(scopeId), scopeId);
 
+        // Validate that the role collection is not null.
+        ValidateNotNull(nameof(roles), roles);
+
+        // Return early if the role collection is empty.
+        if ( !roles.Any() )
+        {
+            return new KcResponse<object>();
+        }
+
         // Construct the URL to remove roles from the specified client scope.
         var url = $"{BaseUrl}/{realm}/client-scopes/{scopeId}/scope-mappings/realm";
 
@@ -263,6 +282,7 @@ internal sealed class KcScopeMappings(string baseUrl,
             HttpMethod.Delete,
             accessToken,
             "Unable to remove a set of realm-level roles from the client’s scope",
+            roles,
             cancellationToken: cancellationToken
         ).ConfigureAwait(false);
     }

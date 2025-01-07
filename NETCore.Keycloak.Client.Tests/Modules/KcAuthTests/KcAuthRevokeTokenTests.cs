@@ -43,7 +43,8 @@ public class KcAuthRevokeTokenTests : KcTestingModule
         Assert.IsNotNull(accessToken);
 
         // Act
-        var revokeAccessTokenResponse = await KeycloakRestClient.Auth.RevokeAccessTokenAsync(TestEnvironment.TestingRealm.Name,
+        var revokeAccessTokenResponse = await KeycloakRestClient.Auth.RevokeAccessTokenAsync(
+            TestEnvironment.TestingRealm.Name,
             new KcClientCredentials
             {
                 ClientId = TestEnvironment.TestingRealm.PublicClient.ClientId
@@ -70,7 +71,8 @@ public class KcAuthRevokeTokenTests : KcTestingModule
         Assert.IsNotNull(accessToken);
 
         // Act
-        var revokeAccessTokenResponse = await KeycloakRestClient.Auth.RevokeRefreshTokenAsync(TestEnvironment.TestingRealm.Name,
+        var revokeAccessTokenResponse = await KeycloakRestClient.Auth.RevokeRefreshTokenAsync(
+            TestEnvironment.TestingRealm.Name,
             new KcClientCredentials
             {
                 ClientId = TestEnvironment.TestingRealm.PublicClient.ClientId

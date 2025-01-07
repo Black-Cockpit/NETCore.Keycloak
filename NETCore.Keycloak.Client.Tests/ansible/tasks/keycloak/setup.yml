@@ -84,7 +84,10 @@
 # Create client scopes and audiences
 # Includes the task file to configure client scopes and audiences in Keycloak.
 - include_tasks:
-    file: "tasks/keycloak/client_scopes/audiences.yml"
+    file: "tasks/keycloak/client_scopes/{{ item }}.yml"
+  loop:
+  - "audiences"
+  - "attributes"
 
 # Create realm clients
 # Includes the task file to configure Keycloak clients for the specified realm.
