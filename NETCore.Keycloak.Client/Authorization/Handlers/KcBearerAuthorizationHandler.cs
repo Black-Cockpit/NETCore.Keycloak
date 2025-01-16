@@ -14,7 +14,7 @@ namespace NETCore.Keycloak.Client.Authorization.Handlers;
 /// <summary>
 /// Authorization handler for Keycloak that validates user sessions and permissions for accessing protected resources.
 /// </summary>
-public class KcAuthorizationHandler : AuthorizationHandler<KcAuthorizationRequirement>
+public class KcBearerAuthorizationHandler : AuthorizationHandler<KcAuthorizationRequirement>
 {
     /// <summary>
     /// Logger for logging Keycloak authorization events.
@@ -32,10 +32,10 @@ public class KcAuthorizationHandler : AuthorizationHandler<KcAuthorizationRequir
     private readonly IKcRealmAdminTokenHandler _realmAdminTokenHandler;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="KcAuthorizationHandler"/> class.
+    /// Initializes a new instance of the <see cref="KcBearerAuthorizationHandler"/> class.
     /// </summary>
     /// <param name="serviceProvider">The service provider used to create scoped services.</param>
-    public KcAuthorizationHandler(IServiceProvider serviceProvider)
+    public KcBearerAuthorizationHandler(IServiceProvider serviceProvider)
     {
         // Create a service scope for resolving scoped dependencies.
         using var scope = serviceProvider.CreateScope();
@@ -59,11 +59,11 @@ public class KcAuthorizationHandler : AuthorizationHandler<KcAuthorizationRequir
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context,
         KcAuthorizationRequirement requirement)
     {
-        // Ensure that authorization requirement is not null.
-        ArgumentNullException.ThrowIfNull(requirement, "Authorization requirement is required.");
-
         // Ensure that authorization context is not null
         ArgumentNullException.ThrowIfNull(context, "Authorization context is required.");
+
+        // Ensure that authorization requirement is not null.
+        ArgumentNullException.ThrowIfNull(requirement, "Authorization requirement is required.");
 
         // Check if the user is authenticated
         if ( context.User.Identity?.IsAuthenticated ?? false )
