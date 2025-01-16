@@ -196,6 +196,7 @@ public class KcBearerAuthorizationHandler : AuthorizationHandler<KcAuthorization
         // Extract the user ID from the claims
         var userId = context.User.Claims
             .FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
+
         if ( string.IsNullOrWhiteSpace(userId) )
         {
             throw new KcUserNotFoundException("Unable to extract user subject.");
@@ -203,6 +204,7 @@ public class KcBearerAuthorizationHandler : AuthorizationHandler<KcAuthorization
 
         // Check if the user exists in Keycloak
         var userResponse = await keycloakClient.Users.GetAsync(realm, adminToken, userId).ConfigureAwait(false);
+
         if ( userResponse.IsError )
         {
             throw new KcUserNotFoundException($"User {userId} not found. Error: {userResponse.ErrorMessage}",
@@ -211,6 +213,7 @@ public class KcBearerAuthorizationHandler : AuthorizationHandler<KcAuthorization
 
         // Extract the session ID from the claims
         var sessionId = context.User.Claims.FirstOrDefault(claim => claim.Type == "sid")?.Value;
+
         if ( string.IsNullOrWhiteSpace(sessionId) )
         {
             throw new KcSessionClosedException("Unable to extract session ID.");
@@ -219,6 +222,7 @@ public class KcBearerAuthorizationHandler : AuthorizationHandler<KcAuthorization
         // Retrieve active sessions for the user
         var sessionsResponse =
             await keycloakClient.Users.SessionsAsync(realm, adminToken, userId).ConfigureAwait(false);
+
         if ( sessionsResponse.IsError )
         {
             throw new KcSessionClosedException($"No active session found for user {userId}.",

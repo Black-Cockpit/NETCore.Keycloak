@@ -19,7 +19,7 @@ public static class KcAuthorizationExtension
     /// <returns></returns>
     public static IServiceCollection AddKeycloakAuthorization(this IServiceCollection services) =>
         services
-            .AddSingleton<IAuthorizationHandler, KcAuthorizationHandler>().AddHttpContextAccessor();
+            .AddSingleton<IAuthorizationHandler, KcBearerAuthorizationHandler>().AddHttpContextAccessor();
 
     /// <summary>
     /// Add keycloak policy provider
