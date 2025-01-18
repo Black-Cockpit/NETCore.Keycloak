@@ -26,7 +26,7 @@ public static class KcAuthorizationExtension
     /// </summary>
     /// <param name="services"></param>
     /// <returns></returns>
-    public static IServiceCollection AddKeycloakProtectedResourceProtection<T, TV>(
+    public static IServiceCollection AddKeycloakProtectedResourcesPolicies<T, TV>(
         this IServiceCollection services)
         where T : KcProtectedResourceStore
         where TV : KcRealmAdminConfigurationStore
