@@ -13,7 +13,7 @@ internal sealed class KcRoles(string baseUrl,
     ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcRoles
 {
     /// <inheritdoc cref="IKcRoles.CreateAsync"/>
-    public async Task<KcResponse<object>> CreateAsync(
+    public Task<KcResponse<object>> CreateAsync(
         string realm,
         string accessToken,
         KcRole role,
@@ -29,18 +29,18 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles";
 
         // Process the request to create the realm role.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Post,
             accessToken,
             "Unable to create realm role",
             role,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.ListAsync"/>
-    public async Task<KcResponse<IEnumerable<KcRole>>> ListAsync(
+    public Task<KcResponse<IEnumerable<KcRole>>> ListAsync(
         string realm,
         string accessToken,
         KcFilter filter = null,
@@ -56,17 +56,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles{filter.BuildQuery()}";
 
         // Process the request to retrieve the realm roles.
-        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+        return ProcessRequestAsync<IEnumerable<KcRole>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to list realm roles",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.GetAsync"/>
-    public async Task<KcResponse<KcRole>> GetAsync(
+    public Task<KcResponse<KcRole>> GetAsync(
         string realm,
         string accessToken,
         string name,
@@ -82,13 +82,13 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles/{name}";
 
         // Process the request to retrieve the realm role by name.
-        return await ProcessRequestAsync<KcRole>(
+        return ProcessRequestAsync<KcRole>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to get realm role",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.IsRolesExistsAsync"/>
@@ -126,7 +126,7 @@ internal sealed class KcRoles(string baseUrl,
     }
 
     /// <inheritdoc cref="IKcRoles.GetByIdAsync"/>
-    public async Task<KcResponse<KcRole>> GetByIdAsync(
+    public Task<KcResponse<KcRole>> GetByIdAsync(
         string realm,
         string accessToken,
         string id,
@@ -142,17 +142,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles-by-id/{id}";
 
         // Process the request to retrieve the realm role by ID.
-        return await ProcessRequestAsync<KcRole>(
+        return ProcessRequestAsync<KcRole>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to get realm role by id",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.UpdateAsync"/>
-    public async Task<KcResponse<object>> UpdateAsync(
+    public Task<KcResponse<object>> UpdateAsync(
         string realm,
         string accessToken,
         string name,
@@ -172,18 +172,18 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles/{name}";
 
         // Process the request to update the realm role by name.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Put,
             accessToken,
             "Unable to update realm role",
             role,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.UpdateByIdAsync"/>
-    public async Task<KcResponse<KcRole>> UpdateByIdAsync(
+    public Task<KcResponse<KcRole>> UpdateByIdAsync(
         string realm,
         string accessToken,
         string id,
@@ -203,18 +203,18 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles-by-id/{id}";
 
         // Process the request to update the realm role by ID.
-        return await ProcessRequestAsync<KcRole>(
+        return ProcessRequestAsync<KcRole>(
             url,
             HttpMethod.Put,
             accessToken,
             "Unable to update realm role by id",
             role,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.DeleteAsync"/>
-    public async Task<KcResponse<object>> DeleteAsync(
+    public Task<KcResponse<object>> DeleteAsync(
         string realm,
         string accessToken,
         string name,
@@ -230,17 +230,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles/{name}";
 
         // Process the request to delete the realm role by name.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Delete,
             accessToken,
             "Unable to delete realm role by name",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.DeleteByIdAsync"/>
-    public async Task<KcResponse<object>> DeleteByIdAsync(
+    public Task<KcResponse<object>> DeleteByIdAsync(
         string realm,
         string accessToken,
         string id,
@@ -256,17 +256,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles-by-id/{id}";
 
         // Process the request to delete the realm role by ID.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Delete,
             accessToken,
             "Unable to delete realm role by id",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.AddCompositeAsync"/>
-    public async Task<KcResponse<object>> AddCompositeAsync(
+    public Task<KcResponse<object>> AddCompositeAsync(
         string realm,
         string accessToken,
         string name,
@@ -285,25 +285,25 @@ internal sealed class KcRoles(string baseUrl,
         // If the role collection is empty, return a response indicating no operation was performed.
         if ( !roles.Any() )
         {
-            return new KcResponse<object>();
+            return Task.FromResult(new KcResponse<object>());
         }
 
         // Construct the URL for adding composite roles to the specified realm role.
         var url = $"{BaseUrl}/{realm}/roles/{name}/composites";
 
         // Process the request to add composite roles.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Post,
             accessToken,
             "Unable to add realm role composites",
             roles,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.AddCompositeByIdAsync"/>
-    public async Task<KcResponse<object>> AddCompositeByIdAsync(
+    public Task<KcResponse<object>> AddCompositeByIdAsync(
         string realm,
         string accessToken,
         string id,
@@ -322,25 +322,25 @@ internal sealed class KcRoles(string baseUrl,
         // If the role collection is empty, return a response indicating no operation was performed.
         if ( !roles.Any() )
         {
-            return new KcResponse<object>();
+            return Task.FromResult(new KcResponse<object>());
         }
 
         // Construct the URL for adding composite roles to the specified realm role by ID.
         var url = $"{BaseUrl}/{realm}/roles-by-id/{id}/composites";
 
         // Process the request to add composite roles.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Post,
             accessToken,
             "Unable to add realm role composites by role id",
             roles,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.ListCompositeAsync"/>
-    public async Task<KcResponse<IEnumerable<KcRole>>> ListCompositeAsync(
+    public Task<KcResponse<IEnumerable<KcRole>>> ListCompositeAsync(
         string realm,
         string accessToken,
         string name,
@@ -356,17 +356,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles/{name}/composites";
 
         // Process the request to retrieve the list of the realm composite roles.
-        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+        return ProcessRequestAsync<IEnumerable<KcRole>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to list realm role composites",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.ListCompositeByIdAsync"/>
-    public async Task<KcResponse<IEnumerable<KcRole>>> ListCompositeByIdAsync(
+    public Task<KcResponse<IEnumerable<KcRole>>> ListCompositeByIdAsync(
         string realm,
         string accessToken,
         string id,
@@ -382,17 +382,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles-by-id/{id}/composites";
 
         // Process the request to retrieve the list of composite roles by role ID.
-        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+        return ProcessRequestAsync<IEnumerable<KcRole>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to list realm role composites by role id",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.DeleteCompositeAsync"/>
-    public async Task<KcResponse<object>> DeleteCompositeAsync(
+    public Task<KcResponse<object>> DeleteCompositeAsync(
         string realm,
         string accessToken,
         string name,
@@ -411,25 +411,25 @@ internal sealed class KcRoles(string baseUrl,
         // If the role collection is empty, return a response indicating no operation was performed.
         if ( !roles.Any() )
         {
-            return new KcResponse<object>();
+            return Task.FromResult(new KcResponse<object>());
         }
 
         // Construct the URL to delete the composite roles for the specified role name.
         var url = $"{BaseUrl}/{realm}/roles/{name}/composites";
 
         // Process the request to delete the composite roles associated with the specified role name.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Delete,
             accessToken,
             "Unable to delete realm composite role",
             roles,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.DeleteCompositeByIdAsync"/>
-    public async Task<KcResponse<object>> DeleteCompositeByIdAsync(
+    public Task<KcResponse<object>> DeleteCompositeByIdAsync(
         string realm,
         string accessToken,
         string id,
@@ -448,25 +448,25 @@ internal sealed class KcRoles(string baseUrl,
         // If the role collection is empty, return a response indicating no operation was performed.
         if ( !roles.Any() )
         {
-            return new KcResponse<object>();
+            return Task.FromResult(new KcResponse<object>());
         }
 
         // Construct the URL to delete the composite roles for the specified role ID.
         var url = $"{BaseUrl}/{realm}/roles-by-id/{id}/composites";
 
         // Process the request to delete the composite roles associated with the specified role ID.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Delete,
             accessToken,
             "Unable to delete realm composite role by role id",
             roles,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.GetClientLevelCompositesAsync"/>
-    public async Task<KcResponse<IEnumerable<KcRole>>> GetClientLevelCompositesAsync(
+    public Task<KcResponse<IEnumerable<KcRole>>> GetClientLevelCompositesAsync(
         string realm,
         string accessToken,
         string name,
@@ -486,17 +486,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles/{name}/composites/clients/{clientId}";
 
         // Process the request to retrieve the client-level composite roles.
-        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+        return ProcessRequestAsync<IEnumerable<KcRole>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to get role client level composites",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.GetClientLevelCompositesByIdAsync"/>
-    public async Task<KcResponse<IEnumerable<KcRole>>> GetClientLevelCompositesByIdAsync(
+    public Task<KcResponse<IEnumerable<KcRole>>> GetClientLevelCompositesByIdAsync(
         string realm,
         string accessToken,
         string id,
@@ -516,17 +516,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles-by-id/{id}/composites/clients/{clientId}";
 
         // Process the request to retrieve the client-level composite roles by role ID.
-        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+        return ProcessRequestAsync<IEnumerable<KcRole>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to get role client level composites by role id",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.GetRealmLevelCompositesAsync"/>
-    public async Task<KcResponse<IEnumerable<KcRole>>> GetRealmLevelCompositesAsync(
+    public Task<KcResponse<IEnumerable<KcRole>>> GetRealmLevelCompositesAsync(
         string realm,
         string accessToken,
         string name,
@@ -542,17 +542,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles/{name}/composites/realm";
 
         // Process the request to retrieve the realm-level composite roles.
-        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+        return ProcessRequestAsync<IEnumerable<KcRole>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to get role realm level composites",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.GetRealmLevelCompositesByIdAsync"/>
-    public async Task<KcResponse<IEnumerable<KcRole>>> GetRealmLevelCompositesByIdAsync(
+    public Task<KcResponse<IEnumerable<KcRole>>> GetRealmLevelCompositesByIdAsync(
         string realm,
         string accessToken,
         string id,
@@ -568,17 +568,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles-by-id/{id}/composites/realm";
 
         // Process the request to retrieve the realm-level composite roles.
-        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+        return ProcessRequestAsync<IEnumerable<KcRole>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to get role realm level composites by role id",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.GetGroupsAsync"/>
-    public async Task<KcResponse<IEnumerable<KcGroup>>> GetGroupsAsync(
+    public Task<KcResponse<IEnumerable<KcGroup>>> GetGroupsAsync(
         string realm,
         string accessToken,
         string name,
@@ -598,17 +598,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles/{name}/groups{filter.BuildQuery()}";
 
         // Process the request to retrieve the groups associated with the role.
-        return await ProcessRequestAsync<IEnumerable<KcGroup>>(
+        return ProcessRequestAsync<IEnumerable<KcGroup>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to list realm role groups",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.GetAuthorizationPermissionsAsync"/>
-    public async Task<KcResponse<KcPermissionManagement>> GetAuthorizationPermissionsAsync(
+    public Task<KcResponse<KcPermissionManagement>> GetAuthorizationPermissionsAsync(
         string realm,
         string accessToken,
         string name,
@@ -624,17 +624,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles/{name}/management/permissions";
 
         // Process the request to retrieve the authorization permissions for the role.
-        return await ProcessRequestAsync<KcPermissionManagement>(
+        return ProcessRequestAsync<KcPermissionManagement>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to get realm role management permission",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.GetAuthorizationPermissionsByIdAsync"/>
-    public async Task<KcResponse<KcPermissionManagement>> GetAuthorizationPermissionsByIdAsync(
+    public Task<KcResponse<KcPermissionManagement>> GetAuthorizationPermissionsByIdAsync(
         string realm,
         string accessToken,
         string id,
@@ -650,17 +650,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles-by-id/{id}/management/permissions";
 
         // Process the request to retrieve the authorization permissions for the role by ID.
-        return await ProcessRequestAsync<KcPermissionManagement>(
+        return ProcessRequestAsync<KcPermissionManagement>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to get realm role management permission by role id",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.SetAuthorizationPermissionsAsync"/>
-    public async Task<KcResponse<KcPermissionManagement>> SetAuthorizationPermissionsAsync(
+    public Task<KcResponse<KcPermissionManagement>> SetAuthorizationPermissionsAsync(
         string realm,
         string accessToken,
         string name,
@@ -680,18 +680,18 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles/{name}/management/permissions";
 
         // Process the request to set the authorization permissions for the role by name.
-        return await ProcessRequestAsync<KcPermissionManagement>(
+        return ProcessRequestAsync<KcPermissionManagement>(
             url,
             HttpMethod.Put,
             accessToken,
             "Unable to set realm role management permission",
             permissionManagement,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.SetAuthorizationPermissionsByIdAsync"/>
-    public async Task<KcResponse<KcPermissionManagement>> SetAuthorizationPermissionsByIdAsync(
+    public Task<KcResponse<KcPermissionManagement>> SetAuthorizationPermissionsByIdAsync(
         string realm,
         string accessToken,
         string id,
@@ -711,18 +711,18 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles-by-id/{id}/management/permissions";
 
         // Process the request to set the authorization permissions for the role by ID.
-        return await ProcessRequestAsync<KcPermissionManagement>(
+        return ProcessRequestAsync<KcPermissionManagement>(
             url,
             HttpMethod.Put,
             accessToken,
             "Unable to set realm role management permission by role id",
             permissionManagement,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.GetUserInRoleAsync"/>
-    public async Task<KcResponse<IEnumerable<KcUser>>> GetUserInRoleAsync(
+    public Task<KcResponse<IEnumerable<KcUser>>> GetUserInRoleAsync(
         string realm,
         string accessToken,
         string name,
@@ -742,17 +742,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/roles/{name}/users{filter.BuildQuery()}";
 
         // Process the request to retrieve the users associated with the specified role.
-        return await ProcessRequestAsync<IEnumerable<KcUser>>(
+        return ProcessRequestAsync<IEnumerable<KcUser>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to list realm role users",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.CreateClientRoleAsync"/>
-    public async Task<KcResponse<object>> CreateClientRoleAsync(
+    public Task<KcResponse<object>> CreateClientRoleAsync(
         string realm,
         string accessToken,
         string clientId,
@@ -772,18 +772,18 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles";
 
         // Process the request to create the client role.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Post,
             accessToken,
             "Unable to create client role",
             role,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.ListClientRoleAsync"/>
-    public async Task<KcResponse<IEnumerable<KcRole>>> ListClientRoleAsync(
+    public Task<KcResponse<IEnumerable<KcRole>>> ListClientRoleAsync(
         string realm,
         string accessToken,
         string clientId,
@@ -803,17 +803,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles{filter.BuildQuery()}";
 
         // Process the request to retrieve the list of client roles.
-        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+        return ProcessRequestAsync<IEnumerable<KcRole>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to list client roles",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.GetClientRolesAsync"/>
-    public async Task<KcResponse<KcRole>> GetClientRolesAsync(
+    public Task<KcResponse<KcRole>> GetClientRolesAsync(
         string realm,
         string accessToken,
         string clientId,
@@ -833,13 +833,13 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}";
 
         // Process the request to retrieve the client role details.
-        return await ProcessRequestAsync<KcRole>(
+        return ProcessRequestAsync<KcRole>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to get client role",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.IsClientRoleExistsAsync"/>
@@ -880,7 +880,7 @@ internal sealed class KcRoles(string baseUrl,
     }
 
     /// <inheritdoc cref="IKcRoles.UpdateClientRoleAsync"/>
-    public async Task<KcResponse<object>> UpdateClientRoleAsync(
+    public Task<KcResponse<object>> UpdateClientRoleAsync(
         string realm,
         string accessToken,
         string clientId,
@@ -904,18 +904,18 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}";
 
         // Process the request to update the client role and return the response.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Put,
             accessToken,
             "Unable to update client role",
             role,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.DeleteClientRoleAsync"/>
-    public async Task<KcResponse<object>> DeleteClientRoleAsync(
+    public Task<KcResponse<object>> DeleteClientRoleAsync(
         string realm,
         string accessToken,
         string clientId,
@@ -935,17 +935,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}";
 
         // Process the request to delete the client role and return the response.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Delete,
             accessToken,
             "Unable to delete client role",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.AddClientRoleToCompositeAsync"/>
-    public async Task<KcResponse<object>> AddClientRoleToCompositeAsync(
+    public Task<KcResponse<object>> AddClientRoleToCompositeAsync(
         string realm,
         string accessToken,
         string clientId,
@@ -968,25 +968,25 @@ internal sealed class KcRoles(string baseUrl,
         // Return early if the role collection is empty.
         if ( !roles.Any() )
         {
-            return new KcResponse<object>();
+            return Task.FromResult(new KcResponse<object>());
         }
 
         // Construct the URL for adding roles to the composite role.
         var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}/composites";
 
         // Process the request to add the roles to the composite.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Post,
             accessToken,
             "Unable to add composite to the client roles",
             roles,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.GetClientCompositeRolesAsync"/>
-    public async Task<KcResponse<IEnumerable<KcRole>>> GetClientCompositeRolesAsync(
+    public Task<KcResponse<IEnumerable<KcRole>>> GetClientCompositeRolesAsync(
         string realm,
         string accessToken,
         string clientId,
@@ -1006,17 +1006,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}/composites";
 
         // Process the request to retrieve the composite roles.
-        return await ProcessRequestAsync<IEnumerable<KcRole>>(
+        return ProcessRequestAsync<IEnumerable<KcRole>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to get client composite roles",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.RemoveClientRoleFromCompositeAsync"/>
-    public async Task<KcResponse<object>> RemoveClientRoleFromCompositeAsync(
+    public Task<KcResponse<object>> RemoveClientRoleFromCompositeAsync(
         string realm,
         string accessToken,
         string clientId,
@@ -1036,17 +1036,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}/composites";
 
         // Process the request to remove the composite roles.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Delete,
             accessToken,
             "Unable to remove composite from the client roles",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.GetGroupsInClientRoleAsync"/>
-    public async Task<KcResponse<IEnumerable<KcGroup>>> GetGroupsInClientRoleAsync(
+    public Task<KcResponse<IEnumerable<KcGroup>>> GetGroupsInClientRoleAsync(
         string realm,
         string accessToken,
         string clientId,
@@ -1070,17 +1070,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}/groups{filter.BuildQuery()}";
 
         // Process the request to retrieve the list of groups.
-        return await ProcessRequestAsync<IEnumerable<KcGroup>>(
+        return ProcessRequestAsync<IEnumerable<KcGroup>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to list client role groups",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.GetClientRoleAuthorizationPermissionsAsync"/>
-    public async Task<KcResponse<KcPermissionManagement>> GetClientRoleAuthorizationPermissionsAsync(
+    public Task<KcResponse<KcPermissionManagement>> GetClientRoleAuthorizationPermissionsAsync(
         string realm,
         string accessToken,
         string clientId,
@@ -1100,17 +1100,17 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}/management/permissions";
 
         // Process the request to retrieve the management permissions.
-        return await ProcessRequestAsync<KcPermissionManagement>(
+        return ProcessRequestAsync<KcPermissionManagement>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to get client role management permission",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.SetClientRoleAuthorizationPermissionsAsync"/>
-    public async Task<KcResponse<KcPermissionManagement>> SetClientRoleAuthorizationPermissionsAsync(
+    public Task<KcResponse<KcPermissionManagement>> SetClientRoleAuthorizationPermissionsAsync(
         string realm,
         string accessToken,
         string clientId,
@@ -1134,18 +1134,18 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}/management/permissions";
 
         // Process the request to update the management permissions.
-        return await ProcessRequestAsync<KcPermissionManagement>(
+        return ProcessRequestAsync<KcPermissionManagement>(
             url,
             HttpMethod.Put,
             accessToken,
             "Unable to set client role management permission",
             permissionManagement,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcRoles.GetUsersInClientRoleAsync"/>
-    public async Task<KcResponse<IEnumerable<KcUser>>> GetUsersInClientRoleAsync(
+    public Task<KcResponse<IEnumerable<KcUser>>> GetUsersInClientRoleAsync(
         string realm,
         string accessToken,
         string clientId,
@@ -1169,12 +1169,12 @@ internal sealed class KcRoles(string baseUrl,
         var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}/users{filter.BuildQuery()}";
 
         // Process the request to retrieve the list of users.
-        return await ProcessRequestAsync<IEnumerable<KcUser>>(
+        return ProcessRequestAsync<IEnumerable<KcUser>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to get client role users",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 }

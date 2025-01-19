@@ -10,7 +10,7 @@ internal sealed class KcClientScopes(string baseUrl,
     ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcClientScopes
 {
     /// <inheritdoc cref="IKcClientScopes.CreateAsync"/>
-    public async Task<KcResponse<object>> CreateAsync(
+    public Task<KcResponse<object>> CreateAsync(
         string realm,
         string accessToken,
         KcClientScope scope,
@@ -26,18 +26,18 @@ internal sealed class KcClientScopes(string baseUrl,
         var url = $"{BaseUrl}/{realm}/client-scopes";
 
         // Process the request to create the client scope.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Post,
             accessToken,
             "Unable to create client scope",
             scope,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcClientScopes.ListAsync"/>
-    public async Task<KcResponse<IEnumerable<KcClientScope>>> ListAsync(
+    public Task<KcResponse<IEnumerable<KcClientScope>>> ListAsync(
         string realm,
         string accessToken,
         CancellationToken cancellationToken = default)
@@ -49,17 +49,17 @@ internal sealed class KcClientScopes(string baseUrl,
         var url = $"{BaseUrl}/{realm}/client-scopes";
 
         // Process the request to retrieve the list of client scopes.
-        return await ProcessRequestAsync<IEnumerable<KcClientScope>>(
+        return ProcessRequestAsync<IEnumerable<KcClientScope>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to list client scopes",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcClientScopes.GetAsync"/>
-    public async Task<KcResponse<KcClientScope>> GetAsync(
+    public Task<KcResponse<KcClientScope>> GetAsync(
         string realm,
         string accessToken,
         string scopeId,
@@ -75,17 +75,17 @@ internal sealed class KcClientScopes(string baseUrl,
         var url = $"{BaseUrl}/{realm}/client-scopes/{scopeId}";
 
         // Process the request to retrieve the client scope.
-        return await ProcessRequestAsync<KcClientScope>(
+        return ProcessRequestAsync<KcClientScope>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to get client scopes",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcClientScopes.UpdateAsync"/>
-    public async Task<KcResponse<KcClientScope>> UpdateAsync(
+    public Task<KcResponse<KcClientScope>> UpdateAsync(
         string realm,
         string accessToken,
         string scopeId,
@@ -105,18 +105,18 @@ internal sealed class KcClientScopes(string baseUrl,
         var url = $"{BaseUrl}/{realm}/client-scopes/{scopeId}";
 
         // Process the request to update the client scope.
-        return await ProcessRequestAsync<KcClientScope>(
+        return ProcessRequestAsync<KcClientScope>(
             url,
             HttpMethod.Put,
             accessToken,
             "Unable to update client scope",
             scope,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcClientScopes.DeleteAsync"/>
-    public async Task<KcResponse<object>> DeleteAsync(
+    public Task<KcResponse<object>> DeleteAsync(
         string realm,
         string accessToken,
         string scopeId,
@@ -132,12 +132,12 @@ internal sealed class KcClientScopes(string baseUrl,
         var url = $"{BaseUrl}/{realm}/client-scopes/{scopeId}";
 
         // Process the request to remove the client scope.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Delete,
             accessToken,
             "Unable to delete client scopes",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 }

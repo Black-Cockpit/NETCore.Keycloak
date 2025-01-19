@@ -16,7 +16,7 @@ internal sealed class KcAttackDetection(string baseUrl,
     ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcAttackDetection
 {
     /// <inheritdoc cref="IKcAttackDetection.DeleteUsersLoginFailureAsync"/>
-    public async Task<KcResponse<object>> DeleteUsersLoginFailureAsync(
+    public Task<KcResponse<object>> DeleteUsersLoginFailureAsync(
         string realm,
         string accessToken,
         string userId = null,
@@ -31,17 +31,17 @@ internal sealed class KcAttackDetection(string baseUrl,
             : $"{BaseUrl}/{realm}/attack-detection/brute-force/users/{userId}"; // Clear a specific user's login failures.
 
         // Process the request to delete login failures and return the result.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Delete,
             accessToken,
             "Unable to clear users login failure",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcAttackDetection.GetUserStatusAsync"/>
-    public async Task<KcResponse<KcUserBruteForceStatus>> GetUserStatusAsync(
+    public Task<KcResponse<KcUserBruteForceStatus>> GetUserStatusAsync(
         string realm,
         string accessToken,
         string userId,
@@ -54,12 +54,12 @@ internal sealed class KcAttackDetection(string baseUrl,
         var url = $"{BaseUrl}/{realm}/attack-detection/brute-force/users/{userId}";
 
         // Process the request to retrieve the brute force status and return the result.
-        return await ProcessRequestAsync<KcUserBruteForceStatus>(
+        return ProcessRequestAsync<KcUserBruteForceStatus>(
             url,
             HttpMethod.Get,
             accessToken,
             $"Unable to get user {userId} login failure status",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 }

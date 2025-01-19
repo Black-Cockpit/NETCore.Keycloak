@@ -12,7 +12,7 @@ internal sealed class KcGroups(string baseUrl,
     ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcGroups
 {
     /// <inheritdoc cref="IKcGroups.CreateAsync"/>
-    public async Task<KcResponse<KcGroup>> CreateAsync(
+    public Task<KcResponse<KcGroup>> CreateAsync(
         string realm,
         string accessToken,
         KcGroup kcGroup,
@@ -28,18 +28,18 @@ internal sealed class KcGroups(string baseUrl,
         var url = $"{BaseUrl}/{realm}/groups";
 
         // Process the request to create the group.
-        return await ProcessRequestAsync<KcGroup>(
+        return ProcessRequestAsync<KcGroup>(
             url,
             HttpMethod.Post,
             accessToken,
             "Unable to create realm group",
             kcGroup,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcGroups.ListAsync"/>
-    public async Task<KcResponse<IEnumerable<KcGroup>>> ListAsync(
+    public Task<KcResponse<IEnumerable<KcGroup>>> ListAsync(
         string realm,
         string accessToken,
         KcGroupFilter filter = null,
@@ -55,17 +55,17 @@ internal sealed class KcGroups(string baseUrl,
         var url = $"{BaseUrl}/{realm}/groups{filter.BuildQuery()}";
 
         // Process the request to retrieve the list of groups.
-        return await ProcessRequestAsync<IEnumerable<KcGroup>>(
+        return ProcessRequestAsync<IEnumerable<KcGroup>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to list realm group",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcGroups.CountAsync"/>
-    public async Task<KcResponse<KcCount>> CountAsync(
+    public Task<KcResponse<KcCount>> CountAsync(
         string realm,
         string accessToken,
         KcGroupFilter filter = null,
@@ -81,17 +81,17 @@ internal sealed class KcGroups(string baseUrl,
         var url = $"{BaseUrl}/{realm}/groups/count{filter.BuildQuery()}";
 
         // Process the request to retrieve the count of groups.
-        return await ProcessRequestAsync<KcCount>(
+        return ProcessRequestAsync<KcCount>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to count realm group",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcGroups.GetAsync"/>
-    public async Task<KcResponse<KcGroup>> GetAsync(
+    public Task<KcResponse<KcGroup>> GetAsync(
         string realm,
         string accessToken,
         string id,
@@ -107,17 +107,17 @@ internal sealed class KcGroups(string baseUrl,
         var url = $"{BaseUrl}/{realm}/groups/{id}";
 
         // Process the request to retrieve the group details.
-        return await ProcessRequestAsync<KcGroup>(
+        return ProcessRequestAsync<KcGroup>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to get realm group",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcGroups.UpdateAsync"/>
-    public async Task<KcResponse<KcGroup>> UpdateAsync(
+    public Task<KcResponse<KcGroup>> UpdateAsync(
         string realm,
         string accessToken,
         string id,
@@ -137,18 +137,18 @@ internal sealed class KcGroups(string baseUrl,
         var url = $"{BaseUrl}/{realm}/groups/{id}";
 
         // Process the request to update the group details.
-        return await ProcessRequestAsync<KcGroup>(
+        return ProcessRequestAsync<KcGroup>(
             url,
             HttpMethod.Put,
             accessToken,
             "Unable to update realm group",
             kcGroup,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcGroups.DeleteAsync"/>
-    public async Task<KcResponse<object>> DeleteAsync(
+    public Task<KcResponse<object>> DeleteAsync(
         string realm,
         string accessToken,
         string id,
@@ -164,17 +164,17 @@ internal sealed class KcGroups(string baseUrl,
         var url = $"{BaseUrl}/{realm}/groups/{id}";
 
         // Process the request to remove the group.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Delete,
             accessToken,
             "Unable to delete realm group",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcGroups.SetOrCreateChildAsync"/>
-    public async Task<KcResponse<KcGroup>> SetOrCreateChildAsync(
+    public Task<KcResponse<KcGroup>> SetOrCreateChildAsync(
         string realm,
         string accessToken,
         string id,
@@ -194,18 +194,18 @@ internal sealed class KcGroups(string baseUrl,
         var url = $"{BaseUrl}/{realm}/groups/{id}/children";
 
         // Process the request to set or create the child group.
-        return await ProcessRequestAsync<KcGroup>(
+        return ProcessRequestAsync<KcGroup>(
             url,
             HttpMethod.Post,
             accessToken,
             "Unable to set or create child for realm group",
             kcGroup,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcGroups.GetAuthorizationManagementPermissionAsync"/>
-    public async Task<KcResponse<KcPermissionManagement>> GetAuthorizationManagementPermissionAsync(
+    public Task<KcResponse<KcPermissionManagement>> GetAuthorizationManagementPermissionAsync(
         string realm,
         string accessToken,
         string id,
@@ -221,17 +221,17 @@ internal sealed class KcGroups(string baseUrl,
         var url = $"{BaseUrl}/{realm}/groups/{id}/management/permissions";
 
         // Process the request to retrieve the management permissions.
-        return await ProcessRequestAsync<KcPermissionManagement>(
+        return ProcessRequestAsync<KcPermissionManagement>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to get realm group management permission",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcGroups.SetAuthorizationManagementPermissionAsync"/>
-    public async Task<KcResponse<KcPermissionManagement>> SetAuthorizationManagementPermissionAsync(
+    public Task<KcResponse<KcPermissionManagement>> SetAuthorizationManagementPermissionAsync(
         string realm,
         string accessToken,
         string id,
@@ -251,18 +251,18 @@ internal sealed class KcGroups(string baseUrl,
         var url = $"{BaseUrl}/{realm}/groups/{id}/management/permissions";
 
         // Process the request to set the management permissions.
-        return await ProcessRequestAsync<KcPermissionManagement>(
+        return ProcessRequestAsync<KcPermissionManagement>(
             url,
             HttpMethod.Put,
             accessToken,
             "Unable to set realm group management permission",
             permissionManagement,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcGroups.GetMembersAsync"/>
-    public async Task<KcResponse<IEnumerable<KcUser>>> GetMembersAsync(
+    public Task<KcResponse<IEnumerable<KcUser>>> GetMembersAsync(
         string realm,
         string accessToken,
         string id,
@@ -278,12 +278,12 @@ internal sealed class KcGroups(string baseUrl,
         var url = $"{BaseUrl}/{realm}/groups/{id}/members";
 
         // Process the request to retrieve the group's members.
-        return await ProcessRequestAsync<IEnumerable<KcUser>>(
+        return ProcessRequestAsync<IEnumerable<KcUser>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to get realm group members",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 }

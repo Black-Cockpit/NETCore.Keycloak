@@ -10,7 +10,7 @@ internal sealed class KcClientInitialAccess(string baseUrl,
     ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcClientInitialAccess
 {
     /// <inheritdoc cref="IKcClientInitialAccess.CreateInitialAccessTokenAsync"/>
-    public async Task<KcResponse<KcClientInitialAccessModel>> CreateInitialAccessTokenAsync(
+    public Task<KcResponse<KcClientInitialAccessModel>> CreateInitialAccessTokenAsync(
         string realm,
         string accessToken,
         KcCreateClientInitialAccess access,
@@ -26,18 +26,18 @@ internal sealed class KcClientInitialAccess(string baseUrl,
         var url = $"{BaseUrl}/{realm}/clients-initial-access";
 
         // Process the request to create the initial access token.
-        return await ProcessRequestAsync<KcClientInitialAccessModel>(
+        return ProcessRequestAsync<KcClientInitialAccessModel>(
             url,
             HttpMethod.Post,
             accessToken,
             "Unable to create client initial access token",
             access,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcClientInitialAccess.GetInitialAccessAsync"/>
-    public async Task<KcResponse<IEnumerable<KcClientInitialAccessModel>>> GetInitialAccessAsync(
+    public Task<KcResponse<IEnumerable<KcClientInitialAccessModel>>> GetInitialAccessAsync(
         string realm,
         string accessToken,
         CancellationToken cancellationToken = default)
@@ -49,17 +49,17 @@ internal sealed class KcClientInitialAccess(string baseUrl,
         var url = $"{BaseUrl}/{realm}/clients-initial-access";
 
         // Process the request to retrieve the initial access tokens.
-        return await ProcessRequestAsync<IEnumerable<KcClientInitialAccessModel>>(
+        return ProcessRequestAsync<IEnumerable<KcClientInitialAccessModel>>(
             url,
             HttpMethod.Get,
             accessToken,
             "Unable to list client initial access tokens",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcClientInitialAccess.DeleteInitialAccessTokenAsync"/>
-    public async Task<KcResponse<object>> DeleteInitialAccessTokenAsync(
+    public Task<KcResponse<object>> DeleteInitialAccessTokenAsync(
         string realm,
         string accessToken,
         string id,
@@ -75,12 +75,12 @@ internal sealed class KcClientInitialAccess(string baseUrl,
         var url = $"{BaseUrl}/{realm}/clients-initial-access/{id}";
 
         // Process the request to delete the initial access token.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Delete,
             accessToken,
             "Unable to delete client initial access token",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 }

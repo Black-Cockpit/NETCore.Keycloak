@@ -12,7 +12,7 @@ internal sealed class KcUsers(string baseUrl,
     ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcUsers
 {
     /// <inheritdoc cref="IKcUsers.CreateAsync"/>
-    public async Task<KcResponse<object>> CreateAsync(
+    public Task<KcResponse<object>> CreateAsync(
         string realm,
         string accessToken,
         KcUser user,
@@ -28,14 +28,14 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users";
 
         // Process the request to create the user.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Post,
             accessToken,
             "Unable to create user",
             user,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcUsers.IsUserExistsByEmailAsync"/>
@@ -67,7 +67,7 @@ internal sealed class KcUsers(string baseUrl,
     }
 
     /// <inheritdoc cref="IKcUsers.ListUserAsync"/>
-    public async Task<KcResponse<IEnumerable<KcUser>>> ListUserAsync(
+    public Task<KcResponse<IEnumerable<KcUser>>> ListUserAsync(
         string realm,
         string accessToken,
         KcUserFilter filter = null,
@@ -83,17 +83,17 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users{filter.BuildQuery()}";
 
         // Process the request to retrieve the list of users.
-        return await ProcessRequestAsync<IEnumerable<KcUser>>(
+        return ProcessRequestAsync<IEnumerable<KcUser>>(
             url,
             HttpMethod.Get,
             accessToken,
             $"Unable to list realm {realm} users",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcUsers.CountAsync"/>
-    public async Task<KcResponse<object>> CountAsync(
+    public Task<KcResponse<object>> CountAsync(
         string realm,
         string accessToken,
         KcUserFilter filter = null,
@@ -109,17 +109,17 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users/count{filter.BuildQuery()}";
 
         // Process the request to retrieve the count of users.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Get,
             accessToken,
             $"Unable to count realm {realm} users",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcUsers.GetAsync"/>
-    public async Task<KcResponse<KcUser>> GetAsync(
+    public Task<KcResponse<KcUser>> GetAsync(
         string realm,
         string accessToken,
         string userId,
@@ -135,17 +135,17 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users/{userId}";
 
         // Process the request to retrieve the user details.
-        return await ProcessRequestAsync<KcUser>(
+        return ProcessRequestAsync<KcUser>(
             url,
             HttpMethod.Get,
             accessToken,
             $"Unable to get user {userId}",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcUsers.UpdateAsync"/>
-    public async Task<KcResponse<object>> UpdateAsync(
+    public Task<KcResponse<object>> UpdateAsync(
         string realm,
         string accessToken,
         string userId,
@@ -165,18 +165,18 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users/{userId}";
 
         // Process the request to update the user details.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Put,
             accessToken,
             $"Unable to update user {userId}",
             user,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcUsers.DeleteAsync"/>
-    public async Task<KcResponse<object>> DeleteAsync(
+    public Task<KcResponse<object>> DeleteAsync(
         string realm,
         string accessToken,
         string userId,
@@ -192,17 +192,17 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users/{userId}";
 
         // Process the request to delete the user.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Delete,
             accessToken,
             $"Unable to delete user {userId}",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcUsers.GetCredentialsAsync"/>
-    public async Task<KcResponse<IEnumerable<KcCredentials>>> GetCredentialsAsync(
+    public Task<KcResponse<IEnumerable<KcCredentials>>> GetCredentialsAsync(
         string realm,
         string accessToken,
         string userId,
@@ -218,17 +218,17 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users/{userId}/credentials";
 
         // Process the request to retrieve the user's credentials.
-        return await ProcessRequestAsync<IEnumerable<KcCredentials>>(
+        return ProcessRequestAsync<IEnumerable<KcCredentials>>(
             url,
             HttpMethod.Get,
             accessToken,
             $"Unable to get user {userId} credentials",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcUsers.DeleteCredentialsAsync"/>
-    public async Task<KcResponse<object>> DeleteCredentialsAsync(
+    public Task<KcResponse<object>> DeleteCredentialsAsync(
         string realm,
         string accessToken,
         string userId,
@@ -248,17 +248,17 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users/{userId}/credentials/{credentialsId}";
 
         // Process the request to delete the credential.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Delete,
             accessToken,
             $"Unable to delete user {userId} credentials",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcUsers.UpdateCredentialsLabelAsync"/>
-    public async Task<KcResponse<object>> UpdateCredentialsLabelAsync(
+    public Task<KcResponse<object>> UpdateCredentialsLabelAsync(
         string realm,
         string accessToken,
         string userId,
@@ -285,7 +285,7 @@ internal sealed class KcUsers(string baseUrl,
         using var content = new StringContent(label);
 
         // Process the request to update the credential label.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Put,
             accessToken,
@@ -293,11 +293,11 @@ internal sealed class KcUsers(string baseUrl,
             contentType: "text/plain",
             content: content,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcUsers.UserGroupsAsync"/>
-    public async Task<KcResponse<IEnumerable<KcGroup>>> UserGroupsAsync(
+    public Task<KcResponse<IEnumerable<KcGroup>>> UserGroupsAsync(
         string realm,
         string accessToken,
         string userId,
@@ -317,17 +317,17 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users/{userId}/groups{filter.BuildQuery()}";
 
         // Process the request to retrieve the user's groups.
-        return await ProcessRequestAsync<IEnumerable<KcGroup>>(
+        return ProcessRequestAsync<IEnumerable<KcGroup>>(
             url,
             HttpMethod.Get,
             accessToken,
             $"Unable to get user {userId} groups",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcUsers.CountGroupsAsync"/>
-    public async Task<KcResponse<KcCount>> CountGroupsAsync(
+    public Task<KcResponse<KcCount>> CountGroupsAsync(
         string realm,
         string accessToken,
         string userId,
@@ -347,17 +347,17 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users/{userId}/groups/count{filter.BuildQuery()}";
 
         // Process the request to count the user's groups.
-        return await ProcessRequestAsync<KcCount>(
+        return ProcessRequestAsync<KcCount>(
             url,
             HttpMethod.Get,
             accessToken,
             $"Unable to count user {userId} groups",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcUsers.AddToGroupAsync"/>
-    public async Task<KcResponse<object>> AddToGroupAsync(
+    public Task<KcResponse<object>> AddToGroupAsync(
         string realm,
         string accessToken,
         string userId,
@@ -377,17 +377,17 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users/{userId}/groups/{groupId}";
 
         // Process the request to add the user to the group.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Put,
             accessToken,
             $"Unable to add user {userId} to group {groupId}",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcUsers.DeleteFromGroupAsync"/>
-    public async Task<KcResponse<object>> DeleteFromGroupAsync(
+    public Task<KcResponse<object>> DeleteFromGroupAsync(
         string realm,
         string accessToken,
         string userId,
@@ -407,17 +407,17 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users/{userId}/groups/{groupId}";
 
         // Process the request to remove the user from the group.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Delete,
             accessToken,
             $"Unable to delete user {userId} from group {groupId}",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcUsers.ResetPasswordAsync"/>
-    public async Task<KcResponse<object>> ResetPasswordAsync(
+    public Task<KcResponse<object>> ResetPasswordAsync(
         string realm,
         string accessToken,
         string userId,
@@ -437,18 +437,18 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users/{userId}/reset-password";
 
         // Process the request to reset the user's password.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Put,
             accessToken,
             $"Unable to update reset password for user {userId}",
             credentials,
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcUsers.SessionsAsync"/>
-    public async Task<KcResponse<IEnumerable<KcSession>>> SessionsAsync(
+    public Task<KcResponse<IEnumerable<KcSession>>> SessionsAsync(
         string realm,
         string accessToken,
         string userId,
@@ -464,17 +464,17 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users/{userId}/sessions";
 
         // Process the request to retrieve the user's active sessions.
-        return await ProcessRequestAsync<IEnumerable<KcSession>>(
+        return ProcessRequestAsync<IEnumerable<KcSession>>(
             url,
             HttpMethod.Get,
             accessToken,
             $"Unable to get user {userId} sessions",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcUsers.DeleteSessionAsync"/>
-    public async Task<KcResponse<object>> DeleteSessionAsync(
+    public Task<KcResponse<object>> DeleteSessionAsync(
         string realm,
         string accessToken,
         string sessionId,
@@ -490,17 +490,17 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/sessions/{sessionId}";
 
         // Process the request to delete the session.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Delete,
             accessToken,
             $"Unable delete session {sessionId}",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 
     /// <inheritdoc cref="IKcUsers.LogoutFromAllSessionsAsync"/>
-    public async Task<KcResponse<object>> LogoutFromAllSessionsAsync(
+    public Task<KcResponse<object>> LogoutFromAllSessionsAsync(
         string realm,
         string accessToken,
         string userId,
@@ -516,12 +516,12 @@ internal sealed class KcUsers(string baseUrl,
         var url = $"{BaseUrl}/{realm}/users/{userId}/logout";
 
         // Process the request to perform the logout operation.
-        return await ProcessRequestAsync<object>(
+        return ProcessRequestAsync<object>(
             url,
             HttpMethod.Post,
             accessToken,
             "Unable to logout from all sessions",
             cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        );
     }
 }
