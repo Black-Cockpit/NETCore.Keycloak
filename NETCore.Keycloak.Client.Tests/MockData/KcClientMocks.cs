@@ -29,7 +29,7 @@ public static class KcClientMocks
             },
             ClientId = Guid.NewGuid().ToString(),
             Secret = Guid.NewGuid().ToString(),
-            Name = faker.Company.CompanyName(),
+            Name = Guid.NewGuid().ToString().Replace("-", string.Empty, StringComparison.Ordinal),
             Description = faker.Lorem.Sentence(),
             BaseUrl = faker.Internet.Url(),
             Enabled = true,
@@ -103,7 +103,7 @@ public static class KcClientMocks
             },
             ClientId = Guid.NewGuid().ToString(), // Unique client identifier.
             Secret = Guid.NewGuid().ToString(), // Secret key for authentication.
-            Name = faker.Company.CompanyName(),
+            Name = Guid.NewGuid().ToString().Replace("-", string.Empty, StringComparison.Ordinal),
             Description = faker.Lorem.Sentence(),
             BaseUrl = faker.Internet.Url(),
             Enabled = true,

@@ -85,7 +85,9 @@ public class KcAuthenticationConfiguration
     /// Get valid issuer
     /// </summary>
     /// <returns></returns>
-    public string ValidIssuer => !string.IsNullOrWhiteSpace(Realm) ? $"{NormalizeUrl(Issuer)}/realms/{Realm}" : null;
+    public string ValidIssuer => !string.IsNullOrWhiteSpace(Realm) && !string.IsNullOrWhiteSpace(Issuer)
+        ? $"{NormalizeUrl(Issuer)}/realms/{Realm}"
+        : null;
 
     /// <summary>
     /// Get authority

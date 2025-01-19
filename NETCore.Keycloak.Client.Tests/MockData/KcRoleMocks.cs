@@ -1,5 +1,3 @@
-using System.Globalization;
-using Bogus;
 using NETCore.Keycloak.Client.Models.Roles;
 
 namespace NETCore.Keycloak.Client.Tests.MockData;
@@ -20,14 +18,10 @@ public static class KcRoleMocks
     /// <returns>A mock <see cref="KcRole"/> instance.</returns>
     public static KcRole Generate()
     {
-        // Create a faker instance to generate random data
-        var faker = new Faker();
-
         // Generate a new realm role with a random name and predefined attributes
         var kcRole = new KcRole
         {
-            Name = faker.Random.Words(2).ToLower(CultureInfo.CurrentCulture)
-                .Replace(" ", string.Empty, StringComparison.Ordinal),
+            Name = Guid.NewGuid().ToString().Replace("-", string.Empty, StringComparison.Ordinal),
             Attributes = new Dictionary<string, IEnumerable<string>>
             {
                 {

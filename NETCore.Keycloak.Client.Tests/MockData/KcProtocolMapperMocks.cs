@@ -1,5 +1,3 @@
-using System.Globalization;
-using Bogus;
 using NETCore.Keycloak.Client.Models.ClientScope;
 using NETCore.Keycloak.Client.Models.KcEnum;
 
@@ -13,14 +11,10 @@ public static class KcProtocolMapperMocks
     /// <summary>
     /// Generates a single Keycloak protocol mapper with random values for testing purposes.
     /// </summary>
-    public static KcProtocolMapper Generate()
-    {
-        var faker = new Faker();
-
-        return new KcProtocolMapper
+    public static KcProtocolMapper Generate() =>
+        new()
         {
-            Name = faker.Random.Word().ToLower(CultureInfo.CurrentCulture)
-                .Replace(" ", string.Empty, StringComparison.Ordinal),
+            Name = Guid.NewGuid().ToString().Replace("-", string.Empty, StringComparison.Ordinal),
             Protocol = KcProtocol.OpenidConnect,
             ProtocolMapper = "oidc-usermodel-attribute-mapper",
             Config = new Dictionary<string, string>
@@ -33,7 +27,6 @@ public static class KcProtocolMapperMocks
                 }
             }
         };
-    }
 
     /// <summary>
     /// Generates a collection of Keycloak protocol mappers with random values for testing purposes.
