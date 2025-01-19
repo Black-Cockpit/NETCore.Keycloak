@@ -200,29 +200,3 @@ app.UseExceptionHandler(builder =>
     });
 });
 ```
-
-## Best Practices
-
-1. **Security**:
-   - Always use HTTPS in production
-   - Keep client secrets secure
-   - Regularly rotate client secrets
-   - Validate all security-related configuration
-
-2. **Token Handling**:
-   - Validate tokens on every request
-   - Implement proper token storage
-   - Handle token expiration gracefully
-   - Use appropriate token lifetimes
-
-3. **Role Management**:
-   - Use descriptive role names
-   - Implement role-based access control (RBAC)
-   - Keep roles granular but manageable
-   - Document role requirements
-
-4. **Error Handling**:
-   - Provide clear error messages
-   - Log authentication failures
-   - Implement proper security headers
-   - Monitor failed authentication attempts

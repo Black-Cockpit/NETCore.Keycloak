@@ -469,18 +469,6 @@ catch (KcException ex)
 }
 ```
 
-### Best Practices
-
-1. **Resource Naming**:
-   - Use consistent naming patterns for resources
-   - Include the resource type in the name (e.g., "orders-api", "users-service")
-   - Keep names unique within each realm
-
-2. **Scope Definition**:
-   - Use standard scope names (e.g., "view", "create", "update", "delete")
-   - Define granular scopes for fine-grained control
-   - Document scope requirements for each resource
-
 ## Models
 
 ### KcProtectedResource
@@ -565,30 +553,14 @@ catch (KcException ex)
     throw;
 }
 ```
+### Best Practices
 
-## Best Practices
+1. **Resource Naming**:
+   - Use consistent naming patterns for resources
+   - Include the resource type in the name (e.g., "orders-api", "users-service")
+   - Keep names unique within each realm
 
-1. **Resource Definition**:
-   - Define resources granularly
-   - Use meaningful scope names
-   - Document resource-scope combinations
-
-2. **Token Handling**:
-   - Always validate RPT tokens
-   - Implement proper token caching
-   - Handle token expiration gracefully
-
-3. **Error Handling**:
-   - Log authorization failures
-   - Provide meaningful error messages
-   - Implement proper exception handling
-
-4. **Security**:
-   - Use HTTPS for all authorization endpoints
-   - Protect admin credentials
-   - Regularly rotate client secrets
-
-5. **Performance**:
-   - Cache authorization decisions
-   - Implement efficient resource stores
-   - Monitor authorization metrics
+2. **Scope Definition**:
+   - Use standard scope names (e.g., "view", "create", "update", "delete")
+   - Define granular scopes for fine-grained control
+   - Document scope requirements for each resource
