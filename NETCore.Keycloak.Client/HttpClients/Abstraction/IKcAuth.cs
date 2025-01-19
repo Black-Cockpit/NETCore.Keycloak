@@ -1,3 +1,4 @@
+using NETCore.Keycloak.Client.Exceptions;
 using NETCore.Keycloak.Client.Models;
 using NETCore.Keycloak.Client.Models.Auth;
 using NETCore.Keycloak.Client.Models.Tokens;

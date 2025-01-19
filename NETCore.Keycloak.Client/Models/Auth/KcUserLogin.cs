@@ -1,3 +1,4 @@
+using NETCore.Keycloak.Client.Exceptions;
 using Newtonsoft.Json;
 
 namespace NETCore.Keycloak.Client.Models.Auth;

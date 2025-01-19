@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Logging;
+using NETCore.Keycloak.Client.Exceptions;
 using NETCore.Keycloak.Client.Models;
 using NETCore.Keycloak.Client.Models.Common;
 using NETCore.Keycloak.Client.Utils;

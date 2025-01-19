@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NETCore.Keycloak.Client.Authorization.Handlers;
 using NETCore.Keycloak.Client.Authorization.Store;
+using NETCore.Keycloak.Client.Exceptions;
 using NETCore.Keycloak.Client.Models.Auth;
 using NETCore.Keycloak.Client.Models.Common;
 using NETCore.Keycloak.Client.Tests.Abstraction;

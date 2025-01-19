@@ -1,3 +1,4 @@
+using NETCore.Keycloak.Client.Exceptions;
 using NETCore.Keycloak.Client.HttpClients.Implementation;
 using NETCore.Keycloak.Client.Tests.Abstraction;
 

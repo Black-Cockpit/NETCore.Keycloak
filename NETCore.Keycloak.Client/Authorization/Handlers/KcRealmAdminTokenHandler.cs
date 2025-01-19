@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NETCore.Keycloak.Client.Authorization.Store;
+using NETCore.Keycloak.Client.Exceptions;
 using NETCore.Keycloak.Client.HttpClients.Implementation;
 using NETCore.Keycloak.Client.Models.Auth;
 using NETCore.Keycloak.Client.Models.Common;

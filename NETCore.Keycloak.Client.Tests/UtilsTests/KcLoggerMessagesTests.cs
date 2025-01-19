@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Moq;
+using NETCore.Keycloak.Client.Exceptions;
 using NETCore.Keycloak.Client.Utils;
 
 namespace NETCore.Keycloak.Client.Tests.UtilsTests;

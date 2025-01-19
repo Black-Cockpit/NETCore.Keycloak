@@ -1,3 +1,4 @@
+using NETCore.Keycloak.Client.Exceptions;
 using NETCore.Keycloak.Client.Models.Auth;
 
 namespace NETCore.Keycloak.Client.Models.Common;

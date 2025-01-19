@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using NETCore.Keycloak.Client.Exceptions;
 using NETCore.Keycloak.Client.HttpClients.Abstraction;
 using NETCore.Keycloak.Client.Models;
 using NETCore.Keycloak.Client.Models.Common;

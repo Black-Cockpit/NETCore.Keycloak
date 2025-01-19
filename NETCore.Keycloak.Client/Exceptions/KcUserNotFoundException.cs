@@ -1,4 +1,4 @@
-namespace NETCore.Keycloak.Client;
+namespace NETCore.Keycloak.Client.Exceptions;
 
 /// <summary>
 /// Represents an exception that occurs when a specified Keycloak user is not found.

@@ -1,3 +1,4 @@
+using NETCore.Keycloak.Client.Exceptions;
 using NETCore.Keycloak.Client.Models;
 using NETCore.Keycloak.Client.Models.Common;
 using NETCore.Keycloak.Client.Models.Groups;

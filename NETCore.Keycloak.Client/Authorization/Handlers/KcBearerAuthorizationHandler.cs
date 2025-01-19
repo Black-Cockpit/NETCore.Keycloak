@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NETCore.Keycloak.Client.Authorization.Requirements;
+using NETCore.Keycloak.Client.Exceptions;
 using NETCore.Keycloak.Client.HttpClients.Implementation;
 using NETCore.Keycloak.Client.Utils;
 

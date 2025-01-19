@@ -1,3 +1,5 @@
+using NETCore.Keycloak.Client.Exceptions;
+
 namespace NETCore.Keycloak.Client.Tests.ExceptionsTests;
 
 /// <summary>

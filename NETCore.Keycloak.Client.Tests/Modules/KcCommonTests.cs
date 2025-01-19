@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Moq;
+using NETCore.Keycloak.Client.Exceptions;
 using NETCore.Keycloak.Client.HttpClients.Abstraction;
 using NETCore.Keycloak.Client.HttpClients.Implementation;
 using NETCore.Keycloak.Client.Models.Auth;

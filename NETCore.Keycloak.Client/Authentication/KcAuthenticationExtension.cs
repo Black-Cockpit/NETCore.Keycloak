@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using NETCore.Keycloak.Client.Authentication.Claims;
 using NETCore.Keycloak.Client.Constants;
+using NETCore.Keycloak.Client.Exceptions;
 
 namespace NETCore.Keycloak.Client.Authentication;
 
