@@ -3,49 +3,13 @@
 /// Includes and calls tasks from external scripts.
 /// </summary>
 
-var configuration = Argument("configuration", "Release");
-
 // Load external task scripts
 #load "cakeScripts/check_tools.cake";
 #load "cakeScripts/setup_keycloak_test_environment.cake";
+#load "../build.cake";
 
-/// <summary>
-/// Task to clean build output directories.
-/// Ensures a clean state before restoring or building the solution.
-/// </summary>
-Task("Clean")
-    .Does(() =>
-    {
-        Information("Cleaning build output directories...");
-        DotNetClean("../NETCore.Keycloak.sln");
-    });
-
-/// <summary>
-/// Task to restore NuGet packages for the solution.
-/// Depends on the Clean task to ensure a clean environment.
-/// </summary>
-Task("Restore")
-    .IsDependentOn("Clean")
-    .Does(() =>
-    {
-        Information("Restoring NuGet packages...");
-        DotNetRestore("../NETCore.Keycloak.sln");
-    });
-
-/// <summary>
-/// Task to build the solution.
-/// Depends on the Restore task to ensure all packages are restored before the build.
-/// </summary>
-Task("Build")
-    .IsDependentOn("Restore")
-    .Does(() =>
-    {
-        Information("Building the solution...");
-        DotNetBuild("../NETCore.Keycloak.sln", new DotNetBuildSettings
-        {
-            Configuration = configuration
-        });
-    });
+// Update the solution context
+slnContext = "..";
 
 /// <summary>
 /// Task to run tests for the solution.
@@ -56,7 +20,7 @@ Task("Test")
     .Does(() =>
     {
         Information("Running unit tests...");
-        DotNetTest("../NETCore.Keycloak.sln", new DotNetTestSettings
+        DotNetTest($"{slnContext}/NETCore.Keycloak.sln", new DotNetTestSettings
         {
             Configuration = configuration,
             NoBuild = true,
@@ -112,5 +76,5 @@ Task("E2E-Tests")
         }
     });
 
-// Execute the Default task
+// Execute the E2E-Tests task
 RunTarget("E2E-Tests");
