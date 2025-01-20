@@ -1,6 +1,6 @@
 # Keycloak Client for .NET Core
 
-A robust Keycloak client library implemented in C# for .NET Core. This library provides models, filters, token handling, and utilities to integrate seamlessly with Keycloak's REST API.
+A comprehensive .NET Core client library for Keycloak that provides seamless integration with Keycloak's authentication and authorization services. This library offers a robust implementation of Keycloak's REST API, including support for OpenID Connect, OAuth 2.0, and User-Managed Access (UMA 2.0).
 
 ## Requirements
 
@@ -24,14 +24,6 @@ A robust Keycloak client library implemented in C# for .NET Core. This library p
 ## Features
 
 - Full support for Keycloak's REST API
-- Typed models for roles, users, groups, permissions, and tokens
-- Filters for querying users, groups, and clients
-- Comprehensive token management and validation
-- Support for custom claims and certificate configuration
-- Authorization handlers for protecting resources
-- Client credential management and validation
-- Session management and validation
-- Attack detection capabilities
 - Comprehensive response types with error handling
 - Built-in monitoring and metrics
 
