@@ -2,6 +2,25 @@
 
 A robust Keycloak client library implemented in C# for .NET Core. This library provides models, filters, token handling, and utilities to integrate seamlessly with Keycloak's REST API.
 
+## Requirements
+
+| Category     | Supported Versions                                                      |
+| ------------ | ----------------------------------------------------------------------- |
+| .NET         | 6.0, 7.0, 8.0                                                           |
+| Dependencies | ASP.NET Core, Microsoft.Extensions.DependencyInjection, Newtonsoft.Json |
+
+## Coverage
+
+| Keycloak Version | Support |
+| ---------------- | ------- |
+| 26.x             | ✅       |
+| 25.x             | ✅       |
+| 24.x             | ✅       |
+| 23.x             | ✅       |
+| 22.x             | ✅       |
+| 21.x             | ✅       |
+| 20.x             | ✅       |
+
 ## Features
 
 - Full support for Keycloak's REST API
@@ -18,15 +37,25 @@ A robust Keycloak client library implemented in C# for .NET Core. This library p
 
 ## Table of Contents
 
-- [Installation](#installation)
-- [Getting Started](#getting-started)
-- [Basic Usage](#basic-usage)
-- [Documentation](#documentation)
-- [Response Types](#response-types)
-- [Monitoring](#monitoring)
-- [Configuration](#configuration)
-- [Contributing](#contributing)
-- [License](#license)
+- [Keycloak Client for .NET Core](#keycloak-client-for-net-core)
+  - [Requirements](#requirements)
+  - [Coverage](#coverage)
+  - [Features](#features)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Basic Setup](#basic-setup)
+  - [Basic Usage](#basic-usage)
+  - [Documentation](#documentation)
+  - [Response Types](#response-types)
+  - [Monitoring](#monitoring)
+  - [Configuration](#configuration)
+    - [Client Configuration Options](#client-configuration-options)
+    - [Authentication Options](#authentication-options)
+  - [Testing](#testing)
+  - [Contributing](#contributing)
+  - [License](#license)
 
 ## Installation
 
@@ -129,6 +158,60 @@ Detailed documentation for each module is available in the docs directory:
   - Client Configuration
   - Service Accounts
   - Client Scopes
+
+## Testing
+
+The library includes a comprehensive test suite that validates functionality across multiple Keycloak versions (20.x through 26.x). The test infrastructure uses Docker and Ansible for automated environment setup and test execution.
+
+### Test Documentation
+
+- [Test Suite Documentation](NETCore.Keycloak.Client.Tests/README.md)
+  - Test Categories and Patterns
+  - Environment Setup
+  - Running Tests
+  - Mock Data Organization
+
+- [Ansible Environment Documentation](NETCore.Keycloak.Client.Tests/ansible/README.md)
+  - Environment Provisioning
+  - Keycloak Configuration
+  - Database Setup
+  - Container Management
+
+### Key Testing Features
+
+1. **Version Coverage**:
+   - Supports Keycloak 20.x through 26.x
+   - Automated environment setup per version
+   - Parallel version testing
+
+2. **Test Categories**:
+   - Authentication flows
+   - Authorization mechanisms
+   - Client operations
+   - Group management
+   - User operations
+
+3. **Infrastructure**:
+   - Docker-based environments
+   - Ansible automation
+   - Continuous Integration ready
+   - Comprehensive mock data
+
+### Running Tests
+
+```bash
+# Install test environment dependencies
+cd NETCore.Keycloak.Client.Tests
+make install_virtual_env
+
+# Run tests for all supported versions
+dotnet cake e2e_test.cake
+
+# Run tests for specific version
+dotnet cake e2e_test.cake --kc_major_version=XX  # Replace XX with version (20-26)
+```
+
+For detailed testing instructions and environment setup, refer to the [Test Suite Documentation](NETCore.Keycloak.Client.Tests/README.md).
 
 ## Response Types
 

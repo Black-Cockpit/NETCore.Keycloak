@@ -15,7 +15,7 @@ services:
   net_core_keycloak_idp:
     container_name: net_core_keycloak_idp
     image: "quay.io/keycloak/keycloak:{{ keycloak_version}}"
-    command: ["start-dev", "--spi-user-sessions-infinispan-preload-offline-sessions-from-database=true", "--spi-connections-jpa-legacy-migration-strategy=update"]
+    command: ["start-dev", "--spi-connections-jpa-legacy-migration-strategy=update"]
     env_file:
       - keycloak.env
     ports:

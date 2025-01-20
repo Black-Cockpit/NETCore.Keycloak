@@ -1,13 +1,8 @@
 # Wait for Keycloak to start
 # Ensures that the Keycloak service is up and running before proceeding with further tasks.
 - name: Wait for keycloak to start
-  wait_for:
-    host: 127.0.0.1
-    port: 8080
-    timeout: 60
-    state: started
-    delay: 15
-  retries: 2
+  pause:
+    seconds: 30
 
 # Create realm
 # Includes the task file to create a Keycloak realm.

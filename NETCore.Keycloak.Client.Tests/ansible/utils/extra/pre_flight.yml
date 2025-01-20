@@ -14,6 +14,17 @@
   tags:
   - always
 
+# Check keycloak version
+- name: "Check keycloak version"
+  assert:
+    that: kc_version in {{ supported_keycloak_version }}
+    fail_msg: "This can only provision testing environment on supported keycloak versions. {{ kc_version }} is not supported."
+    success_msg: "Provision testing environment a supported keycloak version {{ kc_version }}"
+  changed_when: false
+  when: (kc_version | default('')) != ''
+  tags:
+  - always
+
 # Set rhel as a target
 - set_fact:
     target_platform: rhel
@@ -23,3 +34,8 @@
 - set_fact:
     target_platform: debian
   when: ansible_distribution == 'Ubuntu' or ansible_os_family == 'Debian'
+
+# Set Keycloak version
+# Sets the Keycloak version to the value provided in 'kc_version', or defaults to '22.0.3' if none is provided.
+- set_fact:
+    keycloak_version: "{{ kc_version | default('20.0.3') }}"

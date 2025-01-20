@@ -22,6 +22,16 @@ public class KcRolesClaimsTransformerTests
     /// </summary>
     private const string Audience = "test-audience";
 
+    private static readonly string[] expected = new[]
+    {
+        "role1", "role2"
+    };
+
+    private static readonly string[] expectedArray = new[]
+    {
+        "realm-role1", "realm-role2"
+    };
+
     /// <summary>
     /// Verifies that the <see cref="KcRolesClaimsTransformer.TransformAsync"/> method
     /// throws an <see cref="ArgumentNullException"/> when the provided principal is null.
@@ -72,10 +82,7 @@ public class KcRolesClaimsTransformerTests
             .Select(c => c.Value)
             .ToList();
 
-        CollectionAssert.AreEquivalent(new[]
-        {
-            "role1", "role2"
-        }, roles, "Roles should be extracted from resource_access.");
+        CollectionAssert.AreEquivalent(expected, roles, "Roles should be extracted from resource_access.");
     }
 
     /// <summary>
@@ -108,10 +115,7 @@ public class KcRolesClaimsTransformerTests
             .Select(c => c.Value)
             .ToList();
 
-        CollectionAssert.AreEquivalent(new[]
-        {
-            "realm-role1", "realm-role2"
-        }, roles, "Roles should be extracted from realm_access.");
+        CollectionAssert.AreEquivalent(expectedArray, roles, "Roles should be extracted from realm_access.");
     }
 
     /// <summary>

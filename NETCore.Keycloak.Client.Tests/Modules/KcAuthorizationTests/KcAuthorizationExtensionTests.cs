@@ -125,7 +125,7 @@ public class KcAuthorizationExtensionTests : KcTestingModule
 
         // Add Keycloak protected resources policies using the extension method.
         _ = _services.AddKeycloakProtectedResourcesPolicies<
-            MockKcProtectedResourceStore, MockKcRealmAdminConfigurationStore>();
+            KcMockKcProtectedResourceStore, KcMockKcRealmAdminConfigurationStore>();
 
         // Build the service provider from the service collection.
         var serviceProvider = _services.BuildServiceProvider();

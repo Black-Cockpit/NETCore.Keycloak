@@ -13,11 +13,6 @@
   - include_vars:
       dir: "./vars/"
 
-  # Set Keycloak version
-  # Sets the Keycloak version to the value provided in 'kc_version', or defaults to '22.0.3' if none is provided.
-  - set_fact:
-      keycloak_version: "{{ kc_version | default('22.0.3') }}"
-
   # Preflight check
   # Includes and executes the preflight check tasks to validate the environment and ensure prerequisites are met.
   # This is skipped if the stack state is 'stopped' or 'absent'.
