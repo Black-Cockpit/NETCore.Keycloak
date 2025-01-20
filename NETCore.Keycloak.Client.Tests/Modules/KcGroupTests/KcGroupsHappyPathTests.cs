@@ -61,12 +61,10 @@ public class KcGroupsHappyPathTests : KcTestingModule
         var accessToken = await GetRealmAdminTokenAsync(TestContext).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
-        // Generate a mock group using Faker.
-        var faker = new Faker();
+        // Generate a mock group.
         var kcGroup = new KcGroup
         {
-            Name = faker.Random.Word().ToLower(CultureInfo.CurrentCulture)
-                .Replace(" ", string.Empty, StringComparison.Ordinal),
+            Name = Guid.NewGuid().ToString().Replace("-", string.Empty, StringComparison.Ordinal),
             Attributes = new Dictionary<string, IEnumerable<string>>
             {
                 {

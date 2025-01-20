@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using NETCore.Keycloak.Client.Authentication.Claims;
+using NETCore.Keycloak.Client.Exceptions;
 using NETCore.Keycloak.Client.Models.KcEnum;
 using Newtonsoft.Json;
 
@@ -36,9 +37,9 @@ public class KcAuthenticationConfiguration
     public string Issuer { get; set; }
 
     /// <summary>
-    /// List of realms
+    /// Realm name
     /// </summary>
-    [JsonProperty("realms")]
+    [JsonProperty("realm")]
     public string Realm { get; set; }
 
     /// <summary>
@@ -109,5 +110,39 @@ public class KcAuthenticationConfiguration
         var urlNormalized = !url.EndsWith("/", StringComparison.Ordinal) ? url : url.TrimEnd('/');
 
         return urlNormalized;
+    }
+
+    /// <summary>
+    /// Validates the configuration properties of the current instance to ensure all
+    /// required values are set. Throws a <see cref="KcException"/> if any required
+    /// property is missing or invalid.
+    /// </summary>
+    /// <exception cref="KcException">
+    /// Thrown when any of the following properties are null, empty, or contain only whitespace:
+    /// <list type="bullet">
+    /// <item><description><see cref="Url"/></description></item>
+    /// <item><description><see cref="Realm"/></description></item>
+    /// <item><description><see cref="Issuer"/></description></item>
+    /// </list>
+    /// </exception>
+    public void Validate()
+    {
+        // Check if Url is null or whitespace and throw an exception if it is.
+        if ( string.IsNullOrWhiteSpace(Url) )
+        {
+            throw new KcException($"{nameof(Url)} is required");
+        }
+
+        // Check if Realm is null or whitespace and throw an exception if it is.
+        if ( string.IsNullOrWhiteSpace(Realm) )
+        {
+            throw new KcException($"{nameof(Realm)} is required");
+        }
+
+        // Check if Issuer is null or whitespace and throw an exception if it is.
+        if ( string.IsNullOrWhiteSpace(Issuer) )
+        {
+            throw new KcException($"{nameof(Issuer)} is required");
+        }
     }
 }

@@ -1,4 +1,5 @@
 using NETCore.Keycloak.Client.Authentication;
+using NETCore.Keycloak.Client.Exceptions;
 using NETCore.Keycloak.Client.Models.KcEnum;
 
 namespace NETCore.Keycloak.Client.Tests.Modules.KcAuthentication;
@@ -55,7 +56,7 @@ public class KcAuthenticationConfigurationTests
         // Create a configuration with valid Issuer and Realm values.
         var config = new KcAuthenticationConfiguration
         {
-            Issuer = "http://localhost:8080", // Base URL of the Keycloak server.
+            Issuer = "https://localhost:8080", // Base URL of the Keycloak server.
             Realm = "test-realm" // Name of the Keycloak realm.
         };
 
@@ -65,7 +66,7 @@ public class KcAuthenticationConfigurationTests
 
         // Assert
         // Verify that ValidIssuer is correctly constructed using the Issuer and Realm.
-        Assert.AreEqual("http://localhost:8080/realms/test-realm", validIssuer,
+        Assert.AreEqual("https://localhost:8080/realms/test-realm", validIssuer,
             "ValidIssuer should be constructed correctly.");
     }
 
@@ -80,7 +81,7 @@ public class KcAuthenticationConfigurationTests
         // Create a configuration with a valid Issuer but a null Realm.
         var config = new KcAuthenticationConfiguration
         {
-            Issuer = "http://localhost:8080", // Base URL of the Keycloak server.
+            Issuer = "https://localhost:8080", // Base URL of the Keycloak server.
             Realm = null // Realm is not set.
         };
 
@@ -126,11 +127,11 @@ public class KcAuthenticationConfigurationTests
     {
         // Act & Assert
         // Verify that a URL with a trailing slash is trimmed correctly.
-        Assert.AreEqual("http://localhost", InvokeNormalizeUrl("http://localhost/"),
+        Assert.AreEqual("https://localhost", InvokeNormalizeUrl("https://localhost/"),
             "Trailing slash should be trimmed.");
 
         // Verify that a URL without a trailing slash remains unchanged.
-        Assert.AreEqual("http://localhost", InvokeNormalizeUrl("http://localhost"),
+        Assert.AreEqual("https://localhost", InvokeNormalizeUrl("https://localhost"),
             "URL without trailing slash should remain unchanged.");
 
         // Verify that null input returns null.
@@ -152,7 +153,7 @@ public class KcAuthenticationConfigurationTests
         // Create a configuration with valid Issuer and Realm values.
         var config = new KcAuthenticationConfiguration
         {
-            Issuer = "http://localhost:8080", // Base URL of the Keycloak server.
+            Issuer = "https://localhost:8080", // Base URL of the Keycloak server.
             Realm = "test-realm" // Name of the Keycloak realm.
         };
 
@@ -162,7 +163,73 @@ public class KcAuthenticationConfigurationTests
 
         // Assert
         // Verify that Authority matches the value of ValidIssuer.
-        Assert.AreEqual("http://localhost:8080/realms/test-realm", authority, "Authority should match ValidIssuer.");
+        Assert.AreEqual("https://localhost:8080/realms/test-realm", authority, "Authority should match ValidIssuer.");
+    }
+
+    /// <summary>
+    /// Tests that the <see cref="KcAuthenticationConfiguration.Validate"/> method
+    /// throws a <see cref="KcException"/> when the <see cref="KcAuthenticationConfiguration.Url"/> property
+    /// is not set (null, empty, or whitespace).
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(KcException))]
+    public void ShouldValidateBaseUrl()
+    {
+        // Arrange
+        // Create a configuration object without setting the Url property.
+        var config = new KcAuthenticationConfiguration
+        {
+            Issuer = "https://localhost:8080", // Valid Issuer value.
+            Realm = "test-realm" // Valid Realm value.
+        };
+
+        // Act
+        // Call the Validate method, which should throw an exception due to the missing Url.
+        config.Validate();
+    }
+
+    /// <summary>
+    /// Tests that the <see cref="KcAuthenticationConfiguration.Validate"/> method
+    /// throws a <see cref="KcException"/> when the <see cref="KcAuthenticationConfiguration.Realm"/> property
+    /// is not set (null, empty, or whitespace).
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(KcException))]
+    public void ShouldValidateRealm()
+    {
+        // Arrange
+        // Create a configuration object with valid Url and Issuer but without setting the Realm property.
+        var config = new KcAuthenticationConfiguration
+        {
+            Url = "https://localhost:8080", // Valid Url value.
+            Issuer = "https://localhost:8080" // Valid Issuer value.
+        };
+
+        // Act
+        // Call the Validate method, which should throw an exception due to the missing Realm.
+        config.Validate();
+    }
+
+    /// <summary>
+    /// Tests that the <see cref="KcAuthenticationConfiguration.Validate"/> method
+    /// throws a <see cref="KcException"/> when the <see cref="KcAuthenticationConfiguration.Issuer"/> property
+    /// is not set (null, empty, or whitespace).
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(KcException))]
+    public void ShouldValidateIssuer()
+    {
+        // Arrange
+        // Create a configuration object with valid Url and Realm but without setting the Issuer property.
+        var config = new KcAuthenticationConfiguration
+        {
+            Url = "https://localhost:8080", // Valid Url value.
+            Realm = "test-realm" // Valid Realm value.
+        };
+
+        // Act
+        // Call the Validate method, which should throw an exception due to the missing Issuer.
+        config.Validate();
     }
 
     /// <summary>
