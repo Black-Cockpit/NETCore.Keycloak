@@ -1,0 +1,105 @@
+# Set user profile attributes for a Keycloak realm
+# Description: This task configures user profile attributes and permissions for the specified Keycloak realm. 
+# Attributes include username, email, firstName, lastName, and custom attributes like account_owner and business_account_owner.
+# Attributes are categorized into groups for better organization, such as user metadata and user permissions.
+- name: "Set {{ realm }} realm user profile attributes"
+  community.general.keycloak_userprofile:
+    auth_client_id: "{{ keycloak.client_id }}"
+    auth_keycloak_url: "{{ keycloak.auth_url }}"
+    auth_realm: "{{ keycloak.auth_realm }}"
+    auth_username: "{{ keycloak.username }}"
+    auth_password: "{{ keycloak.password }}"
+    realm: "{{ realm }}"
+    state: present
+    config:
+      kc_user_profile_config:
+      - attributes:
+        - name: username
+          displayName: "${username}"
+          validations:
+            length:
+              min: 3
+              max: 255            
+          permissions:
+            view:
+            - admin
+            - user
+            edit:
+            - admin
+            - user
+          multivalued: false
+        - name: email
+          displayName: "${email}"
+          validations:
+            email: {}
+            length:
+              max: 255
+          required:
+            roles:
+            - user
+          permissions:
+            view:
+            - admin
+            - user
+            edit:
+            - admin
+            - user
+          multivalued: false
+        - name: firstName
+          displayName: "${firstName}"
+          validations:
+            length:
+              max: 255
+          required:
+            roles:
+            - user
+          permissions:
+            view:
+            - admin
+            - user
+            edit:
+            - admin
+            - user
+          multivalued: false
+        - name: lastName
+          displayName: "${lastName}"
+          validations:
+            length:
+              max: 255
+          required:
+            roles:
+            - user
+          permissions:
+            view:
+            - admin
+            - user
+            edit:
+            - admin
+            - user
+          multivalued: false
+        - name: account_owner
+          displayName: "Account owner"
+          required:
+            roles:
+            - user
+          permissions:
+            edit:
+            - admin
+            view:
+            - admin
+          multivalued: false
+        - name: business_account_owner
+          displayName: "Business account owner"
+          required:
+            roles:
+            - user
+          permissions:
+            edit:
+            - admin
+            view:
+            - admin
+          multivalued: false
+      - groups:
+        - name: "user-metadata"
+          displayHeader: "User metadata"
+          displayDescription: "Attributes, which refer to user metadata"

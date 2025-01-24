@@ -1,3 +1,33 @@
+# Set the default client scopes with the "basic" scope included
+# If the Keycloak version is not in ['20.0.3', '22.0.3', '21.1.2', '23.0.7'], the "basic" scope is added to the default client scopes.
+- set_fact:
+    app__client_default_client_scopes:
+        - "acr"
+        - "attributes"
+        - "audiences"
+        - "email"
+        - "offline_access"
+        - "profile"
+        - "roles"
+        - "web-origins"
+        - "basic"
+  when: "(kc_version | default('')) not in ['20.0.3', '22.0.3', '21.1.2', '23.0.7', '24.0.5-0']"
+
+# Set the default client scopes without the "basic" scope
+# If the Keycloak version is in ['20.0.3', '22.0.3', '21.1.2', '23.0.7'], the "basic" scope is excluded from the default client scopes.
+- set_fact:
+    app__client_default_client_scopes:
+        - "acr"
+        - "attributes"
+        - "audiences"
+        - "email"
+        - "offline_access"
+        - "profile"
+        - "roles"
+        - "web-origins"
+  when: "(kc_version | default('')) in ['20.0.3', '22.0.3', '21.1.2', '23.0.7', '24.0.5-0']"
+
+
 # Create app client
 # Configures an application client in the specified Keycloak realm.
 - name: "Create {{ realm }} app client"
@@ -23,15 +53,7 @@
     authorization_services_enabled: false
     always_display_in_console: false
     standard_flow_enabled: false
-    default_client_scopes:
-      - "acr"
-      - "attributes"
-      - "audiences"
-      - "email"
-      - "offline_access"
-      - "profile"
-      - "roles"
-      - "web-origins"
+    default_client_scopes: "{{ app__client_default_client_scopes }}"
     optional_client_scopes:
       - "address"
       - "microprofile-jwt"

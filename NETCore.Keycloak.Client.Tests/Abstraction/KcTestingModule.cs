@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Net;
 using Bogus;
 using Microsoft.Extensions.Logging;
@@ -405,8 +404,7 @@ public abstract class KcTestingModule
         var clientScope = new KcClientScope
         {
             Description = faker.Random.Words(3),
-            Name = faker.Random.Word().ToLower(CultureInfo.CurrentCulture)
-                .Replace(" ", string.Empty, StringComparison.Ordinal),
+            Name = Guid.NewGuid().ToString().Replace("-", string.Empty, StringComparison.Ordinal),
             Protocol = KcProtocol.OpenidConnect
         };
 
@@ -446,12 +444,10 @@ public abstract class KcTestingModule
         var accessToken = await GetRealmAdminTokenAsync(context).ConfigureAwait(false);
         Assert.IsNotNull(accessToken);
 
-        // Generate a mock group using Faker.
-        var faker = new Faker();
+        // Generate a mock group.
         var kcGroup = new KcGroup
         {
-            Name = faker.Random.Word().ToLower(CultureInfo.CurrentCulture)
-                .Replace(" ", string.Empty, StringComparison.Ordinal),
+            Name = Guid.NewGuid().ToString().Replace("-", string.Empty, StringComparison.Ordinal),
             Attributes = new Dictionary<string, IEnumerable<string>>
             {
                 {

@@ -3,6 +3,22 @@
 - include_vars:
     file: "vars/kc_realm.yml"
 
+# Set the old password policy
+# This policy uses a higher iteration count (27500) for hashing and includes requirements for length, special characters, uppercase, lowercase, digits, and password history.
+- set_fact:
+    old_password_policy: "hashIterations(27500) and length(10) and notUsername(undefined) and notEmail(undefined) and specialChars(1) and upperCase(1) and lowerCase(1) and digits(1) and passwordHistory(12)"
+
+# Set the argon password policy
+# This policy uses a lower iteration count (99) for hashing while maintaining the same requirements for length, special characters, uppercase, lowercase, digits, and password history.
+- set_fact:
+    argon_password_policy: "hashIterations(99) and length(10) and notUsername(undefined) and notEmail(undefined) and specialChars(1) and upperCase(1) and lowerCase(1) and digits(1) and passwordHistory(12)"
+
+# Set the active password policy based on the Keycloak version
+# If the Keycloak version is not in ['20.0.3', '22.0.3', '21.1.2', '23.0.7'], the argon password policy is used; otherwise, the old password policy is applied.
+- set_fact:
+    password_policy: "{{ argon_password_policy if ((kc_version | default('')) not in ['20.0.3', '22.0.3', '21.1.2', '23.0.7', '24.0.5-0']) else old_password_policy }}"
+
+
 # Create Keycloak realm
 # Configures a new Keycloak realm or updates an existing one with the specified settings.
 - name: "Create {{ realm }} realm"

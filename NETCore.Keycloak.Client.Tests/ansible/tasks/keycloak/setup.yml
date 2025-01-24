@@ -9,6 +9,13 @@
 - include_tasks:
     file: "tasks/keycloak/create_realm.yml"
 
+# Set user profile attributes for a Keycloak realm
+# Includes the task file to set user profile attributes for a Keycloak realm.
+# This task is included only for the keycloak version upper to 23
+- include_tasks:
+    file: "tasks/keycloak/set_realm_user_profile_attributes.yml"
+  when: "(kc_version | default('')) not in ['20.0.3', '22.0.3', '21.1.2', '23.0.7']"
+
 # Create realm admin user
 # Creates an admin user for the specified realm with the provided credentials.
 - name: "Create {{ realm }} realm admin user"

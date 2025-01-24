@@ -80,12 +80,12 @@
         ownerManagedAccess: true
         displayName: Two factor endpoint
         uris:
-          - "/api/*/auth/twofactor/*"
+        - "/api/*/auth/twofactor/*"
         scopes:
-          - name: Enable
-          - name: Verify
-          - name: Disable
-          - name: GetRecoveryCodes
+        - name: Enable
+        - name: Verify
+        - name: Disable
+        - name: GetRecoveryCodes
       policies:
       - name: should_be_client_user
         description: 'Should be a client user'
@@ -101,9 +101,9 @@
           code: |
             var context = $evaluation.getContext();
             var identity = context.getIdentity();
-            var attributes = identity.getAttributes();   
-            if(attributes.exists("account_owner")){
-              $evaluation.grant();
+            var attributes = identity.getAttributes();
+            if (attributes.exists("account_owner") && attributes.getValue("account_owner").asString(0) === "1") {
+                $evaluation.grant();
             }
       - name: should_be_business_account_owner
         description: 'Should be business account owner'
@@ -113,9 +113,9 @@
           code: |
             var context = $evaluation.getContext();
             var identity = context.getIdentity();
-            var attributes = identity.getAttributes();   
-            if(attributes.exists("business_account_owner")){
-              $evaluation.grant();
+            var attributes = identity.getAttributes();
+            if (attributes.exists("business_account_owner") && attributes.getValue("business_account_owner").asString(0) === "1") {
+                $evaluation.grant();
             }
       - name: can_view_roles
         description: 'Can view roles'
@@ -125,9 +125,9 @@
           code: |
             var context = $evaluation.getContext();
             var identity = context.getIdentity();
-            var attributes = identity.getAttributes();   
-            if(attributes.exists("role_view")){
-              $evaluation.grant();
+            var attributes = identity.getAttributes();
+            if (attributes.exists("role_view") && attributes.getValue("role_view").asString(0) === "1") {
+                $evaluation.grant();
             }
       - name: can_write_roles
         description: 'Can write roles'
@@ -137,9 +137,9 @@
           code: |
             var context = $evaluation.getContext();
             var identity = context.getIdentity();
-            var attributes = identity.getAttributes();   
-            if(attributes.exists("role_write")){
-              $evaluation.grant();
+            var attributes = identity.getAttributes();
+            if (attributes.exists("role_write") && attributes.getValue("role_write").asString(0) === "1") {
+                $evaluation.grant();
             }
       - name: can_delete_roles
         description: 'Can delete roles'
@@ -149,9 +149,9 @@
           code: |
             var context = $evaluation.getContext();
             var identity = context.getIdentity();
-            var attributes = identity.getAttributes();   
-            if(attributes.exists("role_delete")){
-              $evaluation.grant();
+            var attributes = identity.getAttributes();
+            if (attributes.exists("role_delete") && attributes.getValue("role_delete").asString(0) === "1") {
+                $evaluation.grant();
             }
       - name: should_be_client_owner
         description: 'Should have client role and business account owner'
@@ -281,7 +281,6 @@
     state: present
   register: auth_client_result
   retries: 5
-
 
 # Delete auth_client client default authz
 - name: "Delete realm {{ realm }} auth_client client default authz"
