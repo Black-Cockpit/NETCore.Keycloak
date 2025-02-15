@@ -63,6 +63,5 @@ Task("Default")
         }
     });
 
-
 // Execute the Default task
 RunTarget("Default");
