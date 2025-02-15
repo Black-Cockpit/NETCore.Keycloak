@@ -40,6 +40,8 @@ jobs:
       # Install dependencies
       - name: Install dependencies
         run: |
+          wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+          sudo dpkg -i packages-microsoft-prod.deb && sudo apt-get update
           sudo apt install -y make dotnet-sdk-6.0 dotnet-sdk-7.0 python3-pip python3-rpm python3-psycopg2
           pip install 'python-keycloak==3.3.0' --user
           dotnet tool install --global dotnet-sonarscanner
