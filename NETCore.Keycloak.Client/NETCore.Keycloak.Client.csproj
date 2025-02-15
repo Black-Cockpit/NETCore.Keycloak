@@ -5,7 +5,7 @@
       A comprehensive .NET Core client library for Keycloak that provides seamless integration with Keycloak's authentication and authorization services.
       This library offers a robust implementation of Keycloak's REST API, including support for OpenID Connect, OAuth 2.0, and User-Managed Access (UMA 2.0).
     </Description>
-    <PackageVersion>1.0.0</PackageVersion>
+    <PackageVersion>1.0.1</PackageVersion>
     <PackageId>Keycloak.NETCore.Client</PackageId>
     <PackageTags>keycloak;oauth2;authentication;authorization;openid-connect;oidc;oidc-provider;fapi;fapi-client;user-managed-access;financial-security</PackageTags>
     <PackageIcon>black_cockpit.png</PackageIcon>
