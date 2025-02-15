@@ -12,8 +12,8 @@
 <div align="center">
 
 [![GitHub Build Status](https://github.com/Black-Cockpit/NETCore.Keycloak/actions/workflows/build.yml/badge.svg)](https://github.com/Black-Cockpit/NETCore.Keycloak/actions/workflows/build.yml)
-[![NuGet version](https://img.shields.io/nuget/v/NETCore.Keycloak.Client.svg)](https://www.nuget.org/packages/NETCore.Keycloak.Client/)
-[![NuGet downloads](https://img.shields.io/nuget/dt/NETCore.Keycloak.Client.svg)](https://www.nuget.org/packages/NETCore.Keycloak.Client/)
+[![NuGet version](https://img.shields.io/nuget/v/Keycloak.NETCore.Client.svg)](https://www.nuget.org/packages/Keycloak.NETCore.Client/)
+[![NuGet downloads](https://img.shields.io/nuget/dt/Keycloak.NETCore.Client.svg)](https://www.nuget.org/packages/Keycloak.NETCore.Client/)
 [![GitHub Stars](https://img.shields.io/github/stars/Black-Cockpit/NETCore.Keycloak)](https://github.com/Black-Cockpit/NETCore.Keycloak/stargazers)
 [![License](https://img.shields.io/github/license/Black-Cockpit/NETCore.Keycloak)](LICENSE)
 
@@ -76,7 +76,7 @@
 To integrate the Keycloak client library into your .NET Core application, simply add the NuGet package:
 
 ```bash
-Install-Package NETCore.Keycloak
+Install-Package Keycloak.NETCore.Client
 ```
 
 ## 🚀 Getting Started
