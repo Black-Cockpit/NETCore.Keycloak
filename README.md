@@ -16,6 +16,7 @@
 [![NuGet downloads](https://img.shields.io/nuget/dt/Keycloak.NETCore.Client.svg)](https://www.nuget.org/packages/Keycloak.NETCore.Client/)
 [![GitHub Stars](https://img.shields.io/github/stars/Black-Cockpit/NETCore.Keycloak)](https://github.com/Black-Cockpit/NETCore.Keycloak/stargazers)
 [![License](https://img.shields.io/github/license/Black-Cockpit/NETCore.Keycloak)](LICENSE)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FBlack-Cockpit%2FNETCore.Keycloak.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FBlack-Cockpit%2FNETCore.Keycloak?ref=badge_shield)
 
 ---
 
@@ -70,6 +71,9 @@
     - [⚡ Running Tests](#-running-tests)
   - [🤝 Contributing](#-contributing)
   - [📄 License](#-license)
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FBlack-Cockpit%2FNETCore.Keycloak.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FBlack-Cockpit%2FNETCore.Keycloak?ref=badge_large)
 
 ## 💻 Installation
 
