@@ -29,7 +29,12 @@ jobs:
       # Build the project
       - name: Build project
         if: success()
-        run: dotnet cake build.cake --target=build
+        run: |
+          # Copy Licence
+          cp LICENSE NETCore.Keycloak.Client/
+          
+          # Build project
+          dotnet cake build.cake --target=build
       
       # Deploy nuget package
       - name: Deploy nuget package
@@ -37,9 +42,6 @@ jobs:
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
-          # Copy Licence
-          cp LICENSE NETCore.Keycloak.Client/
-          
           # Extract nuget package version
           NUGET_PKG_VERSION=$(cat NETCore.Keycloak.Client/NETCore.Keycloak.Client.csproj | grep "PackageVersion" | awk -F '>' '{print $2}' | awk -F '<' '{print $1}')
           
