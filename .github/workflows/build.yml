@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dotnet-version: [6.0.x, 7.0.x, 8.0.x]
+        dotnet-version: [8.0.x]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -29,15 +29,11 @@ jobs:
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
       
-      # Set Global.json to Match .NET SDK
-      - name: Set .NET SDK Version
+      # Setup cake tool
+      - name: Setup cake tool
         run: |
-          echo '{ "sdk": { "version": "${{ matrix.dotnet-version }}" } }' > global.json
-
-      # Restore dependencies
-      - name: Restore dependencies
-        run: dotnet restore
+          dotnet tool install --global Cake.Tool
 
       # Build the project
       - name: Build project
-        run: dotnet build --no-restore -c Release
+        run: dotnet cake cake.build
