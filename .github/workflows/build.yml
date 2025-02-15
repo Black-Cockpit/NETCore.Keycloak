@@ -34,4 +34,9 @@ jobs:
       # Build the project
       - name: Build project
         if: success()
-        run: dotnet cake build.cake --target=build
+        run: |
+          # Copy Licence
+          cp LICENSE NETCore.Keycloak.Client/
+          
+          # Build project
+          dotnet cake build.cake --target=build
