@@ -6,7 +6,7 @@
       This library offers a robust implementation of Keycloak's REST API, including support for OpenID Connect, OAuth 2.0, and User-Managed Access (UMA 2.0).
     </Description>
     <PackageVersion>1.0.0</PackageVersion>
-    <PackageId>NETCore.Keycloak.Client</PackageId>
+    <PackageId>NETCore.Keycloak</PackageId>
     <PackageTags>keycloak;oauth2;authentication;authorization;openid-connect;oidc;oidc-provider;fapi;fapi-client;user-managed-access;financial-security</PackageTags>
     <PackageIcon>black_cockpit.png</PackageIcon>
     <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
