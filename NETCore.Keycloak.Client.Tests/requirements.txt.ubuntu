@@ -1,5 +1,5 @@
 ansible==8.7.0
-ansible-core==2.15.13
+ansible-core==2.15.12
 cffi==1.17.1
 cryptography==44.0.0
 importlib-resources==5.0.7
