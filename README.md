@@ -1,15 +1,15 @@
-# Keycloak Client for .NET Core
+# 🔐 Keycloak Client for .NET Core
 
-A comprehensive .NET Core client library for Keycloak that provides seamless integration with Keycloak's authentication and authorization services. This library offers a robust implementation of Keycloak's REST API, including support for OpenID Connect, OAuth 2.0, and User-Managed Access (UMA 2.0).
+🚀 A powerful and feature-rich .NET Core client library for Keycloak that simplifies integration with Keycloak's authentication and authorization services. This enterprise-ready library provides a comprehensive implementation of Keycloak's REST API, with full support for OpenID Connect, OAuth 2.0, and User-Managed Access (UMA 2.0) protocols.
 
-## Requirements
+## ⚙️ Requirements
 
 | Category     | Supported Versions                                                      |
 | ------------ | ----------------------------------------------------------------------- |
 | .NET         | 6.0, 7.0, 8.0                                                           |
 | Dependencies | ASP.NET Core, Microsoft.Extensions.DependencyInjection, Newtonsoft.Json |
 
-## Coverage
+## ✅ Version Compatibility
 
 | Keycloak Version | Support |
 | ---------------- | ------- |
@@ -21,51 +21,49 @@ A comprehensive .NET Core client library for Keycloak that provides seamless int
 | 21.x             | ✅       |
 | 20.x             | ✅       |
 
-## Features
+## 🌟 Key Features
 
-- Full support for Keycloak's REST API
-- Comprehensive response types with error handling
-- Built-in monitoring and metrics
+- 🔄 Complete Keycloak REST API integration
+- 🛡️ Robust security with OpenID Connect and OAuth 2.0
+- 📊 Built-in monitoring and performance metrics
+- 🔍 Comprehensive error handling and debugging
+- 🚦 Automated token management and renewal
+- 👥 Advanced user and group management
+- 🔑 Multiple authentication flows support
+- 📈 Enterprise-grade scalability
 
-## Table of Contents
+## 📚 Table of Contents
 
-- [Keycloak Client for .NET Core](#keycloak-client-for-net-core)
-  - [Requirements](#requirements)
-  - [Coverage](#coverage)
-  - [Features](#features)
-  - [Table of Contents](#table-of-contents)
-  - [Installation](#installation)
-  - [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Basic Setup](#basic-setup)
-  - [Basic Usage](#basic-usage)
-  - [Documentation](#documentation)
-  - [Response Types](#response-types)
-  - [Monitoring](#monitoring)
-  - [Configuration](#configuration)
-    - [Client Configuration Options](#client-configuration-options)
-    - [Authentication Options](#authentication-options)
-  - [Testing](#testing)
-  - [Contributing](#contributing)
-  - [License](#license)
+- [🔐 Keycloak Client for .NET Core](#keycloak-client-for-net-core)
+  - [⚙️ Requirements](#requirements)
+  - [✅ Version Compatibility](#version-compatibility)
+  - [🌟 Key Features](#key-features)
+  - [📚 Table of Contents](#table-of-contents)
+  - [💻 Installation](#installation)
+  - [🚀 Getting Started](#getting-started)
+  - [📖 Basic Usage](#basic-usage)
+  - [📚 Documentation](#documentation)
+  - [🧪 Testing](#testing)
+  - [🤝 Contributing](#contributing)
+  - [📄 License](#license)
 
-## Installation
+## 💻 Installation
 
-To use the Keycloak client library in your .NET Core application, add the NuGet package:
+To integrate the Keycloak client library into your .NET Core application, simply add the NuGet package:
 
 ```bash
 Install-Package NETCore.Keycloak
 ```
 
-## Getting Started
+## 🚀 Getting Started
 
-### Prerequisites
+### 📋 Prerequisites
 
-- .NET Core SDK (version 6.0 or later)
-- A running Keycloak instance
-- Client credentials and realm configuration for Keycloak
+- ✳️ .NET Core SDK (version 6.0 or later)
+- 🖥️ A running Keycloak instance
+- 🔑 Client credentials and realm configuration
 
-### Basic Setup
+### 🔧 Basic Setup
 
 1. Add the Keycloak client to your services in `Program.cs` or `Startup.cs`:
 
@@ -81,7 +79,7 @@ services.AddKeycloakAuthentication(options =>
 });
 ```
 
-## Basic Usage
+## 📖 Basic Usage
 
 Here's a quick example of how to use the library:
 
@@ -105,71 +103,62 @@ var users = await keycloakClient.Users.GetAsync(
     new KcUserFilter { MaxResults = 10 });
 ```
 
-## Documentation
+## 📚 Documentation
 
-Detailed documentation for each module is available in the docs directory:
+Explore our comprehensive documentation for each module:
 
-- [API Authentication](docs/api-authentication.md)
+- 🔐 [API Authentication](docs/api-authentication.md)
   - JWT Bearer Authentication
   - Role Claims Transformation
-  - Configuration Options
   - Security Best Practices
 
-- [Authorization](docs/authorization.md)
+- 🛡️ [Authorization](docs/authorization.md)
   - UMA 2.0 Authorization
-  - Protected Resources
   - Policy Enforcement
-  - RPT Token Management
+  - Protected Resources
 
-- [Response Types](docs/response-types.md)
-  - KcResponse<T>
-  - KcOperationResponse<T>
-  - Error Handling
+- 📊 [Response Types](docs/response-types.md)
+  - Type-safe responses
+  - Error handling
   - Response Models
 
-- [Monitoring and Metrics](docs/monitoring.md)
-  - Performance Monitoring
-  - Error Diagnosis
-  - Health Monitoring
-  - Integration with Monitoring Systems
+- 📈 [Monitoring and Metrics](docs/monitoring.md)
+  - Performance tracking
+  - Health checks
+  - System diagnostics
 
-- [Authentication Management](docs/authentication.md)
-  - Token Management
-  - Client Credentials Flow
-  - Resource Owner Password Flow
-  - Token Validation and Security
+- 🔑 [Authentication Management](docs/authentication.md)
+  - Token lifecycle
+  - Multiple auth flows
+  - Security features
 
-- [User Management](docs/users.md)
-  - User Operations
-  - Session Management
-  - Role Mapping
-  - Group Management
+- 👥 [User Management](docs/users.md)
+  - User operations
+  - Role management
+  - Group handling
 
-- [Client Management](docs/clients.md)
-  - Client Operations
-  - Client Configuration
-  - Service Accounts
-  - Client Scopes
+- ⚙️ [Client Management](docs/clients.md)
+  - Configuration
+  - Service accounts
+  - Client scopes
 
-## Testing
+## 🧪 Testing
 
-The library includes a comprehensive test suite that validates functionality across multiple Keycloak versions (20.x through 26.x). The test infrastructure uses Docker and Ansible for automated environment setup and test execution.
+Our library includes an extensive test suite ensuring reliability across multiple Keycloak versions (20.x through 26.x). The testing infrastructure leverages Docker and Ansible for automated setup and execution.
 
-### Test Documentation
+### 📋 Test Documentation
 
-- [Test Suite Documentation](NETCore.Keycloak.Client.Tests/README.md)
-  - Test Categories and Patterns
-  - Environment Setup
-  - Running Tests
-  - Mock Data Organization
+- 📘 [Test Suite Guide](NETCore.Keycloak.Client.Tests/README.md)
+  - Test patterns
+  - Setup instructions
+  - Mock data structure
 
-- [Ansible Environment Documentation](NETCore.Keycloak.Client.Tests/ansible/README.md)
-  - Environment Provisioning
-  - Keycloak Configuration
-  - Database Setup
-  - Container Management
+- 🔧 [Ansible Setup Guide](NETCore.Keycloak.Client.Tests/ansible/README.md)
+  - Environment setup
+  - Configuration management
+  - Container orchestration
 
-### Key Testing Features
+### 🔬 Key Testing Features
 
 1. **Version Coverage**:
    - Supports Keycloak 20.x through 26.x
@@ -189,7 +178,7 @@ The library includes a comprehensive test suite that validates functionality acr
    - Continuous Integration ready
    - Comprehensive mock data
 
-### Running Tests
+### ⚡ Running Tests
 
 ```bash
 # Install test environment dependencies
@@ -198,78 +187,15 @@ make install_virtual_env
 
 # Run tests for all supported versions
 dotnet cake e2e_test.cake
-
-# Run tests for specific version
-dotnet cake e2e_test.cake --kc_major_version=XX  # Replace XX with version (20-26)
 ```
 
-For detailed testing instructions and environment setup, refer to the [Test Suite Documentation](NETCore.Keycloak.Client.Tests/README.md).
+## 🤝 Contributing
 
-## Response Types
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to submit pull requests, report issues, and contribute to the project.
 
-The library provides a consistent response model for all operations through `KcResponse<T>` and `KcOperationResponse<T>`. These types include:
-
-- Strongly-typed response data
-- Error information and exception details
-- Built-in monitoring metrics
-- Support for single and multi-operation responses
-
-For detailed information about response types and error handling, see [Response Types Documentation](docs/response-types.md).
-
-## Monitoring
-
-Built-in monitoring capabilities help you track the performance and health of your Keycloak integration:
-
-- Request execution times
-- HTTP method and status code tracking
-- Request URI monitoring
-- Support for health checks
-- Integration with popular monitoring systems
-
-For comprehensive information about monitoring features and integration examples, see [Monitoring Documentation](docs/monitoring.md).
-
-## Configuration
-
-### Client Configuration Options
-
-```csharp
-public class KcClientConfiguration
-{
-    public string KeycloakBaseUrl { get; set; }
-    public string Realm { get; set; }
-    public KcClientCredentials ClientCredentials { get; set; }
-    public bool ValidateIssuer { get; set; } = true;
-    public bool ValidateAudience { get; set; } = true;
-    public bool RequireHttpsMetadata { get; set; } = true;
-}
-```
-
-### Authentication Options
-
-```csharp
-services.AddKeycloakAuthentication(options =>
-{
-    options.KeycloakBaseUrl = Configuration["Keycloak:BaseUrl"];
-    options.Realm = Configuration["Keycloak:Realm"];
-    options.ClientCredentials = new KcClientCredentials
-    {
-        ClientId = Configuration["Keycloak:ClientId"],
-        ClientSecret = Configuration["Keycloak:ClientSecret"]
-    };
-    options.RequireHttpsMetadata = true;
-});
-```
-
-## Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to your branch
-5. Create a Pull Request
-
-## License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+⭐ Star us on GitHub | 📫 Report Issues | 📚 Read the Docs
