@@ -8,9 +8,6 @@ on:
       - reopened
       - edited
       - synchronize
-  push:
-    branches:
-      - master
 
 jobs:
   # Build source code
@@ -36,4 +33,5 @@ jobs:
 
       # Build the project
       - name: Build project
+        if: success()
         run: dotnet cake build.cake --target=build

@@ -1,0 +1,43 @@
+name: Deploy
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  # Deploy nuget package when a branch is labeled with `release` and the merge is done to master.
+  Deploy:
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release') && github.event.pull_request.base.ref == 'master'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet-version: [8.0.x]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      # Setup .NET SDK
+      - name: Set up .NET SDK ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+      
+      # Setup cake tool
+      - name: Setup cake tool
+        run: dotnet tool install --global Cake.Tool
+
+      # Build the project
+      - name: Build project
+        if: success()
+        run: dotnet cake build.cake --target=build
+      
+      # Deploy nuget package
+      - name: Deploy nuget package
+        if: success()
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          # Extract nuget package version
+          NUGET_PKG_VERSION=$(cat NETCore.Keycloak.Client/NETCore.Keycloak.Client.csproj | grep "PackageVersion" | awk -F '>' '{print $2}' | awk -F '<' '{print $1}')
+          dotnet nuget push NETCore.Keycloak.Client/Release/NETCore.Keycloak.Client.${NUGET_PKG_VERSION}.nupkg --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+          

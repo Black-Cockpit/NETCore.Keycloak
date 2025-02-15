@@ -1,11 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
+    <Authors>Hasni Mehdi</Authors>
+    <Description>
+      A comprehensive .NET Core client library for Keycloak that provides seamless integration with Keycloak's authentication and authorization services.
+      This library offers a robust implementation of Keycloak's REST API, including support for OpenID Connect, OAuth 2.0, and User-Managed Access (UMA 2.0).
+    </Description>
+    <PackageVersion>1.0.0</PackageVersion>
+    <PackageId>NETCore.Keycloak.Client</PackageId>
+    <PackageTags>keycloak;oauth2;authentication;authorization;openid-connect;oidc;oidc-provider;fapi;fapi-client;user-managed-access;financial-security</PackageTags>
+    <PackageIcon>black_cockpit.png</PackageIcon>
     <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <OutputType>Library</OutputType>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>NETCore.Keycloak.Client</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
@@ -23,5 +32,6 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.0"/>
     <PackageReference Include="System.Text.Json" Version="8.0.5"/>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.33"/>
+    <None Include="black_cockpit.png" Pack="true" PackagePath="\"/>
   </ItemGroup>
 </Project>
