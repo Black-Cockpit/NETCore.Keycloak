@@ -1,6 +1,25 @@
 # 🔐 Keycloak Client for .NET Core
 
+<div align="center">
+  <img src="assets/kc_logo.svg" alt="Keycloak .NET Core Client Logo" width="200">
+</div>
+
 🚀 A powerful and feature-rich .NET Core client library for Keycloak that simplifies integration with Keycloak's authentication and authorization services. This enterprise-ready library provides a comprehensive implementation of Keycloak's REST API, with full support for OpenID Connect, OAuth 2.0, and User-Managed Access (UMA 2.0) protocols.
+
+***
+---
+
+<div align="center">
+
+[![NuGet version](https://img.shields.io/nuget/v/NETCore.Keycloak.Client.svg)](https://www.nuget.org/packages/NETCore.Keycloak.Client/)
+[![NuGet downloads](https://img.shields.io/nuget/dt/NETCore.Keycloak.Client.svg)](https://www.nuget.org/packages/NETCore.Keycloak.Client/)
+[![GitHub Build Status](https://github.com/Black-Cockpit/NETCore.Keycloak/workflows/build/badge.svg)](https://github.com/Black-Cockpit/NETCore.Keycloak/actions)
+[![GitHub Stars](https://img.shields.io/github/stars/Black-Cockpit/NETCore.Keycloak.svg)](https://github.com/Black-Cockpit/NETCore.Keycloak/stargazers)
+[![License](https://img.shields.io/github/license/Black-Cockpit/NETCore.Keycloak.svg)](LICENSE)
+
+---
+
+</div>
 
 ## ⚙️ Requirements
 
@@ -34,18 +53,18 @@
 
 ## 📚 Table of Contents
 
-- [🔐 Keycloak Client for .NET Core](#keycloak-client-for-net-core)
-  - [⚙️ Requirements](#requirements)
-  - [✅ Version Compatibility](#version-compatibility)
-  - [🌟 Key Features](#key-features)
-  - [📚 Table of Contents](#table-of-contents)
-  - [💻 Installation](#installation)
-  - [🚀 Getting Started](#getting-started)
-  - [📖 Basic Usage](#basic-usage)
-  - [📚 Documentation](#documentation)
-  - [🧪 Testing](#testing)
-  - [🤝 Contributing](#contributing)
-  - [📄 License](#license)
+- [🔐 Keycloak Client for .NET Core](#-keycloak-client-for-net-core)
+  - [⚙️ Requirements](#️-requirements)
+  - [✅ Version Compatibility](#-version-compatibility)
+  - [🌟 Key Features](#-key-features)
+  - [📚 Table of Contents](#-table-of-contents)
+  - [💻 Installation](#-installation)
+  - [🚀 Getting Started](#-getting-started)
+  - [📖 Basic Usage](#-basic-usage)
+  - [📚 Documentation](#-documentation)
+  - [🧪 Testing](#-testing)
+  - [🤝 Contributing](#-contributing)
+  - [📄 License](#-license)
 
 ## 💻 Installation
 
