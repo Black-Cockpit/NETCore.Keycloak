@@ -13,7 +13,7 @@
 
 [![NuGet version](https://img.shields.io/nuget/v/NETCore.Keycloak.Client.svg)](https://www.nuget.org/packages/NETCore.Keycloak.Client/)
 [![NuGet downloads](https://img.shields.io/nuget/dt/NETCore.Keycloak.Client.svg)](https://www.nuget.org/packages/NETCore.Keycloak.Client/)
-[![GitHub Build Status](https://github.com/Black-Cockpit/NETCore.Keycloak/workflows/build/badge.svg)](https://github.com/Black-Cockpit/NETCore.Keycloak/actions)
+[![GitHub Build Status](https://github.com/Black-Cockpit/NETCore.Keycloak/actions/workflows/build.yml/badge.svg)](https://github.com/Black-Cockpit/NETCore.Keycloak/actions/workflows/build.yml)
 [![GitHub Stars](https://img.shields.io/github/stars/Black-Cockpit/NETCore.Keycloak.svg)](https://github.com/Black-Cockpit/NETCore.Keycloak/stargazers)
 [![License](https://img.shields.io/github/license/Black-Cockpit/NETCore.Keycloak.svg)](LICENSE)
 
