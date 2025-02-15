@@ -9,7 +9,6 @@
     <PackageId>Keycloak.NETCore.Client</PackageId>
     <PackageTags>keycloak;oauth2;authentication;authorization;openid-connect;oidc;oidc-provider;fapi;fapi-client;user-managed-access;financial-security</PackageTags>
     <PackageIcon>black_cockpit.png</PackageIcon>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/Black-Cockpit/NETCore.Keycloak/refs/heads/master/LICENSE</PackageLicenseUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/Black-Cockpit/NETCore.Keycloak.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
