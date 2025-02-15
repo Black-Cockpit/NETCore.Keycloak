@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dotnet-version: [ 8.0.x ]
+        dotnet-version: [ 6.0.x, 7.0.x ,8.0.x ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,7 +31,7 @@ jobs:
       # Install cake tool
       - name: Install cake tool
         run: |
-            dotnet tool install --global Cake.Tool
+            dotnet tool install --global Cake.Tool --version 2.0.0
       
       # Build the project    
       - name: Build project
