@@ -40,7 +40,7 @@ jobs:
       # Install dependencies
       - name: Install dependencies
         run: |
-          sudo apt install -y make python3-pip
+          sudo apt install -y make python3-pip python3-rpm
           dotnet tool install --global dotnet-sonarscanner
           dotnet tool install --global Cake.Tool
           dotnet tool install --global JetBrains.dotCover.GlobalTool
