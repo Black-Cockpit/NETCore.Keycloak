@@ -1,0 +1,35 @@
+name: Branch Naming Policy
+on:
+  create:
+  delete:
+  pull_request:
+    branches:
+      - master
+    types:
+      - edited
+      - opened
+      - reopened
+jobs:
+  branch-naming-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+
+      - name: Branch naming policy check
+        run: |
+          echo "${{ steps.extract_branch.outputs.branch }}"
+          [[ "${{ steps.extract_branch.outputs.branch }}" =~ ^[a-z0-9_]{5,50}$ ]] || exit 1
+
+      - name: Close pull request and delete branch
+        if: failure()
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr close "$PR_NUMBER" -c "Pull request has been closed due the breach of branch naming policy" -d
