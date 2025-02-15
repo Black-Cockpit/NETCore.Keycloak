@@ -55,5 +55,5 @@ jobs:
           cp LICENSE NETCore.Keycloak.Client/
           
           # Build, test and analyze project with keycloak version 20
-          cd NETCore.Keycloak.Client.Tests && cp requirements.txt.ubuntu requirements.txt
+          cd NETCore.Keycloak.Client.Tests 
           dotnet cake build_test_analyse.cake --kc_major_version=20 --sonar_token=${SONAR_TOKEN}
