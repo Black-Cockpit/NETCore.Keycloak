@@ -1,7 +1,6 @@
 name: Branch Naming Policy
 on:
   create:
-  delete:
   pull_request:
     branches:
       - master
