@@ -41,7 +41,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt install -y make python3-pip python3-rpm python3-psycopg2
-          pip3 install python-keycloak==3.3.0 --user
+          pip install 'python-keycloak==3.3.0' --user
           dotnet tool install --global dotnet-sonarscanner
           dotnet tool install --global Cake.Tool
           dotnet tool install --global JetBrains.dotCover.GlobalTool
