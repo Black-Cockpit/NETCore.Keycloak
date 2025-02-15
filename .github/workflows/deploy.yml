@@ -39,5 +39,5 @@ jobs:
         run: |
           # Extract nuget package version
           NUGET_PKG_VERSION=$(cat NETCore.Keycloak.Client/NETCore.Keycloak.Client.csproj | grep "PackageVersion" | awk -F '>' '{print $2}' | awk -F '<' '{print $1}')
-          dotnet nuget push NETCore.Keycloak.Client/Release/NETCore.Keycloak.Client.${NUGET_PKG_VERSION}.nupkg --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+          dotnet nuget push NETCore.Keycloak.Client/bin/Release/NETCore.Keycloak.Client.${NUGET_PKG_VERSION}.nupkg --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
           
