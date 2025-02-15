@@ -37,7 +37,7 @@ install_virtual_env:
 	fi
 	@echo "Creating directory ${CONF_DIR_CONTEXT}/${VIRTUAL_ENV_DIR}"
 	# Create a new virtual environment
-	@python3.9 -m venv ${CONF_DIR_CONTEXT}/${VIRTUAL_ENV_DIR}
+	@python3 -m venv ${CONF_DIR_CONTEXT}/${VIRTUAL_ENV_DIR}
 	# Activate the virtual environment and install dependencies
 	@pushd ${CONF_DIR_CONTEXT}/ && source ${VIRTUAL_ENV_DIR}/bin/activate && pip install -r requirements.txt
 	# Install required Ansible collections
