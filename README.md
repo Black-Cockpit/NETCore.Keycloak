@@ -15,7 +15,10 @@
 [![NuGet version](https://img.shields.io/nuget/v/Keycloak.NETCore.Client.svg)](https://www.nuget.org/packages/Keycloak.NETCore.Client/)
 [![NuGet downloads](https://img.shields.io/nuget/dt/Keycloak.NETCore.Client.svg)](https://www.nuget.org/packages/Keycloak.NETCore.Client/)
 [![GitHub Stars](https://img.shields.io/github/stars/Black-Cockpit/NETCore.Keycloak)](https://github.com/Black-Cockpit/NETCore.Keycloak/stargazers)
+[![CodeFactor](https://www.codefactor.io/repository/github/black-cockpit/netcore.keycloak/badge)](https://www.codefactor.io/repository/github/black-cockpit/netcore.keycloak)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FBlack-Cockpit%2FNETCore.Keycloak.svg?type=shield&issueType=security)](https://app.fossa.com/projects/git%2Bgithub.com%2FBlack-Cockpit%2FNETCore.Keycloak?ref=badge_shield&issueType=security)
 [![License](https://img.shields.io/github/license/Black-Cockpit/NETCore.Keycloak)](LICENSE)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FBlack-Cockpit%2FNETCore.Keycloak.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2FBlack-Cockpit%2FNETCore.Keycloak?ref=badge_shield&issueType=license)
 
 ---
 
