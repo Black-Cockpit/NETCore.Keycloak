@@ -36,4 +36,4 @@ jobs:
 
       # Build the project
       - name: Build project
-        run: dotnet cake cake.build
+        run: dotnet cake cake.build --target=build
