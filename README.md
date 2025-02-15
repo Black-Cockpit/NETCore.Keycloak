@@ -76,7 +76,7 @@
 To integrate the Keycloak client library into your .NET Core application, simply add the NuGet package:
 
 ```bash
-Install-Package NETCore.Keycloak
+Install-Package Keycloak.NETCore.Client
 ```
 
 ## 🚀 Getting Started

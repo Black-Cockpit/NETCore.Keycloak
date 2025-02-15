@@ -9,6 +9,12 @@
     <PackageId>Keycloak.NETCore.Client</PackageId>
     <PackageTags>keycloak;oauth2;authentication;authorization;openid-connect;oidc;oidc-provider;fapi;fapi-client;user-managed-access;financial-security</PackageTags>
     <PackageIcon>black_cockpit.png</PackageIcon>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/Black-Cockpit/NETCore.Keycloak/refs/heads/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Black-Cockpit/NETCore.Keycloak.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/Black-Cockpit/NETCore.Keycloak</PackageProjectUrl>
     <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -34,5 +40,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.33"/>
     <None Include="black_cockpit.png" Pack="true" PackagePath="\"/>
     <None Include="LICENSE" Pack="true" PackagePath="\"/>
+    <None Include="README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 </Project>
