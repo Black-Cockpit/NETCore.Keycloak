@@ -11,12 +11,23 @@
 
 <div align="center">
 
-[![GitHub Build Status](https://github.com/Black-Cockpit/NETCore.Keycloak/actions/workflows/build.yml/badge.svg)](https://github.com/Black-Cockpit/NETCore.Keycloak/actions/workflows/build.yml)
+[![GitHub Build Status](https://github.com/Black-Cockpit/NETCore.Keycloak/actions/workflows/build_test_analyze.yml/badge.svg)](https://github.com/Black-Cockpit/NETCore.Keycloak/actions/workflows/build.yml)
 [![NuGet version](https://img.shields.io/nuget/v/Keycloak.NETCore.Client.svg)](https://www.nuget.org/packages/Keycloak.NETCore.Client/)
 [![NuGet downloads](https://img.shields.io/nuget/dt/Keycloak.NETCore.Client.svg)](https://www.nuget.org/packages/Keycloak.NETCore.Client/)
 [![GitHub Stars](https://img.shields.io/github/stars/Black-Cockpit/NETCore.Keycloak)](https://github.com/Black-Cockpit/NETCore.Keycloak/stargazers)
 [![CodeFactor](https://www.codefactor.io/repository/github/black-cockpit/netcore.keycloak/badge)](https://www.codefactor.io/repository/github/black-cockpit/netcore.keycloak)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FBlack-Cockpit%2FNETCore.Keycloak.svg?type=shield&issueType=security)](https://app.fossa.com/projects/git%2Bgithub.com%2FBlack-Cockpit%2FNETCore.Keycloak?ref=badge_shield&issueType=security)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=Black-Cockpit_NETCore.Keycloak&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=Black-Cockpit_NETCore.Keycloak)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Black-Cockpit_NETCore.Keycloak&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Black-Cockpit_NETCore.Keycloak)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=Black-Cockpit_NETCore.Keycloak&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=Black-Cockpit_NETCore.Keycloak)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Black-Cockpit_NETCore.Keycloak&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Black-Cockpit_NETCore.Keycloak)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Black-Cockpit_NETCore.Keycloak&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=Black-Cockpit_NETCore.Keycloak)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=Black-Cockpit_NETCore.Keycloak&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=Black-Cockpit_NETCore.Keycloak)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=Black-Cockpit_NETCore.Keycloak&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=Black-Cockpit_NETCore.Keycloak)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=Black-Cockpit_NETCore.Keycloak&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=Black-Cockpit_NETCore.Keycloak)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Black-Cockpit_NETCore.Keycloak&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Black-Cockpit_NETCore.Keycloak)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Black-Cockpit_NETCore.Keycloak&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=Black-Cockpit_NETCore.Keycloak)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=Black-Cockpit_NETCore.Keycloak&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=Black-Cockpit_NETCore.Keycloak)
 [![License](https://img.shields.io/github/license/Black-Cockpit/NETCore.Keycloak)](LICENSE)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FBlack-Cockpit%2FNETCore.Keycloak.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2FBlack-Cockpit%2FNETCore.Keycloak?ref=badge_shield&issueType=license)
 

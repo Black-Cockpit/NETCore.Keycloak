@@ -38,6 +38,8 @@ out
 **/containers/**
 **/Assets/*.json
 
+**/NETCore.Keycloak.Client/LICENSE
+
 private.pem
 location_db.bin
 
@@ -98,6 +100,9 @@ BenchmarkDotNet.Artifacts/
 project.lock.json
 project.fragment.lock.json
 artifacts/
+
+# SonarQube
+**/.sonarqube
 
 # StyleCop
 StyleCopReport.xml
@@ -173,6 +178,7 @@ _TeamCity*
 
 # DotCover is a Code Coverage Tool
 *.dotCover
+**/dotCover*
 
 # AxoCover is a Code Coverage Tool
 .axoCover/*
