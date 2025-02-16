@@ -22,7 +22,7 @@ jobs:
       - name: Branch naming policy check
         run: |
           echo "${{ steps.extract_branch.outputs.branch }}"
-          [[ "${{ steps.extract_branch.outputs.branch }}" =~ ^[a-z0-9_]{5,50}$ ]] || exit 1
+          [[ "${{ steps.extract_branch.outputs.branch }}" =~ ^(feature|bugfix|hotfix|docs|refactor)/[a-z0-9_]{5,50}$ ]] || exit 1
 
       - name: Close pull request and delete branch
         if: failure()

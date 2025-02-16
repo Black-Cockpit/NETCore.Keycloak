@@ -227,13 +227,17 @@ make install_virtual_env
 dotnet cake e2e_test.cake
 ```
 
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to submit pull requests, report issues, and contribute to the project.
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
----
+## 🤝 Contributing
+
+We welcome contributions from the community! Please check our [Contributing Guidelines](CONTRIBUTING.md) for details on:
+
+- Branch naming conventions
+- Code style and formatting rules
+- Pull request process
+- Security guidelines
+
 ⭐ Star us on GitHub | 📫 Report Issues | 📚 Read the Docs
