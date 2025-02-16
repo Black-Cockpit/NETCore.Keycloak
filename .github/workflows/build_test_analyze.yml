@@ -18,17 +18,10 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        dotnet-version: [6.0.x, 7.0.x, 8.0.x]
         java-version: [ 21 ]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-      
-      # Setup .NET SDK
-      - name: Set up .NET SDK ${{ matrix.dotnet-version }}
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: ${{ matrix.dotnet-version }}
           
       # Setup OpenJDK
       - name: Setup OpenJDK
@@ -44,7 +37,7 @@ jobs:
           wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
           sudo apt-get autoremove -y && sudo apt-get autoclean && sudo dpkg -i packages-microsoft-prod.deb && sudo apt-get update
           sudo apt install -y dotnet-host-7.0
-          sudo apt install -y make dotnet-sdk-6.0  dotnet-sdk-7.0 python3-pip python3-rpm python3-psycopg2
+          sudo apt install -y make dotnet-sdk-6.0 dotnet-sdk-7.0 dotnet-sdk-8.0 python3-pip python3-rpm python3-psycopg2
           pip install 'python-keycloak==3.3.0' --user
           dotnet tool install --global dotnet-sonarscanner
           dotnet tool install --global Cake.Tool
