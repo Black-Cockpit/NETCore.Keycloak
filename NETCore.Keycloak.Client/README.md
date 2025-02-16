@@ -87,7 +87,7 @@ var token = await keycloakClient.Auth.GetClientCredentialsTokenAsync(
 var users = await keycloakClient.Users.GetAsync(
     "your-realm",
     token.AccessToken,
-    new KcUserFilter { MaxResults = 10 });
+    new KcUserFilter { Max = 10 });
 ```
 ## 📄 License
 
