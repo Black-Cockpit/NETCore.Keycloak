@@ -46,7 +46,7 @@ jobs:
           pip install 'python-keycloak==3.3.0' --user
           dotnet tool install --global dotnet-sonarscanner
           dotnet tool install --global Cake.Tool
-          dotnet tool install --global JetBrains.dotCover.GlobalTool --version
+          dotnet tool install --global JetBrains.dotCover.GlobalTool
           
       # Build test and analyze the project
       - name: Build test and analyze the project
