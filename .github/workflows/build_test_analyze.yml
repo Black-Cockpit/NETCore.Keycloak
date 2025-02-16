@@ -36,6 +36,7 @@ jobs:
           sudo apt remove -y --purge dotnet-sdk-6* dotnet-hostfxr-6* dotnet-sdk-7* dotnet-hostfxr-7* dotnet-host-7*
           wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
           sudo apt-get autoremove -y && sudo apt-get autoclean && sudo dpkg -i packages-microsoft-prod.deb && sudo apt-get update
+          sudo apt install -y dotnet-hostfxr-7.0
           sudo apt install -y dotnet-host-7.0
           sudo apt install -y make dotnet-sdk-6.0 dotnet-sdk-7.0 dotnet-sdk-8.0 python3-pip python3-rpm python3-psycopg2
           pip install 'python-keycloak==3.3.0' --user
