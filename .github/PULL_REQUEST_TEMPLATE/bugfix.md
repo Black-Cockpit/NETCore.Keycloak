@@ -5,30 +5,30 @@ title: '[BUGFIX] '
 labels: 'bug'
 ---
 
-## Bug Description
+## 🐛 Bug Description
 <!-- Link to the bug report issue and briefly describe the bug -->
 
-## Fix Description
+## 🔧 Fix Description
 <!-- Describe your fix and how it addresses the issue -->
 
-## Root Cause
+## 🔍 Root Cause
 <!-- Explain what caused the bug -->
 
-## Testing
+## 🧪 Testing
 <!-- Describe how you tested the fix -->
 
-## Regression Tests
+## ✅ Regression Tests
 <!-- Describe the tests you've added to prevent regression -->
 
-## Checklist
+## 📋 Checklist
 - [ ] I have followed the code style guidelines
 - [ ] I have added regression tests
 - [ ] I have updated documentation if needed
 - [ ] I have added/updated XML documentation comments if needed
 - [ ] I have verified the fix in my local environment
 
-## Additional Context
+## 📚 Additional Context
 <!-- Add any other context about the fix here -->
 
-## Screenshots
+## 📸 Screenshots
 <!-- If applicable, add screenshots to show the fix -->

@@ -6,37 +6,36 @@ labels: 'bug'
 assignees: ''
 ---
 
-## Bug Description
+## 🐛 Bug Description
 <!-- A clear and concise description of what the bug is -->
 
-## Steps To Reproduce
+## 📝 Steps To Reproduce
 1. 
 2. 
 3. 
 
-## Expected Behavior
+## ✅ Expected Behavior
 <!-- What you expected to happen -->
 
-## Actual Behavior
+## ❌ Actual Behavior
 <!-- What actually happened -->
 
-## Environment
+## 🔧 Environment
 - NETCore.Keycloak Version:
 - .NET Version:
 - Keycloak Server Version:
 - Operating System:
 
-## Additional Context
+## 📚 Additional Context
 <!-- Add any other context about the problem here -->
 
-## Possible Solution
+## 💡 Possible Solution
 <!-- If you have suggestions on how to fix the bug -->
 
-## Screenshots
+## 📸 Screenshots
 <!-- If applicable, add screenshots to help explain your problem -->
 
-## Logs
+## 📊 Logs
 <!-- If applicable, add relevant log outputs -->
 ```
 [Paste logs here]
-```

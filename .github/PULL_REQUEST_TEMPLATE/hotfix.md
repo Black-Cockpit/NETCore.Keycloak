@@ -5,33 +5,33 @@ title: '[HOTFIX] '
 labels: 'hotfix'
 ---
 
-## Emergency Description
+## 🚨 Emergency Description
 <!-- Describe the critical issue being fixed -->
 
-## Impact
+## 💥 Impact
 <!-- Describe the impact of the issue on users -->
 
-## Fix Description
+## 🔧 Fix Description
 <!-- Describe your emergency fix -->
 
-## Risk Assessment
+## ⚠️ Risk Assessment
 <!-- Assess the risk of this hotfix -->
 
-## Testing
+## 🧪 Testing
 <!-- Describe how you tested the fix -->
 
-## Verification Steps
+## ✅ Verification Steps
 <!-- Steps for reviewers to verify the fix -->
 
-## Checklist
+## 📋 Checklist
 - [ ] I have followed the code style guidelines
 - [ ] I have added tests
 - [ ] I have updated documentation if needed
 - [ ] I have tested in production-like environment
 - [ ] I have considered potential side effects
 
-## Rollback Plan
+## 🔄 Rollback Plan
 <!-- Describe how to rollback this change if needed -->
 
-## Additional Context
+## 📚 Additional Context
 <!-- Add any other context about the hotfix here -->
