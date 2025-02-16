@@ -1,0 +1,62 @@
+name: Build test and analyze
+on:
+  push: 
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+    types:
+      - opened
+      - reopened
+      - edited
+      - synchronize
+
+jobs:
+  # Build test and analyze source code
+  build_test_analyze:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        java-version: [ 21 ]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+          
+      # Setup OpenJDK
+      - name: Setup OpenJDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: ${{ matrix.java-version }}
+
+      # Install all required .NET SDK versions
+      - name: Install .NET SDKs (6.0, 7.0, 8.0)
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: |
+            6.0.x
+            7.0.x
+            8.0.x
+      
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          sudo apt install -y make python3-pip python3-rpm python3-psycopg2
+          pip install 'python-keycloak==3.3.0' --user
+          dotnet tool install --global dotnet-sonarscanner
+          dotnet tool install --global Cake.Tool
+          dotnet tool install --global JetBrains.dotCover.GlobalTool
+          
+      # Build test and analyze the project
+      - name: Build test and analyze the project
+        if: success()
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          # Copy Licence
+          cp LICENSE NETCore.Keycloak.Client/
+          
+          # Build, test and analyze project with keycloak version 20
+          cd NETCore.Keycloak.Client.Tests 
+          dotnet cake build_test_analyse.cake --kc_major_version=20 --sonar_token=${SONAR_TOKEN}
