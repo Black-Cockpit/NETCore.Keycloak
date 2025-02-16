@@ -29,18 +29,24 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: ${{ matrix.java-version }}
+
+      # Install all required .NET SDK versions
+      - name: Install .NET SDKs (6.0, 7.0, 8.0)
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: |
+            6.0.x
+            7.0.x
+            8.0.x
       
       # Install dependencies
       - name: Install dependencies
         run: |
-          sudo apt remove -y --purge dotnet-sdk-6* dotnet-hostfxr-6* dotnet-sdk-7* dotnet-hostfxr-7* dotnet-host-7*
-          wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-          sudo apt-get autoremove -y && sudo apt-get autoclean && sudo dpkg -i packages-microsoft-prod.deb && sudo apt-get update
-          sudo apt install -y make dotnet-sdk-6.0 dotnet-sdk-7.0 dotnet-sdk-8.0 python3-pip python3-rpm python3-psycopg2
+          sudo apt install -y make python3-pip python3-rpm python3-psycopg2
           pip install 'python-keycloak==3.3.0' --user
           dotnet tool install --global dotnet-sonarscanner
           dotnet tool install --global Cake.Tool
-          dotnet tool install --global JetBrains.dotCover.GlobalTool --version 2022.1.2
+          dotnet tool install --global JetBrains.dotCover.GlobalTool --version
           
       # Build test and analyze the project
       - name: Build test and analyze the project
