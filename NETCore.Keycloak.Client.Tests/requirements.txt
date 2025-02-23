@@ -13,7 +13,7 @@ MarkupSafe==3.0.2
 packaging==24.2
 pyasn1==0.6.1
 pycparser==2.22
-python-jose==3.3.0
+python-jose==3.4.0
 python-keycloak==3.3.0
 PyYAML==6.0.2
 requests==2.32.3
