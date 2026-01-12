@@ -44,6 +44,9 @@ public sealed class KeycloakClient : IKeycloakClient
     /// <inheritdoc cref="IKeycloakClient.ScopeMappings"/>
     public IKcScopeMappings ScopeMappings { get; }
 
+    /// <inheritdoc cref="IKeycloakClient.Organizations"/>
+    public IKcOrganizations Organizations { get; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="KeycloakClient"/> class.
     /// Provides access to various Keycloak API services through respective clients.
@@ -86,5 +89,6 @@ public sealed class KeycloakClient : IKeycloakClient
         ProtocolMappers = new KcProtocolMappers(adminUrl, logger);
         ScopeMappings = new KcScopeMappings(adminUrl, logger);
         RoleMappings = new KcRoleMappings(adminUrl, logger);
+        Organizations = new KcOrganizations(adminUrl, logger);
     }
 }
