@@ -79,5 +79,5 @@ public sealed class KcOrganization
     /// A collection of <see cref="KcOrganizationDomain"/> representing domains associated with the organization.
     /// </value>
     [JsonPropertyName("domains")]
-    public List<KcOrganizationDomain> Domains { get; set; } = new();
+    public ICollection<KcOrganizationDomain> Domains { get; set; } = [];
 }
