@@ -70,7 +70,7 @@ public sealed class KeycloakClient : IKeycloakClient
 
         // Remove the trailing slash from the base URL if it exists.
         baseUrl = baseUrl.EndsWith("/", StringComparison.Ordinal)
-            ? baseUrl.Remove(baseUrl.Length - 1, 1)
+            ? baseUrl[..^1]
             : baseUrl;
 
         // Define the admin API base URL for realm-specific administrative operations.
