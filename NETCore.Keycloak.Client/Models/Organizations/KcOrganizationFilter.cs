@@ -36,7 +36,6 @@ public sealed class KcOrganizationFilter : KcFilter
     /// </returns>
     public new string BuildQuery()
     {
-
         var builder = new StringBuilder($"?max={Max}");
 
         // Include brief representation if specified
