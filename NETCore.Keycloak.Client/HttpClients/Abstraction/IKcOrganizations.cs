@@ -1,10 +1,12 @@
+using NETCore.Keycloak.Client.Exceptions;
 using NETCore.Keycloak.Client.Models;
 using NETCore.Keycloak.Client.Models.Organizations;
 
 namespace NETCore.Keycloak.Client.HttpClients.Abstraction;
 
 /// <summary>
-/// Keycloak organizations REST client
+/// Keycloak organizations REST client.
+/// <see href="https://www.keycloak.org/docs-api/latest/rest-api/index.html#_organizations"/>
 /// </summary>
 public interface IKcOrganizations
 {
@@ -17,7 +19,10 @@ public interface IKcOrganizations
     /// <param name="accessToken">The access token used for authentication.</param>
     /// <param name="organization">The organization representation to create.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
-    /// <returns>A <see cref="KcResponse{T}"/> indicating the result.</returns>
+    /// <returns>
+    /// A <see cref="KcResponse{T}"/> indicating the result of the operation.
+    /// </returns>
+    /// <exception cref="KcException">Thrown if any required parameter is null, empty, or invalid.</exception>
     Task<KcResponse<object>> CreateAsync(
         string realm,
         string accessToken,
@@ -34,7 +39,10 @@ public interface IKcOrganizations
     /// <param name="organizationId">The ID of the organization to update.</param>
     /// <param name="organization">The updated organization representation.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
-    /// <returns>A <see cref="KcResponse{T}"/> indicating the result.</returns>
+    /// <returns>
+    /// A <see cref="KcResponse{T}"/> indicating the result of the operation.
+    /// </returns>
+    /// <exception cref="KcException">Thrown if any required parameter is null, empty, or invalid.</exception>
     Task<KcResponse<object>> UpdateAsync(
         string realm,
         string accessToken,
@@ -51,7 +59,10 @@ public interface IKcOrganizations
     /// <param name="accessToken">The access token used for authentication.</param>
     /// <param name="organizationId">The ID of the organization to delete.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
-    /// <returns>A <see cref="KcResponse{T}"/> indicating the result.</returns>
+    /// <returns>
+    /// A <see cref="KcResponse{T}"/> indicating the result of the operation.
+    /// </returns>
+    /// <exception cref="KcException">Thrown if any required parameter is null, empty, or invalid.</exception>
     Task<KcResponse<object>> DeleteAsync(
         string realm,
         string accessToken,
@@ -67,7 +78,10 @@ public interface IKcOrganizations
     /// <param name="accessToken">The access token used for authentication.</param>
     /// <param name="organizationId">The ID of the organization to retrieve.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
-    /// <returns>A <see cref="KcResponse{OrganizationRepresentation}"/> with the organization details.</returns>
+    /// <returns>
+    /// A <see cref="KcResponse{T}"/> containing the <see cref="KcOrganization"/> details.
+    /// </returns>
+    /// <exception cref="KcException">Thrown if any required parameter is null, empty, or invalid.</exception>
     Task<KcResponse<KcOrganization>> GetAsync(
         string realm,
         string accessToken,
@@ -83,7 +97,10 @@ public interface IKcOrganizations
     /// <param name="accessToken">The access token used for authentication.</param>
     /// <param name="filter">Optional filter criteria.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
-    /// <returns>A <see cref="KcResponse{T}"/> containing an enumerable of organizations.</returns>
+    /// <returns>
+    /// A <see cref="KcResponse{T}"/> containing an enumerable of <see cref="KcOrganization"/> objects.
+    /// </returns>
+    /// <exception cref="KcException">Thrown if any required parameter is null, empty, or invalid.</exception>
     Task<KcResponse<IEnumerable<KcOrganization>>> ListAsync(
         string realm,
         string accessToken,
@@ -99,7 +116,10 @@ public interface IKcOrganizations
     /// <param name="accessToken">The access token used for authentication.</param>
     /// <param name="filter">Optional filter criteria.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
-    /// <returns>A <see cref="KcResponse{long}"/> with the count of organizations.</returns>
+    /// <returns>
+    /// A <see cref="KcResponse{T}"/> with the count of organizations.
+    /// </returns>
+    /// <exception cref="KcException">Thrown if any required parameter is null, empty, or invalid.</exception>
     Task<KcResponse<long>> CountAsync(
         string realm,
         string accessToken,

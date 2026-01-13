@@ -5,13 +5,13 @@ using NETCore.Keycloak.Client.Models.Organizations;
 
 namespace NETCore.Keycloak.Client.HttpClients.Implementation;
 
-/// <summary>
-///     Organization service API for managing organizations in Keycloak.
-/// </summary>
-internal sealed class KcOrganizations(string baseUrl, ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcOrganizations
+/// <inheritdoc cref="IKcOrganizations"/>
+internal sealed class KcOrganizations(string baseUrl,
+    ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcOrganizations
 {
     // Primary constructor on the class declaration is used; no explicit ctor body required.
 
+    /// <inheritdoc cref="IKcOrganizations.CreateAsync"/>
     public Task<KcResponse<object>> CreateAsync(
         string realm,
         string accessToken,
@@ -32,6 +32,7 @@ internal sealed class KcOrganizations(string baseUrl, ILogger logger) : KcHttpCl
             cancellationToken);
     }
 
+    /// <inheritdoc cref="IKcOrganizations.UpdateAsync"/>
     public Task<KcResponse<object>> UpdateAsync(
         string realm,
         string accessToken,
@@ -54,6 +55,7 @@ internal sealed class KcOrganizations(string baseUrl, ILogger logger) : KcHttpCl
             cancellationToken);
     }
 
+    /// <inheritdoc cref="IKcOrganizations.DeleteAsync"/>
     public Task<KcResponse<object>> DeleteAsync(
         string realm,
         string accessToken,
@@ -74,6 +76,7 @@ internal sealed class KcOrganizations(string baseUrl, ILogger logger) : KcHttpCl
             cancellationToken);
     }
 
+    /// <inheritdoc cref="IKcOrganizations.GetAsync"/>
     public Task<KcResponse<KcOrganization>> GetAsync(
         string realm,
         string accessToken,
@@ -94,6 +97,7 @@ internal sealed class KcOrganizations(string baseUrl, ILogger logger) : KcHttpCl
             cancellationToken);
     }
 
+    /// <inheritdoc cref="IKcOrganizations.ListAsync"/>
     public Task<KcResponse<IEnumerable<KcOrganization>>> ListAsync(
         string realm,
         string accessToken,
@@ -114,6 +118,7 @@ internal sealed class KcOrganizations(string baseUrl, ILogger logger) : KcHttpCl
             cancellationToken);
     }
 
+    /// <inheritdoc cref="IKcOrganizations.CountAsync"/>
     public Task<KcResponse<long>> CountAsync(
         string realm,
         string accessToken,

@@ -4,7 +4,7 @@ namespace NETCore.Keycloak.Client.Models.Organizations;
 
 /// <summary>
 /// Represents an organization domain in Keycloak.
-/// <see href="https://www.keycloak.org/docs-api/20.0.3/rest-api/index.html#_organizationrepresentation"/>
+/// <see href="https://www.keycloak.org/docs-api/latest/rest-api/index.html#OrganizationDomainRepresentation"/>
 /// </summary>
 public sealed class KcOrganizationDomain
 {
