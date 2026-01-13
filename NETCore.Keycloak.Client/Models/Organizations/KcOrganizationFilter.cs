@@ -1,114 +1,77 @@
 using System.Globalization;
 using System.Text;
-using System.Text.Json.Serialization;
 using NETCore.Keycloak.Client.Models.Common;
+using Newtonsoft.Json;
 
 namespace NETCore.Keycloak.Client.Models.Organizations;
 
 /// <summary>
-/// Filter model for organizations queries.
+/// Represents a filter for querying Keycloak organizations.
 /// </summary>
 public sealed class KcOrganizationFilter : KcFilter
 {
     /// <summary>
-    /// Filter by organization name (partial or exact if Exact = true)
+    /// Gets or sets a query string for searching custom attributes, formatted as 'key1:value1 key2:value2'.
     /// </summary>
-    [JsonPropertyName("name")]
-    public string Name { get; set; }
+    /// <value>
+    /// A string representing the custom attribute search query.
+    /// </value>
+    [JsonProperty("q")]
+    public string Q { get; set; }
 
     /// <summary>
-    /// Filter by organization alias
+    /// Gets or sets a value indicating whether the query parameters must match exactly.
     /// </summary>
-    [JsonPropertyName("alias")]
-    public string Alias { get; set; }
-
-    /// <summary>
-    /// Filter by enabled state
-    /// </summary>
-    [JsonPropertyName("enabled")]
-    public bool? Enabled { get; set; }
-
-    /// <summary>
-    /// Filter by domain name
-    /// </summary>
-    [JsonPropertyName("domain")]
-    public string Domain { get; set; }
-
-    /// <summary>
-    /// Filter by verified domain
-    /// </summary>
-    [JsonPropertyName("domainVerified")]
-    public bool? DomainVerified { get; set; }
-
-    /// <summary>
-    /// Require exact matching for name / alias
-    /// </summary>
-    [JsonPropertyName("exact")]
+    /// <value>
+    /// <c>true</c> if the parameters must match exactly; otherwise, <c>false</c>.
+    /// </value>
+    [JsonProperty("exact")]
     public bool? Exact { get; set; }
 
     /// <summary>
-    /// Free text search (Keycloak standard search param)
+    /// Builds the query string based on the filter properties.
     /// </summary>
-    [JsonPropertyName("search")]
-    public string Search { get; set; }
-
-    /// <summary>
-    /// Build query string
-    /// </summary>
+    /// <returns>
+    /// A string containing the query parameters to be appended to a URL.
+    /// </returns>
     public new string BuildQuery()
     {
-        var sb = new StringBuilder($"?max={Max}");
 
-        if ( BriefRepresentation.HasValue )
+        var builder = new StringBuilder($"?max={Max}");
+
+        // Include brief representation if specified
+        if ( BriefRepresentation != null )
         {
-            _ = sb.Append("&briefRepresentation=")
-              .Append(BriefRepresentation.Value.ToString().ToLower(CultureInfo.CurrentCulture));
+            _ = builder.Append(CultureInfo.CurrentCulture,
+                $"&briefRepresentation={BriefRepresentation.ToString().ToLower(CultureInfo.CurrentCulture)}");
         }
 
-        if ( !string.IsNullOrWhiteSpace(Name) )
+        // Include pagination offset if specified
+        if ( First != null )
         {
-            _ = sb.Append("&name=").Append(Name);
+            _ = builder.Append(CultureInfo.CurrentCulture,
+                $"&first={string.Create(CultureInfo.CurrentCulture, $"{First}").ToLower(CultureInfo.CurrentCulture)}");
         }
 
-        if ( !string.IsNullOrWhiteSpace(Alias) )
+        // Include custom attribute query if specified
+        if ( !string.IsNullOrWhiteSpace(Q) )
         {
-            _ = sb.Append("&alias=").Append(Alias);
+            _ = builder.Append(CultureInfo.CurrentCulture, $"&q={Q}");
         }
 
-        if ( Enabled.HasValue )
-        {
-            _ = sb.Append("&enabled=")
-              .Append(Enabled.Value.ToString().ToLower(CultureInfo.CurrentCulture));
-        }
-
-        if ( !string.IsNullOrWhiteSpace(Domain) )
-        {
-            _ = sb.Append("&domain=").Append(Domain);
-        }
-
-        if ( DomainVerified.HasValue )
-        {
-            _ = sb.Append("&domainVerified=")
-              .Append(DomainVerified.Value.ToString().ToLower(CultureInfo.CurrentCulture));
-        }
-
-        if ( Exact.HasValue )
-        {
-            _ = sb.Append("&exact=")
-              .Append(Exact.Value.ToString().ToLower(CultureInfo.CurrentCulture));
-        }
-
-        if ( First.HasValue )
-        {
-            _ = sb.Append("&first=")
-              .Append(First.Value.ToString(CultureInfo.CurrentCulture));
-        }
-
+        // Include general search query if specified
         if ( !string.IsNullOrWhiteSpace(Search) )
         {
-            _ = sb.Append("&search=").Append(Search);
+            _ = builder.Append(CultureInfo.CurrentCulture, $"&search={Search}");
         }
 
-        return sb.ToString();
+        // Include exact match filter if specified
+        if ( Exact != null )
+        {
+            _ = builder.Append(CultureInfo.CurrentCulture,
+                $"&exact={Exact.ToString().ToLower(CultureInfo.CurrentCulture)}");
+        }
+
+        return builder.ToString();
     }
 }
