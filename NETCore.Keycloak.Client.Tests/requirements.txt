@@ -3,7 +3,7 @@ ansible-core>=2.17.7
 certifi==2024.12.14
 cffi==1.17.1
 charset-normalizer==3.4.1
-cryptography==44.0.0
+cryptography==44.0.1
 deprecation==2.1.0
 ecdsa==0.19.0
 idna==3.10
@@ -11,14 +11,14 @@ importlib-resources==5.0.7
 Jinja2==3.1.5
 MarkupSafe==3.0.2
 packaging==24.2
-pyasn1==0.6.1
+pyasn1==0.6.2
 pycparser==2.22
-python-jose==3.3.0
+python-jose==3.4.0
 python-keycloak==7.0.2
 PyYAML==6.0.2
-requests==2.32.3
+requests==2.32.4
 requests-toolbelt==1.0.0
 resolvelib==1.0.1
 rsa==4.9
 six==1.17.0
-urllib3==2.3.0
+urllib3==2.6.3
