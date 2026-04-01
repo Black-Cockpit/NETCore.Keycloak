@@ -41,7 +41,7 @@ public abstract class KcHttpClientBase
 
         // Ensure the base URL does not end with a trailing slash.
         BaseUrl = baseUrl.EndsWith("/", StringComparison.Ordinal)
-            ? baseUrl.Remove(baseUrl.Length - 1, 1)
+            ? baseUrl[..^1]
             : baseUrl;
 
         Logger = logger;

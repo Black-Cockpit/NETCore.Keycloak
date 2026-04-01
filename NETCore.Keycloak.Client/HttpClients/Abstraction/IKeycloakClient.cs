@@ -76,4 +76,9 @@ public interface IKeycloakClient
     /// See <see cref="IKcScopeMappings"/> for detailed operations.
     /// </summary>
     public IKcScopeMappings ScopeMappings { get; }
+
+    /// <summary>
+    /// Gets the organizations REST client for managing organizations.
+    /// </summary>
+    public IKcOrganizations Organizations { get; }
 }

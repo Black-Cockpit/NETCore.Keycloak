@@ -44,6 +44,9 @@ public sealed class KeycloakClient : IKeycloakClient
     /// <inheritdoc cref="IKeycloakClient.ScopeMappings"/>
     public IKcScopeMappings ScopeMappings { get; }
 
+    /// <inheritdoc cref="IKeycloakClient.Organizations"/>
+    public IKcOrganizations Organizations { get; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="KeycloakClient"/> class.
     /// Provides access to various Keycloak API services through respective clients.
@@ -67,7 +70,7 @@ public sealed class KeycloakClient : IKeycloakClient
 
         // Remove the trailing slash from the base URL if it exists.
         baseUrl = baseUrl.EndsWith("/", StringComparison.Ordinal)
-            ? baseUrl.Remove(baseUrl.Length - 1, 1)
+            ? baseUrl[..^1]
             : baseUrl;
 
         // Define the admin API base URL for realm-specific administrative operations.
@@ -86,5 +89,6 @@ public sealed class KeycloakClient : IKeycloakClient
         ProtocolMappers = new KcProtocolMappers(adminUrl, logger);
         ScopeMappings = new KcScopeMappings(adminUrl, logger);
         RoleMappings = new KcRoleMappings(adminUrl, logger);
+        Organizations = new KcOrganizations(adminUrl, logger);
     }
 }
