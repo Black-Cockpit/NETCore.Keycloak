@@ -35,7 +35,7 @@ public interface IKcClients
     Task<KcResponse<object>> CreateAsync(string realm, string accessToken, KcClient kcClient,
         CancellationToken cancellationToken = default);
 
-    /// <inheritdoc cref="IKcClients.ListAsync"/>
+    /// <inheritdoc cref="ListAsync"/>
     /// <summary>
     /// Retrieves a list of clients from a specified Keycloak realm, optionally filtered by specified criteria.
     ///

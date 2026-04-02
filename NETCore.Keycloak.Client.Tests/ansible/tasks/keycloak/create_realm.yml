@@ -86,3 +86,36 @@
     events_listeners: "{{ events_listeners }}"
     state: "{{ state }}"
   retries: 5
+
+# Obtain admin access token for enabling organizations
+# Retrieves an admin token from the master realm for API calls that are not supported by the Ansible Keycloak modules.
+- name: "Obtain admin access token for {{ realm }} realm configuration"
+  uri:
+    url: "{{ keycloak.auth_url }}/realms/{{ keycloak.auth_realm }}/protocol/openid-connect/token"
+    method: POST
+    body_format: form-urlencoded
+    body:
+      client_id: "{{ keycloak.client_id }}"
+      username: "{{ keycloak.username }}"
+      password: "{{ keycloak.password }}"
+      grant_type: password
+    status_code: 200
+  register: keycloak_admin_token
+  retries: 5
+  when: "(kc_version | default('')) not in ['20.0.3', '22.0.3', '21.1.2', '23.0.7', '24.0.5-0', '25.0.6']"
+
+# Enable organizations for the realm
+# Organizations are available starting from Keycloak 26 and must be enabled at the realm level.
+- name: "Enable organizations for {{ realm }} realm"
+  uri:
+    url: "{{ keycloak.auth_url }}/admin/realms/{{ realm }}"
+    method: PUT
+    headers:
+      Authorization: "Bearer {{ keycloak_admin_token.json.access_token }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      organizationsEnabled: true
+    status_code: 204
+  retries: 5
+  when: "(kc_version | default('')) not in ['20.0.3', '22.0.3', '21.1.2', '23.0.7', '24.0.5-0', '25.0.6']"

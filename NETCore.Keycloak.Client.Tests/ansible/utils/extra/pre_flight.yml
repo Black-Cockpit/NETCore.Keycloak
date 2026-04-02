@@ -7,9 +7,9 @@
 # Check target platforms 
 - name: "Check OS version and family"
   assert:
-    that: ansible_distribution in {{ supported_distribution }}
-    fail_msg: "This can only be run against Supported OSs. {{ ansible_distribution }} {{ ansible_distribution_major_version }} is not supported."
-    success_msg: "This is running against a supported OS {{ ansible_distribution }} {{ ansible_distribution_major_version }}"
+    that: ansible_facts['distribution'] in supported_distribution
+    fail_msg: "This can only be run against Supported OSs. {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_major_version'] }} is not supported."
+    success_msg: "This is running against a supported OS {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_major_version'] }}"
   changed_when: false
   tags:
   - always
@@ -17,7 +17,7 @@
 # Check keycloak version
 - name: "Check keycloak version"
   assert:
-    that: kc_version in {{ supported_keycloak_version }}
+    that: kc_version in supported_keycloak_version
     fail_msg: "This can only provision testing environment on supported keycloak versions. {{ kc_version }} is not supported."
     success_msg: "Provision testing environment a supported keycloak version {{ kc_version }}"
   changed_when: false
@@ -28,12 +28,12 @@
 # Set rhel as a target
 - set_fact:
     target_platform: rhel
-  when: ansible_distribution == 'CentOS' or ansible_os_family == 'RedHat' or ansible_os_family == "Rocky" or ansible_os_family == "AlmaLinux"
+  when: ansible_facts['distribution'] == 'CentOS' or ansible_facts['os_family'] == 'RedHat' or ansible_facts['os_family'] == "Rocky" or ansible_facts['os_family'] == "AlmaLinux"
 
 # Set debian as a target
 - set_fact:
     target_platform: debian
-  when: ansible_distribution == 'Ubuntu' or ansible_os_family == 'Debian'
+  when: ansible_facts['distribution'] == 'Ubuntu' or ansible_facts['os_family'] == 'Debian'
 
 # Set Keycloak version
 # Sets the Keycloak version to the value provided in 'kc_version', or defaults to '22.0.3' if none is provided.

@@ -8,12 +8,11 @@ deprecation==2.1.0
 ecdsa==0.19.0
 idna==3.10
 importlib-resources==5.0.7
-Jinja2==3.1.5
+Jinja2==3.1.6
 MarkupSafe==3.0.2
 packaging==24.2
-pyasn1==0.6.2
 pycparser==2.22
-python-jose==3.4.0
+python-jose== 3.4.0
 python-keycloak==7.0.2
 PyYAML==6.0.2
 requests==2.32.4
@@ -22,3 +21,4 @@ resolvelib==1.0.1
 rsa==4.9
 six==1.17.0
 urllib3==2.6.3
+psycopg2-binary==2.9.10

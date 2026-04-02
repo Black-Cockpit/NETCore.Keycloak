@@ -88,7 +88,7 @@ public class KcAuthenticationExtensionTests : KcTestingModule
         Assert.IsNotNull(claimsTransformer, "IClaimsTransformation should be registered.");
 
         // Verify that the registered IClaimsTransformation is of type KcRolesClaimsTransformer.
-        Assert.IsInstanceOfType(claimsTransformer, typeof(KcRolesClaimsTransformer),
+        Assert.IsInstanceOfType<KcRolesClaimsTransformer>(claimsTransformer,
             "Claims transformer should be of type KcRolesClaimsTransformer.");
     }
 

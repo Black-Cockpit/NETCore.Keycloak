@@ -53,10 +53,10 @@ otp_policy_initial_counter: 0
 otp_policy_look_ahead_window: 1
 otp_policy_period: 30
 otp_policy_type: "totp"
-brute_force_protected: true
+brute_force_protected: false
 max_failure_wait_seconds: 900
 wait_increment_seconds: 60
-failure_factor: 3
+failure_factor: 30
 permanent_lockout: true
 quick_login_check_milli_seconds: 1000
 minimum_quick_login_wait_seconds: 60
@@ -79,7 +79,7 @@ enabled_event_types:
 events_listeners:
 - "jboss-logging"
 state: present
-roles:
+realm_roles:
 - kc_client_role_1
 - kc_client_role_2
 - kc_client_role_3

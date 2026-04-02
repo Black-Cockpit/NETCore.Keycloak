@@ -79,9 +79,9 @@
     name: "{{ item }}"
     state: present
     description: "{{ item | replace('_',' ') | capitalize }} role"
-  loop: "{{ roles }}"
+  loop: "{{ realm_roles }}"
   retries: 5
-  when: roles is defined and roles | length > 0
+  when: realm_roles is defined and realm_roles | length > 0
 
 # Create client scopes and audiences
 # Includes the task file to configure client scopes and audiences in Keycloak.

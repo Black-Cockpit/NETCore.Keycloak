@@ -22,16 +22,19 @@ Task("Test")
     {
         Information("Running tests with dotCover...");
 
-        // Ensure dotnet is installed
-        var dotnetPath = Context.Tools.Resolve("dotnet");
-        if (dotnetPath == null)
+        // Ensure dotCover is installed
+        var dotCoverPath = Context.Tools.Resolve("dotCover");
+        if (dotCoverPath == null)
         {
-            Error("dotnet is not installed or cannot be found.");
+            Error("dotCover is not installed or cannot be found.");
             Environment.Exit(255);
         }
 
-        // Define the test command
-        var testCommand = $"dotcover test {slnContext}/NETCore.Keycloak.sln --configuration {configuration} -l:\"console;verbosity=normal\" --no-restore --no-build --dcReportType=HTML";
+        // Resolve solution path to absolute for dotCover compatibility
+        var slnPath = MakeAbsolute(new FilePath($"{slnContext}/NETCore.Keycloak.sln"));
+
+        // Define the dotCover cover command with XML report output
+        var testCommand = $"cover --xml-report-output=dotCover.Output.xml -- test {slnPath} --configuration {configuration} -l:\"console;verbosity=normal\" --no-restore --no-build";
 
         // Configure dotCover settings
         var processSettings = new ProcessSettings
@@ -43,7 +46,7 @@ Task("Test")
         };
 
         // Run tests with dotCover
-        var result = StartProcess(dotnetPath, processSettings, out var output, out var error);
+        var result = StartProcess(dotCoverPath, processSettings, out var output, out var error);
 
         // Evaluate the result of the process execution
         if (result != 0)

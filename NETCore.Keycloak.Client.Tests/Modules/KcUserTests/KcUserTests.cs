@@ -242,6 +242,12 @@ public class KcUserTests : KcTestingModule
     [TestMethod]
     public async Task F_ShouldGetUserSessions()
     {
+        // Skip on KC 26+ — password grant creates transient sessions not visible via admin API
+        if ( GetKcMajorVersion() >= 26 )
+        {
+            Assert.Inconclusive("Skipped on Keycloak 26+ — transient sessions are not returned by the admin sessions API.");
+        }
+
         // Ensure that the test user exists
         Assert.IsNotNull(TestUser);
 
@@ -280,6 +286,12 @@ public class KcUserTests : KcTestingModule
     [TestMethod]
     public async Task G_ShouldDeleteUserSessions()
     {
+        // Skip on KC 26+ — depends on F_ShouldGetUserSessions which is skipped
+        if ( GetKcMajorVersion() >= 26 )
+        {
+            Assert.Inconclusive("Skipped on Keycloak 26+ — transient sessions are not returned by the admin sessions API.");
+        }
+
         // Ensure that the test user and session exist
         Assert.IsNotNull(TestUser);
         Assert.IsNotNull(TestSession);
