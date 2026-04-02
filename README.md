@@ -229,9 +229,10 @@ dotnet cake e2e_test.cake
 
 Thanks to all the people who contribute to this project!
 
-<a href="https://github.com/Black-Cockpit/NETCore.Keycloak/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=Black-Cockpit/NETCore.Keycloak" />
-</a>
+<a href="https://github.com/hasnimehdi91"><img src="https://github.com/hasnimehdi91.png" width="50" height="50" alt="hasnimehdi91" style="border-radius:50%"></a>
+<a href="https://github.com/ghaith100994"><img src="https://github.com/ghaith100994.png" width="50" height="50" alt="ghaith100994" style="border-radius:50%"></a>
+
+<sub>Want to see your avatar here? Check our [Contributing Guidelines](CONTRIBUTING.md)!</sub>
 
 ## 📄 License
 

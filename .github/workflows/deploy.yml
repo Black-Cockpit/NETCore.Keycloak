@@ -3,12 +3,13 @@ on:
   pull_request:
     types:
       - closed
+  workflow_dispatch:
 
 jobs:
-  # Deploy nuget package when a branch is labeled with `release` and the merge is done to master.
+  # Deploy nuget package when a branch is labeled with `release` and the merge is done to master, or when triggered manually.
   Deploy:
-    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release') && github.event.pull_request.base.ref == 'master'
-    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release') && github.event.pull_request.base.ref == 'master')
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         dotnet-version: [10.0.x]
