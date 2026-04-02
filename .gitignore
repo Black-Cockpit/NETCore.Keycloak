@@ -4,6 +4,7 @@ persister
 Test
 /persister
 .vscode
+.claude
 Scripting
 docker
 kubernetes
@@ -37,6 +38,9 @@ out
 **/out
 **/containers/**
 **/Assets/*.json
+**/*.dcvr
+**/dotCover.Output.xml
+**/dotCover.Output.html
 
 **/NETCore.Keycloak.Client/LICENSE
 
@@ -197,7 +201,6 @@ nCrunchTemp_*
 # MightyMoose
 *.mm.*
 AutoTest.Net/
-
 
 # local files
 compose.yml

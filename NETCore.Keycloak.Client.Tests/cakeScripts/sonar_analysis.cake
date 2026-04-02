@@ -31,7 +31,7 @@ Task("SonarBegin")
                 .Append("/d:sonar.coverage.exclusions=\"**/NETCore.Keycloak.Client.Tests/**/*.*\"")
                 .Append("/d:sonar.test.exclusions=\"**/NETCore.Keycloak.Client.Tests/**/*.*\"")
                 .Append("/d:sonar.exclusions=\"**/NETCore.Keycloak.Client.Tests/**/*.*\"")
-                .Append("/d:sonar.cs.dotcover.reportsPaths=dotCover.Output.html"),
+                .Append("/d:sonar.cs.dotcover.reportsPaths=dotCover.Output.xml"),
             RedirectStandardOutput = true,
             RedirectStandardError = true
         };

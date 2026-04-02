@@ -8,7 +8,8 @@ namespace NETCore.Keycloak.Client.HttpClients.Implementation;
 
 /// <inheritdoc cref="IKcProtocolMappers"/>
 internal sealed class KcProtocolMappers(string baseUrl,
-    ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcProtocolMappers
+    ILogger logger,
+    IHttpClientFactory httpClientFactory = null) : KcHttpClientBase(logger, baseUrl, httpClientFactory), IKcProtocolMappers
 {
     /// <inheritdoc cref="IKcProtocolMappers.AddMappersAsync"/>
     public Task<KcResponse<object>> AddMappersAsync(

@@ -24,7 +24,7 @@ public class KcCommonTests : KcTestingModule
     /// <summary>
     /// Instance of the <see cref="IKeycloakClient"/> used for executing Keycloak-related operations.
     /// </summary>
-    private IKeycloakClient _client;
+    private KeycloakClient _client;
 
     /// <summary>
     /// Sets up the test environment and initializes the required components before each test.

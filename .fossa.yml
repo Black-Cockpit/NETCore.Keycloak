@@ -3,13 +3,12 @@ version: 1
 analysis:
   # Paths to exclude from license/security analysis (relative to repo root)
   ignorePaths:
-    - "NETCore.Keycloak.Client.Tests/**"
-
+  - "NETCore.Keycloak.Client.Tests/**"
   # Specific package locators to ignore (use exact locator shown by FOSSA)
   ignorePackages:
-    - "pip+ansible$13.2.0"
-    - "pip+ansible-core$2.17.7"
-    - "nuget+Microsoft.NET.Test.Sdk$17.6.0"
+  - "pip+ansible$13.2.0"
+  - "pip+ansible-core$2.17.7"
+  - "nuget+Microsoft.NET.Test.Sdk$17.6.0"
 
 # Notes:
 # - Commit and push this file and then trigger a new FOSSA scan so the server-side

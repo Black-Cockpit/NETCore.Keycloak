@@ -39,7 +39,7 @@
 
 | Category     | Supported Versions                                                      |
 | ------------ | ----------------------------------------------------------------------- |
-| .NET         | 6.0, 7.0, 8.0                                                           |
+| .NET         | 8.0, 9.0, 10.0                                                          |
 | Dependencies | ASP.NET Core, Microsoft.Extensions.DependencyInjection, Newtonsoft.Json |
 
 ## ✅ Version Compatibility
@@ -49,10 +49,8 @@
 | 26.x             | ✅       |
 | 25.x             | ✅       |
 | 24.x             | ✅       |
-| 23.x             | ✅       |
-| 22.x             | ✅       |
-| 21.x             | ✅       |
-| 20.x             | ✅       |
+
+> **Note:** Keycloak versions 20.x through 23.x and .NET 6.0/7.0 were supported in previous releases (v1.x). If you need support for these older versions, please use [v1.0.2](https://www.nuget.org/packages/Keycloak.NETCore.Client/1.0.2).
 
 ## 🌟 Key Features
 
@@ -97,7 +95,7 @@ Install-Package Keycloak.NETCore.Client
 
 ### 📋 Prerequisites
 
-- ✳️ .NET Core SDK (version 6.0 or later)
+- ✳️ .NET SDK (version 8.0 or later)
 - 🖥️ A running Keycloak instance
 - 🔑 Client credentials and realm configuration
 
@@ -226,6 +224,14 @@ make install_virtual_env
 # Run tests for all supported versions
 dotnet cake e2e_test.cake
 ```
+
+## 👥 Contributors
+
+Thanks to all the people who contribute to this project!
+
+<a href="https://github.com/Black-Cockpit/NETCore.Keycloak/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Black-Cockpit/NETCore.Keycloak" />
+</a>
 
 ## 📄 License
 

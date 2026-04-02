@@ -11,6 +11,12 @@ namespace NETCore.Keycloak.Client.Tests.Models;
 public class KcTestEnvironment
 {
     /// <summary>
+    /// Gets or sets the Keycloak server version.
+    /// </summary>
+    [JsonProperty("kc_version")]
+    public string KcVersion { get; set; }
+
+    /// <summary>
     /// Gets or sets the base URL of the Keycloak server.
     /// </summary>
     [JsonProperty("baseUrl")]

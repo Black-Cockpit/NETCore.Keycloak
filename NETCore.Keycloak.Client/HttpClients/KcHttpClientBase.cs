@@ -17,6 +17,22 @@ namespace NETCore.Keycloak.Client.HttpClients;
 public abstract class KcHttpClientBase
 {
     /// <summary>
+    /// Default shared <see cref="HttpClient"/> instance used when no <see cref="IHttpClientFactory"/> is provided.
+    /// Configured with a <see cref="SocketsHttpHandler"/> that limits pooled connection lifetime to 2 minutes,
+    /// ensuring DNS changes are respected while avoiding socket exhaustion.
+    /// </summary>
+    private static readonly HttpClient DefaultHttpClient = new(new SocketsHttpHandler
+    {
+        PooledConnectionLifetime = TimeSpan.FromMinutes(2)
+    });
+
+    /// <summary>
+    /// Optional HTTP client factory for creating <see cref="HttpClient"/> instances.
+    /// When provided, takes precedence over the default shared <see cref="HttpClient"/> instance.
+    /// </summary>
+    private readonly IHttpClientFactory _httpClientFactory;
+
+    /// <summary>
     /// Logger instance for logging operations.
     /// </summary>
     protected ILogger Logger { get; }
@@ -27,13 +43,20 @@ public abstract class KcHttpClientBase
     protected string BaseUrl { get; private set; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="KcHttpClientBase"/> class.
+    /// Initializes a new instance of the <see cref="KcHttpClientBase"/> class with an optional <see cref="IHttpClientFactory"/>.
+    /// When an <see cref="IHttpClientFactory"/> is provided, it is used to create <see cref="HttpClient"/> instances
+    /// with managed handler lifetimes and connection pooling. Otherwise, a default shared <see cref="HttpClient"/> is used.
     /// </summary>
     /// <param name="logger">Logger instance to log information and errors.</param>
     /// <param name="baseUrl">Keycloak base URL. Must not be null or empty.</param>
+    /// <param name="httpClientFactory">
+    /// Optional <see cref="IHttpClientFactory"/> for creating <see cref="HttpClient"/> instances.
+    /// When <c>null</c>, a default shared <see cref="HttpClient"/> with pooled connection lifetime is used.
+    /// </param>
     /// <exception cref="KcException">Thrown if the <paramref name="baseUrl"/> is null or empty.</exception>
-    protected KcHttpClientBase(ILogger logger, string baseUrl)
+    protected KcHttpClientBase(ILogger logger, string baseUrl, IHttpClientFactory httpClientFactory)
     {
+        // Ensure the base URL is not null or empty.
         if ( string.IsNullOrWhiteSpace(baseUrl) )
         {
             throw new KcException($"{nameof(baseUrl)} is required");
@@ -45,7 +68,17 @@ public abstract class KcHttpClientBase
             : baseUrl;
 
         Logger = logger;
+        _httpClientFactory = httpClientFactory;
     }
+
+    /// <summary>
+    /// Creates or retrieves an <see cref="HttpClient"/> instance for sending HTTP requests.
+    /// When an <see cref="IHttpClientFactory"/> is configured, a new <see cref="HttpClient"/> is created from the factory.
+    /// Otherwise, the default shared <see cref="HttpClient"/> instance is returned.
+    /// </summary>
+    /// <returns>An <see cref="HttpClient"/> instance ready for use.</returns>
+    protected HttpClient CreateHttpClient() =>
+        _httpClientFactory?.CreateClient() ?? DefaultHttpClient;
 
     /// <summary>
     /// Validates the realm name and access token for a Keycloak operation.
@@ -208,8 +241,8 @@ public abstract class KcHttpClientBase
                     : CreateRequest(method, url, accessToken,
                         GetBody(content), contentType: contentType); // For requests with a body (e.g., POST, PUT).
 
-                // Create a new HttpClient instance for sending the request.
-                using var client = new HttpClient();
+                // Retrieve an HttpClient instance from the factory or default shared instance.
+                var client = CreateHttpClient();
 
                 // Send the request asynchronously and return the response.
                 return await client.SendAsync(request, cancellationToken).ConfigureAwait(false);

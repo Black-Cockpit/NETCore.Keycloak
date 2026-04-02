@@ -1,0 +1,29 @@
+{
+  "policies": [
+    {
+      "name": "should-be-account-owner",
+      "fileName": "should-be-account-owner.js",
+      "description": "Should be self account owner"
+    },
+    {
+      "name": "should-be-business-account-owner",
+      "fileName": "should-be-business-account-owner.js",
+      "description": "Should be business account owner"
+    },
+    {
+      "name": "can-view-roles",
+      "fileName": "can-view-roles.js",
+      "description": "Can view roles"
+    },
+    {
+      "name": "can-write-roles",
+      "fileName": "can-write-roles.js",
+      "description": "Can write roles"
+    },
+    {
+      "name": "can-delete-roles",
+      "fileName": "can-delete-roles.js",
+      "description": "Can delete roles"
+    }
+  ]
+}

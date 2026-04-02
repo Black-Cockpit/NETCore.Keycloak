@@ -10,8 +10,10 @@ using NETCore.Keycloak.Client.Utils;
 namespace NETCore.Keycloak.Client.HttpClients.Implementation;
 
 /// <inheritdoc cref="IKcAuth"/>
-internal sealed class KcAuth(string baseUrl,
-    ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcAuth
+internal sealed class KcAuth(
+    string baseUrl,
+    ILogger logger,
+    IHttpClientFactory httpClientFactory = null) : KcHttpClientBase(logger, baseUrl, httpClientFactory), IKcAuth
 {
     /// <inheritdoc cref="IKcAuth.GetClientCredentialsTokenAsync"/>
     public async Task<KcResponse<KcIdentityProviderToken>> GetClientCredentialsTokenAsync(
@@ -36,22 +38,16 @@ internal sealed class KcAuth(string baseUrl,
             // Execute the HTTP POST request to get the client credentials token.
             using var tokenRequest = await ExecuteRequest(async () =>
             {
-                // Initialize the HTTP client for the request.
-                using var client = new HttpClient();
+                // Retrieve an HttpClient instance from the factory or default shared instance.
+                var client = CreateHttpClient();
 
                 // Create the form content with the client credentials grant type.
                 using var form = new FormUrlEncodedContent(
                     new Dictionary<string, string>
                     {
-                        {
-                            "client_id", clientCredentials.ClientId
-                        },
-                        {
-                            "client_secret", clientCredentials.Secret
-                        },
-                        {
-                            "grant_type", "client_credentials"
-                        }
+                        { "client_id", clientCredentials.ClientId },
+                        { "client_secret", clientCredentials.Secret },
+                        { "grant_type", "client_credentials" }
                     });
 
                 // Send the POST request to the token endpoint with the form content.
@@ -123,27 +119,17 @@ internal sealed class KcAuth(string baseUrl,
             // Execute the HTTP POST request to get the resource owner password token.
             using var tokenRequest = await ExecuteRequest(async () =>
             {
-                // Initialize the HTTP client for the request.
-                using var client = new HttpClient();
+                // Retrieve an HttpClient instance from the factory or default shared instance.
+                var client = CreateHttpClient();
 
                 // Prepare the form data for the request, including client credentials and user login details.
                 var formData = new Dictionary<string, string>
                 {
-                    {
-                        "client_id", clientCredentials.ClientId
-                    },
-                    {
-                        "client_secret", clientCredentials.Secret
-                    },
-                    {
-                        "grant_type", "password"
-                    },
-                    {
-                        "username", userLogin.Username
-                    },
-                    {
-                        "password", userLogin.Password
-                    }
+                    { "client_id", clientCredentials.ClientId },
+                    { "client_secret", clientCredentials.Secret },
+                    { "grant_type", "password" },
+                    { "username", userLogin.Username },
+                    { "password", userLogin.Password }
                 };
 
                 // Add the scope to the form data if it is specified.
@@ -283,25 +269,17 @@ internal sealed class KcAuth(string baseUrl,
             // Execute the HTTP POST request to refresh the access token.
             using var refreshTokenResponse = await ExecuteRequest(async () =>
             {
-                // Initialize the HTTP client for the request.
-                using var client = new HttpClient();
+                // Retrieve an HttpClient instance from the factory or default shared instance.
+                var client = CreateHttpClient();
 
                 // Prepare the form data for the refresh token request.
                 using var form = new FormUrlEncodedContent(
                     new Dictionary<string, string>
                     {
-                        {
-                            "client_id", clientCredentials.ClientId
-                        },
-                        {
-                            "client_secret", clientCredentials.Secret
-                        },
-                        {
-                            "grant_type", "refresh_token"
-                        },
-                        {
-                            "refresh_token", refreshToken
-                        }
+                        { "client_id", clientCredentials.ClientId },
+                        { "client_secret", clientCredentials.Secret },
+                        { "grant_type", "refresh_token" },
+                        { "refresh_token", refreshToken }
                     });
 
                 // Send the POST request to the token endpoint with the form content.
@@ -369,25 +347,17 @@ internal sealed class KcAuth(string baseUrl,
             // Execute the HTTP POST request to revoke the access token.
             using var tokenRevocationResponse = await ExecuteRequest(async () =>
             {
-                // Initialize the HTTP client for the request.
-                using var client = new HttpClient();
+                // Retrieve an HttpClient instance from the factory or default shared instance.
+                var client = CreateHttpClient();
 
                 // Prepare the form data for the token revocation request.
                 using var form = new FormUrlEncodedContent(
                     new Dictionary<string, string>
                     {
-                        {
-                            "client_id", clientCredentials.ClientId
-                        },
-                        {
-                            "client_secret", clientCredentials.Secret
-                        },
-                        {
-                            "token", accessToken
-                        },
-                        {
-                            "token_type_hint", "access_token"
-                        }
+                        { "client_id", clientCredentials.ClientId },
+                        { "client_secret", clientCredentials.Secret },
+                        { "token", accessToken },
+                        { "token_type_hint", "access_token" }
                     });
 
                 // Send the POST request to the token revocation endpoint with the form content.
@@ -465,25 +435,17 @@ internal sealed class KcAuth(string baseUrl,
             // Execute the HTTP POST request to revoke the refresh token.
             using var tokenRevocationResponse = await ExecuteRequest(async () =>
             {
-                // Initialize the HTTP client for the request.
-                using var client = new HttpClient();
+                // Retrieve an HttpClient instance from the factory or default shared instance.
+                var client = CreateHttpClient();
 
                 // Prepare the form data for the token revocation request.
                 using var form = new FormUrlEncodedContent(
                     new Dictionary<string, string>
                     {
-                        {
-                            "client_id", clientCredentials.ClientId
-                        },
-                        {
-                            "client_secret", clientCredentials.Secret
-                        },
-                        {
-                            "token", refreshToken
-                        },
-                        {
-                            "token_type_hint", "refresh_token"
-                        }
+                        { "client_id", clientCredentials.ClientId },
+                        { "client_secret", clientCredentials.Secret },
+                        { "token", refreshToken },
+                        { "token_type_hint", "refresh_token" }
                     });
 
                 // Send the POST request to the token revocation endpoint with the form content.
@@ -556,8 +518,8 @@ internal sealed class KcAuth(string baseUrl,
             // Execute the HTTP POST request to retrieve the Request Party Token.
             using var tokenRequest = await ExecuteRequest(async () =>
             {
-                // Initialize the HTTP client for the request.
-                using var client = new HttpClient();
+                // Retrieve an HttpClient instance from the factory or default shared instance.
+                var client = CreateHttpClient();
 
                 // Add the Authorization header with the provided access token.
                 _ = client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bearer {accessToken}");
@@ -565,12 +527,8 @@ internal sealed class KcAuth(string baseUrl,
                 // Prepare the form data for the RPT request.
                 var formData = new Dictionary<string, string>
                 {
-                    {
-                        "grant_type", "urn:ietf:params:oauth:grant-type:uma-ticket"
-                    }, // Specify the UMA grant type.
-                    {
-                        "audience", audience
-                    } // Specify the audience.
+                    { "grant_type", "urn:ietf:params:oauth:grant-type:uma-ticket" }, // Specify the UMA grant type.
+                    { "audience", audience } // Specify the audience.
                 };
 
                 // Convert the permissions collection to a list, if provided.

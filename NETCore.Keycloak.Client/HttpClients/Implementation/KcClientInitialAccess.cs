@@ -7,7 +7,8 @@ namespace NETCore.Keycloak.Client.HttpClients.Implementation;
 
 /// <inheritdoc cref="IKcClientInitialAccess"/>
 internal sealed class KcClientInitialAccess(string baseUrl,
-    ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcClientInitialAccess
+    ILogger logger,
+    IHttpClientFactory httpClientFactory = null) : KcHttpClientBase(logger, baseUrl, httpClientFactory), IKcClientInitialAccess
 {
     /// <inheritdoc cref="IKcClientInitialAccess.CreateInitialAccessTokenAsync"/>
     public Task<KcResponse<KcClientInitialAccessModel>> CreateInitialAccessTokenAsync(

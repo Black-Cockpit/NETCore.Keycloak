@@ -16,7 +16,8 @@ CURRENT_MK := $(lastword $(MAKEFILE_LIST))
 
 # Configuration for the virtual environment
 # Virtual environment directory name
-VIRTUAL_ENV_DIR := "keycloak.venv"
+VIRTUAL_ENV_DIR := keycloak.venv
+export VIRTUAL_ENV_DIR
 
 # Directory context for the project
 CONF_DIR_CONTEXT := "."
@@ -81,7 +82,7 @@ prepare_keycloak_25_environment: check_virtual_env stop
 	@pushd ${CONF_DIR_CONTEXT}/ && source ${VIRTUAL_ENV_DIR}/bin/activate && ansible-playbook ansible/provision_keycloak.yml -e "stack_state=present" -e "kc_version=25.0.6"
 
 prepare_keycloak_26_environment: check_virtual_env stop
-	@pushd ${CONF_DIR_CONTEXT}/ && source ${VIRTUAL_ENV_DIR}/bin/activate && ansible-playbook ansible/provision_keycloak.yml -e "stack_state=present" -e "kc_version=26.0.8"
+	@pushd ${CONF_DIR_CONTEXT}/ && source ${VIRTUAL_ENV_DIR}/bin/activate && ansible-playbook ansible/provision_keycloak.yml -e "stack_state=present" -e "kc_version=26.5.6"
 
 # -----------------------------------
 # Target: stop

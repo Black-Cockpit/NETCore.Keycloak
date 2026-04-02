@@ -11,7 +11,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisMode>All</AnalysisMode>
-    <NoWarn>$(NoWarn);CA1031, CA1054, CA1056, CA1865, CA1815, CA1711, CA1707</NoWarn>
+    <NoWarn>$(NoWarn);CA1031, CA1054, CA1056, CA1865, CA1815, CA1711, CA1707, CA1515, CA1873</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

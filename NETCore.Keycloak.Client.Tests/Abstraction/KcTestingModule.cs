@@ -10,6 +10,7 @@ using NETCore.Keycloak.Client.Models.ClientScope;
 using NETCore.Keycloak.Client.Models.Common;
 using NETCore.Keycloak.Client.Models.Groups;
 using NETCore.Keycloak.Client.Models.KcEnum;
+using NETCore.Keycloak.Client.Models.Organizations;
 using NETCore.Keycloak.Client.Models.Roles;
 using NETCore.Keycloak.Client.Models.Tokens;
 using NETCore.Keycloak.Client.Models.Users;
@@ -496,6 +497,62 @@ public abstract class KcTestingModule
     }
 
     /// <summary>
+    /// Creates a new organization in the Keycloak realm and retrieves its details.
+    /// This method generates a mock organization, creates it via the Keycloak Admin API,
+    /// then retrieves the created organization by listing organizations with a matching name filter.
+    /// </summary>
+    /// <param name="context">The context name used for managing environment variables.</param>
+    /// <returns>A task representing the asynchronous operation, with a result of <see cref="KcOrganization"/>.</returns>
+    protected async Task<KcOrganization> CreateAndGetOrganizationAsync(string context)
+    {
+        // Retrieve an access token for the realm admin to perform the organization creation.
+        var accessToken = await GetRealmAdminTokenAsync(context).ConfigureAwait(false);
+        Assert.IsNotNull(accessToken);
+
+        // Create a faker instance for generating random data.
+        var faker = new Faker();
+
+        // Generate a mock organization.
+        var kcOrganization = KcOrganizationMocks.Generate(faker);
+
+        // Execute the operation to create the organization.
+        var createOrganizationResponse = await KeycloakRestClient.Organizations.CreateAsync(
+            TestEnvironment.TestingRealm.Name,
+            accessToken.AccessToken,
+            kcOrganization).ConfigureAwait(false);
+
+        // Validate the response from the organization creation operation.
+        Assert.IsNotNull(createOrganizationResponse);
+        Assert.IsFalse(createOrganizationResponse.IsError);
+
+        // Validate the monitoring metrics for the successful organization creation request.
+        KcCommonAssertion.AssertResponseMonitoringMetrics(createOrganizationResponse.MonitoringMetrics,
+            HttpStatusCode.Created, HttpMethod.Post);
+
+        // Execute the operation to list organizations matching the specified filter criteria.
+        var listOrganizationsResponse = await KeycloakRestClient.Organizations
+            .ListAsync(TestEnvironment.TestingRealm.Name, accessToken.AccessToken, new KcOrganizationFilter
+            {
+                Exact = true,
+                Search = kcOrganization.Name
+            }).ConfigureAwait(false);
+
+        // Validate the response from the organization listing operation.
+        Assert.IsNotNull(listOrganizationsResponse);
+        Assert.IsFalse(listOrganizationsResponse.IsError);
+        Assert.IsNotNull(listOrganizationsResponse.Response);
+
+        // Ensure that the test organization is included in the results.
+        Assert.IsTrue(listOrganizationsResponse.Response.Any(org => org.Name == kcOrganization.Name));
+
+        // Validate the monitoring metrics for the successful organization listing request.
+        KcCommonAssertion.AssertResponseMonitoringMetrics(listOrganizationsResponse.MonitoringMetrics,
+            HttpStatusCode.OK, HttpMethod.Get);
+
+        return listOrganizationsResponse.Response.First();
+    }
+
+    /// <summary>
     /// Loads the test environment configuration from the `Assets/testing_environment.json` file.
     /// The loaded configuration is deserialized into the <see cref="KcTestEnvironment"/> object.
     /// Ensures that the configuration is not null after loading.
@@ -507,5 +564,20 @@ public abstract class KcTestingModule
         TestEnvironment = JsonConvert.DeserializeObject<KcTestEnvironment>(sr.ReadToEnd());
 
         Assert.IsNotNull(TestEnvironment, "The test environment configuration must not be null.");
+    }
+
+    /// <summary>
+    /// Gets the major version of the Keycloak server from the test environment configuration.
+    /// </summary>
+    /// <returns>The major version number, or 0 if the version is not set.</returns>
+    protected int GetKcMajorVersion()
+    {
+        if ( string.IsNullOrWhiteSpace(TestEnvironment?.KcVersion) )
+        {
+            return 0;
+        }
+
+        var parts = TestEnvironment.KcVersion.Split('.');
+        return int.TryParse(parts[0], out var major) ? major : 0;
     }
 }

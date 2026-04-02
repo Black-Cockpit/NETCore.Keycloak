@@ -10,7 +10,8 @@ namespace NETCore.Keycloak.Client.HttpClients.Implementation;
 
 /// <inheritdoc cref="IKcRoles"/>
 internal sealed class KcRoles(string baseUrl,
-    ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcRoles
+    ILogger logger,
+    IHttpClientFactory httpClientFactory = null) : KcHttpClientBase(logger, baseUrl, httpClientFactory), IKcRoles
 {
     /// <inheritdoc cref="IKcRoles.CreateAsync"/>
     public Task<KcResponse<object>> CreateAsync(

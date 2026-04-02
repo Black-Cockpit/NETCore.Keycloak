@@ -7,7 +7,8 @@ namespace NETCore.Keycloak.Client.HttpClients.Implementation;
 
 /// <inheritdoc cref="IKcOrganizations"/>
 internal sealed class KcOrganizations(string baseUrl,
-    ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcOrganizations
+    ILogger logger,
+    IHttpClientFactory httpClientFactory = null) : KcHttpClientBase(logger, baseUrl, httpClientFactory), IKcOrganizations
 {
     // Primary constructor on the class declaration is used; no explicit ctor body required.
 

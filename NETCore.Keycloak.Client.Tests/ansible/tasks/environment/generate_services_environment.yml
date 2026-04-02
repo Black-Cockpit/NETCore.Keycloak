@@ -19,6 +19,15 @@
     - keycloak.env
     - postgres.env
 
+# Build JS policies JAR
+# Packages JavaScript authorization policies into a JAR for deployment to Keycloak providers.
+- name: Build JS policies JAR
+  archive:
+    path: "{{ workspace }}/files/js-policies/"
+    dest: "{{ containers_dir }}/js-policies.jar"
+    format: zip
+    force_archive: true
+
 # Copy nginx configuration to volumes
 # Nginx configuration file will be used as fake endpoints during the tests
 - name: Copy nginx configuration to volumes

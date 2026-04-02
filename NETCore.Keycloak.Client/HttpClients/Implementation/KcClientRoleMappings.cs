@@ -9,7 +9,8 @@ namespace NETCore.Keycloak.Client.HttpClients.Implementation;
 
 /// <inheritdoc cref="IKcClientRoleMappings"/>
 internal sealed class KcClientRoleMappings(string baseUrl,
-    ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcClientRoleMappings
+    ILogger logger,
+    IHttpClientFactory httpClientFactory = null) : KcHttpClientBase(logger, baseUrl, httpClientFactory), IKcClientRoleMappings
 {
     /// <inheritdoc cref="IKcClientRoleMappings.MapClientRolesToGroupAsync"/>
     public Task<KcResponse<object>> MapClientRolesToGroupAsync(

@@ -488,6 +488,12 @@ public class KcClientHappyPathTests : KcTestingModule
     [TestMethod]
     public async Task N_ShouldNotSetAuthorizationManagementPermissions()
     {
+        // Skip on KC 26+ — behavior changed, public clients can now have management permissions enabled
+        if ( GetKcMajorVersion() >= 26 )
+        {
+            Assert.Inconclusive("Skipped on Keycloak 26+ — management permissions behavior changed for public clients.");
+        }
+
         // Ensure the test client is initialized before proceeding.
         Assert.IsNotNull(TestClient);
 

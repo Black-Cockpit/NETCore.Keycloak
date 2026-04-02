@@ -12,8 +12,10 @@ namespace NETCore.Keycloak.Client.HttpClients.Implementation;
 /// <param name="baseUrl">Keycloak server base url.
 /// <see href="https://www.keycloak.org/docs-api/20.0.3/rest-api/index.html#_uri_scheme"/></param>
 /// <param name="logger">Logger <see cref="ILogger"/></param>
+/// <param name="httpClientFactory">Optional <see cref="IHttpClientFactory"/> for creating <see cref="HttpClient"/> instances.</param>
 internal sealed class KcAttackDetection(string baseUrl,
-    ILogger logger) : KcHttpClientBase(logger, baseUrl), IKcAttackDetection
+    ILogger logger,
+    IHttpClientFactory httpClientFactory = null) : KcHttpClientBase(logger, baseUrl, httpClientFactory), IKcAttackDetection
 {
     /// <inheritdoc cref="IKcAttackDetection.DeleteUsersLoginFailureAsync"/>
     public Task<KcResponse<object>> DeleteUsersLoginFailureAsync(

@@ -95,64 +95,24 @@
           roles: '[{"id":"kc_client_role_1","required":false},{"id":"kc_client_role_2","required":false},{"id":"kc_client_role_3","required":false}]'
       - name: should_be_account_owner
         description: 'Should be self account owner'
-        type: js
+        type: script-should-be-account-owner.js
         logic: POSITIVE
-        config:
-          code: |
-            var context = $evaluation.getContext();
-            var identity = context.getIdentity();
-            var attributes = identity.getAttributes();
-            if (attributes.exists("account_owner") && attributes.getValue("account_owner").asString(0) === "1") {
-                $evaluation.grant();
-            }
       - name: should_be_business_account_owner
         description: 'Should be business account owner'
-        type: js
+        type: script-should-be-business-account-owner.js
         logic: POSITIVE
-        config:
-          code: |
-            var context = $evaluation.getContext();
-            var identity = context.getIdentity();
-            var attributes = identity.getAttributes();
-            if (attributes.exists("business_account_owner") && attributes.getValue("business_account_owner").asString(0) === "1") {
-                $evaluation.grant();
-            }
       - name: can_view_roles
         description: 'Can view roles'
-        type: js
+        type: script-can-view-roles.js
         logic: POSITIVE
-        config:
-          code: |
-            var context = $evaluation.getContext();
-            var identity = context.getIdentity();
-            var attributes = identity.getAttributes();
-            if (attributes.exists("role_view") && attributes.getValue("role_view").asString(0) === "1") {
-                $evaluation.grant();
-            }
       - name: can_write_roles
         description: 'Can write roles'
-        type: js
+        type: script-can-write-roles.js
         logic: POSITIVE
-        config:
-          code: |
-            var context = $evaluation.getContext();
-            var identity = context.getIdentity();
-            var attributes = identity.getAttributes();
-            if (attributes.exists("role_write") && attributes.getValue("role_write").asString(0) === "1") {
-                $evaluation.grant();
-            }
       - name: can_delete_roles
         description: 'Can delete roles'
-        type: js
+        type: script-can-delete-roles.js
         logic: POSITIVE
-        config:
-          code: |
-            var context = $evaluation.getContext();
-            var identity = context.getIdentity();
-            var attributes = identity.getAttributes();
-            if (attributes.exists("role_delete") && attributes.getValue("role_delete").asString(0) === "1") {
-                $evaluation.grant();
-            }
       - name: should_be_client_owner
         description: 'Should have client role and business account owner'
         type: aggregate
