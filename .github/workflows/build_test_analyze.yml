@@ -15,7 +15,7 @@ on:
 jobs:
   # Build test and analyze source code
   build_test_analyze:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         java-version: [21]
@@ -30,6 +30,12 @@ jobs:
           distribution: "adopt"
           java-version: ${{ matrix.java-version }}
 
+      # Setup Python
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       # Install all required .NET SDK versions
       - name: Install .NET SDKs (8.0, 9.0 and 10.0)
         uses: actions/setup-dotnet@v1
@@ -42,7 +48,7 @@ jobs:
       # Install dependencies
       - name: Install dependencies
         run: |
-          sudo apt install -y make python3-pip python3-rpm
+          sudo apt install -y make python3-rpm
           dotnet tool install --global dotnet-sonarscanner
           dotnet tool install --global Cake.Tool
           dotnet tool install --global JetBrains.dotCover.CommandLineTools
