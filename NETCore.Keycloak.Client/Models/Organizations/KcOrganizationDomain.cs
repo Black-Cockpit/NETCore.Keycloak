@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace NETCore.Keycloak.Client.Models.Organizations;
 
@@ -14,7 +14,7 @@ public sealed class KcOrganizationDomain
     /// <value>
     /// A string representing the domain name (for example, "example.com").
     /// </value>
-    [JsonPropertyName("name")]
+    [JsonProperty("name")]
     public string Name { get; set; }
 
     /// <summary>
@@ -24,6 +24,6 @@ public sealed class KcOrganizationDomain
     /// A nullable boolean indicating whether the domain has been verified by Keycloak. 
     /// True if verified; false if not; null if the verification state is unknown.
     /// </value>
-    [JsonPropertyName("verified")]
+    [JsonProperty("verified")]
     public bool? Verified { get; set; }
 }

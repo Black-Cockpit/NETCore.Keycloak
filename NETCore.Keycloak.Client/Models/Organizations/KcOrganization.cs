@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace NETCore.Keycloak.Client.Models.Organizations;
 
@@ -14,7 +14,7 @@ public sealed class KcOrganization
     /// <value>
     /// A string representing the unique identifier of the organization.
     /// </value>
-    [JsonPropertyName("id")]
+    [JsonProperty("id")]
     public string Id { get; set; }
 
     /// <summary>
@@ -23,7 +23,7 @@ public sealed class KcOrganization
     /// <value>
     /// A string representing the display name of the organization.
     /// </value>
-    [JsonPropertyName("name")]
+    [JsonProperty("name")]
     public string Name { get; set; }
 
     /// <summary>
@@ -32,7 +32,7 @@ public sealed class KcOrganization
     /// <value>
     /// A string representing an alternate identifier or alias for the organization.
     /// </value>
-    [JsonPropertyName("alias")]
+    [JsonProperty("alias")]
     public string Alias { get; set; }
 
     /// <summary>
@@ -42,7 +42,7 @@ public sealed class KcOrganization
     /// A nullable boolean that is true when the organization is enabled, false when disabled,
     /// or null if the enabled state is not set.
     /// </value>
-    [JsonPropertyName("enabled")]
+    [JsonProperty("enabled")]
     public bool? Enabled { get; set; }
 
     /// <summary>
@@ -51,7 +51,7 @@ public sealed class KcOrganization
     /// <value>
     /// A string containing a human-readable description for the organization.
     /// </value>
-    [JsonPropertyName("description")]
+    [JsonProperty("description")]
     public string Description { get; set; }
 
     /// <summary>
@@ -60,7 +60,7 @@ public sealed class KcOrganization
     /// <value>
     /// A string representing the redirect URL associated with the organization (for example, after login or registration flows).
     /// </value>
-    [JsonPropertyName("redirectUrl")]
+    [JsonProperty("redirectUrl")]
     public string RedirectUrl { get; set; }
 
     /// <summary>
@@ -69,7 +69,7 @@ public sealed class KcOrganization
     /// <value>
     /// A dictionary where the key is the attribute name and the value is a list of values for that attribute (Keycloak style).
     /// </value>
-    [JsonPropertyName("attributes")]
+    [JsonProperty("attributes")]
     public Dictionary<string, List<string>> Attributes { get; set; }
 
     /// <summary>
@@ -78,6 +78,6 @@ public sealed class KcOrganization
     /// <value>
     /// A collection of <see cref="KcOrganizationDomain"/> representing domains associated with the organization.
     /// </value>
-    [JsonPropertyName("domains")]
+    [JsonProperty("domains")]
     public ICollection<KcOrganizationDomain> Domains { get; set; } = [];
 }
