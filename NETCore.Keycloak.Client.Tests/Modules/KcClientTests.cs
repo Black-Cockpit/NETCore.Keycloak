@@ -51,7 +51,7 @@ public class KcClientTests : KcTestingModule
     /// </summary>
     [TestMethod]
     public void ShouldValidateClientConfiguration() =>
-        _ = Assert.ThrowsException<KcException>(() => new KeycloakClient(null));
+        _ = Assert.ThrowsExactly<KcException>(() => new KeycloakClient(null));
 
     /// <summary>
     /// Tests that the base URL provided to the <see cref="KeycloakClient"/> is properly truncated.

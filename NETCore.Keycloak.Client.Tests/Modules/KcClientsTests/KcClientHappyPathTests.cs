@@ -734,7 +734,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(registrationAccessTokenResponse.Response);
 
         // Ensure the response is of the expected type.
-        Assert.IsInstanceOfType<KcClient>(registrationAccessTokenResponse.Response);
+        _ = Assert.IsInstanceOfType<KcClient>(registrationAccessTokenResponse.Response);
 
         // Validate the monitoring metrics for the successful registration access token retrieval request.
         KcCommonAssertion.AssertResponseMonitoringMetrics(registrationAccessTokenResponse.MonitoringMetrics,

@@ -43,7 +43,7 @@ public class KcAuthResourceOwnerPasswordTests : KcTestingModule
     public async Task ShouldValidateUserLogin()
     {
         // Assert that null login details throw an exception.
-        _ = await Assert.ThrowsExceptionAsync<KcException>(
+        _ = await Assert.ThrowsExactlyAsync<KcException>(
                 async () => await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(
                     TestEnvironment.TestingRealm.Name,
                     new KcClientCredentials
@@ -53,7 +53,7 @@ public class KcAuthResourceOwnerPasswordTests : KcTestingModule
             .ConfigureAwait(false);
 
         // Assert that an empty login object throws an exception.
-        _ = await Assert.ThrowsExceptionAsync<KcException>(
+        _ = await Assert.ThrowsExactlyAsync<KcException>(
                 async () => await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(
                     TestEnvironment.TestingRealm.Name,
                     new KcClientCredentials
@@ -63,7 +63,7 @@ public class KcAuthResourceOwnerPasswordTests : KcTestingModule
             .ConfigureAwait(false);
 
         // Assert that a login object with only a username throws an exception.
-        _ = await Assert.ThrowsExceptionAsync<KcException>(
+        _ = await Assert.ThrowsExactlyAsync<KcException>(
                 async () => await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(
                     TestEnvironment.TestingRealm.Name,
                     new KcClientCredentials
@@ -76,7 +76,7 @@ public class KcAuthResourceOwnerPasswordTests : KcTestingModule
             .ConfigureAwait(false);
 
         // Assert that a login object with only a password throws an exception.
-        _ = await Assert.ThrowsExceptionAsync<KcException>(
+        _ = await Assert.ThrowsExactlyAsync<KcException>(
                 async () => await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(
                     TestEnvironment.TestingRealm.Name,
                     new KcClientCredentials

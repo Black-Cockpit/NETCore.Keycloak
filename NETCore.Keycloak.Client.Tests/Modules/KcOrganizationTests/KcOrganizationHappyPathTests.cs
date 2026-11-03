@@ -82,7 +82,7 @@ public class KcOrganizationHappyPathTests : KcTestingModule
 
         // Validate the response from the organization creation operation.
         Assert.IsNotNull(createOrganizationResponse);
-        Assert.IsFalse(createOrganizationResponse.IsError);
+        Assert.IsFalse(createOrganizationResponse.IsError, createOrganizationResponse.ErrorMessage);
 
         // Validate the monitoring metrics for the successful organization creation request.
         KcCommonAssertion.AssertResponseMonitoringMetrics(createOrganizationResponse.MonitoringMetrics,
@@ -206,7 +206,7 @@ public class KcOrganizationHappyPathTests : KcTestingModule
         Assert.IsNotNull(getOrganizationResponse.Response);
 
         // Ensure the response is of the expected organization type.
-        Assert.IsInstanceOfType<KcOrganization>(getOrganizationResponse.Response);
+        _ = Assert.IsInstanceOfType<KcOrganization>(getOrganizationResponse.Response);
 
         // Ensure the retrieved organization name matches the expected value.
         Assert.AreEqual(TestOrganization.Name, getOrganizationResponse.Response.Name);

@@ -60,12 +60,12 @@ public class KcAuthClientCredentialsTests : KcTestingModule
     [TestMethod]
     public async Task ShouldValidateClientCredentials()
     {
-        _ = await Assert.ThrowsExceptionAsync<KcException>(
+        _ = await Assert.ThrowsExactlyAsync<KcException>(
                 async () => await KeycloakRestClient.Auth
                     .GetClientCredentialsTokenAsync(TestEnvironment.TestingRealm.Name, null).ConfigureAwait(false))
             .ConfigureAwait(false);
 
-        _ = await Assert.ThrowsExceptionAsync<KcException>(
+        _ = await Assert.ThrowsExactlyAsync<KcException>(
                 async () => await KeycloakRestClient.Auth
                     .GetClientCredentialsTokenAsync(TestEnvironment.TestingRealm.Name, new KcClientCredentials())
                     .ConfigureAwait(false))

@@ -13,7 +13,7 @@ public class KcExceptionTests
     /// Verifies that the exception is correctly identified.
     /// </summary>
     [TestMethod]
-    public void ShouldThrowKcException() => Assert.ThrowsException<KcException>(() => throw new KcException());
+    public void ShouldThrowKcException() => _ = Assert.ThrowsExactly<KcException>(() => throw new KcException());
 
     /// <summary>
     /// Tests that a <see cref="KcException"/> with a specified message retains the message correctly.
@@ -43,6 +43,6 @@ public class KcExceptionTests
 
         // Verify the inner exception
         Assert.IsNotNull(exception.InnerException);
-        Assert.IsInstanceOfType<ArgumentNullException>(exception.InnerException);
+        _ = Assert.IsInstanceOfType<ArgumentNullException>(exception.InnerException);
     }
 }

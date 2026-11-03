@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using Microsoft.Extensions.Logging;
 using NETCore.Keycloak.Client.Constants;
 using NETCore.Keycloak.Client.HttpClients.Abstraction;
@@ -521,9 +522,6 @@ internal sealed class KcAuth(
                 // Retrieve an HttpClient instance from the factory or default shared instance.
                 var client = CreateHttpClient();
 
-                // Add the Authorization header with the provided access token.
-                _ = client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bearer {accessToken}");
-
                 // Prepare the form data for the RPT request.
                 var formData = new Dictionary<string, string>
                 {
@@ -543,11 +541,14 @@ internal sealed class KcAuth(
                     }
                 }
 
-                // Create the form content with the prepared data.
-                using var form = new FormUrlEncodedContent(formData);
+                // Keep the caller's bearer token on this request, without changing shared client defaults.
+                using var request = new HttpRequestMessage(HttpMethod.Post, tokenEndpoint)
+                {
+                    Content = new FormUrlEncodedContent(formData)
+                };
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-                // Send the POST request to the token endpoint with the form content.
-                return await client.PostAsync(new Uri(tokenEndpoint), form, cancellationToken).ConfigureAwait(false);
+                return await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
             }, new KcHttpMonitoringFallbackModel
             {
                 Url = tokenEndpoint, // Log the token endpoint URL for monitoring.

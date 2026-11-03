@@ -187,7 +187,7 @@ public class KcGroupsHappyPathTests : KcTestingModule
         Assert.IsNotNull(getGroupResponse.Response);
 
         // Ensure the response is of the expected group type.
-        Assert.IsInstanceOfType<KcGroup>(getGroupResponse.Response);
+        _ = Assert.IsInstanceOfType<KcGroup>(getGroupResponse.Response);
 
         // Validate the monitoring metrics for the successful group retrieval request.
         KcCommonAssertion.AssertResponseMonitoringMetrics(getGroupResponse.MonitoringMetrics, HttpStatusCode.OK,

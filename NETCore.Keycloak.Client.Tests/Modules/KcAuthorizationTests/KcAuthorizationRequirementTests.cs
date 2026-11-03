@@ -77,7 +77,7 @@ public class KcAuthorizationRequirementTests
     /// </summary>
     [TestMethod]
     public void Constructor_ShouldThrowException_WhenProtectedResourceStoreIsNull() =>
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        _ = Assert.ThrowsExactly<ArgumentNullException>(() =>
             new KcAuthorizationRequirement(null, "TestResource", "TestScope"));
 
     /// <summary>
@@ -90,7 +90,7 @@ public class KcAuthorizationRequirementTests
         var mockProtectedResourceStore = new Mock<KcProtectedResourceStore>();
 
         // Act
-        _ = Assert.ThrowsException<NoNullAllowedException>(() =>
+        _ = Assert.ThrowsExactly<NoNullAllowedException>(() =>
             new KcAuthorizationRequirement(mockProtectedResourceStore.Object, null, "TestScope"));
     }
 
@@ -104,7 +104,7 @@ public class KcAuthorizationRequirementTests
         var mockProtectedResourceStore = new Mock<KcProtectedResourceStore>();
 
         // Act
-        _ = Assert.ThrowsException<NoNullAllowedException>(() =>
+        _ = Assert.ThrowsExactly<NoNullAllowedException>(() =>
             new KcAuthorizationRequirement(mockProtectedResourceStore.Object, "TestResource", null));
     }
 }

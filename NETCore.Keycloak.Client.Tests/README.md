@@ -31,9 +31,7 @@ Key features of the test infrastructure:
    - Docker Compose v2
 
 3. **.NET SDK**:
-   - .NET 6.0 SDK
-   - .NET 7.0 SDK
-   - .NET 8.0 SDK
+   - .NET 10.0 SDK
 
 4. **Build Tools**:
    - Cake (C# Make)
@@ -58,6 +56,29 @@ make install_virtual_env
 ```
 
 ## Running Tests
+
+### Run the complete .NET 10 test suite
+
+The complete suite includes integration tests that create, update, and delete Keycloak resources.
+Use a dedicated test environment prepared with the Ansible/Cake setup described below.
+The generated `Assets/testing_environment.json` must exist in this test project before building;
+the project copies it to the test output directory. This file contains local credentials and is
+intentionally excluded from Git. A missing file causes integration test classes to fail during
+initialization, before their test methods run.
+
+From the repository root, run:
+
+```powershell
+dotnet test NETCore.Keycloak.Client.Tests/NETCore.Keycloak.Client.Tests.csproj --framework net10.0 --configuration Release --logger trx
+```
+
+In Visual Studio, rebuild the test project after generating or updating the configuration, then
+run the `NETCore.Keycloak.Client.Tests (net10.0)` group. Run complete test classes: the integration
+scenarios with `A_` through `Z_` method names share resources created by earlier steps.
+
+Some existing tests intentionally report `Inconclusive` on Keycloak 26+ for transient-session
+visibility and public-client management-permission behavior. These version guards are separate
+from failures and should be reported as skipped tests.
 
 The test suite uses Cake for build automation and includes several types of tests:
 

@@ -39,7 +39,7 @@
 
 | Category     | Supported Versions                                                      |
 | ------------ | ----------------------------------------------------------------------- |
-| .NET         | 8.0, 9.0, 10.0                                                          |
+| .NET         | 10.0                                                                    |
 | Dependencies | ASP.NET Core, Microsoft.Extensions.DependencyInjection, Newtonsoft.Json |
 
 ## ✅ Version Compatibility
@@ -95,7 +95,7 @@ Install-Package Keycloak.NETCore.Client
 
 ### 📋 Prerequisites
 
-- ✳️ .NET SDK (version 8.0 or later)
+- ✳️ .NET 10.0 SDK
 - 🖥️ A running Keycloak instance
 - 🔑 Client credentials and realm configuration
 

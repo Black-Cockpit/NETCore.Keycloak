@@ -52,7 +52,7 @@ public class KcCommonTests : KcTestingModule
     /// </summary>
     [TestMethod]
     public async Task ShouldValidateRequiredString() =>
-        _ = await Assert.ThrowsExceptionAsync<KcException>(async () =>
+        _ = await Assert.ThrowsExactlyAsync<KcException>(async () =>
             await _client.Auth.GetClientCredentialsTokenAsync(
                 null,
                 new KcClientCredentials

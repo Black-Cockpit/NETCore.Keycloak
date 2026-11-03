@@ -91,7 +91,7 @@ public class KcRealmAdminTokenHandlerTests : KcTestingModule
     /// Verifies that the constructor throws an <see cref="ArgumentNullException"/> when the configuration store is null.
     /// </summary>
     [TestMethod]
-    public void A_ShouldValidateRealmAdminConfigurationStore() => Assert.ThrowsException<ArgumentNullException>(
+    public void A_ShouldValidateRealmAdminConfigurationStore() => _ = Assert.ThrowsExactly<ArgumentNullException>(
         () => _ = new KcRealmAdminTokenHandler(null, _mockProvider.Object));
 
     /// <summary>
@@ -105,7 +105,7 @@ public class KcRealmAdminTokenHandlerTests : KcTestingModule
             .Setup(c => c.GetRealmsAdminConfiguration())
             .Returns(() => null);
 
-        _ = Assert.ThrowsException<ArgumentNullException>(() =>
+        _ = Assert.ThrowsExactly<ArgumentNullException>(() =>
             _ = new KcRealmAdminTokenHandler(_mockConfigStore.Object, _mockProvider.Object));
     }
 
@@ -134,7 +134,7 @@ public class KcRealmAdminTokenHandlerTests : KcTestingModule
 
         Assert.IsNotNull(_tokenHandler);
 
-        _ = await Assert.ThrowsExceptionAsync<ArgumentNullException>(async () =>
+        _ = await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () =>
                 await _tokenHandler.TryGetAdminTokenAsync(null).ConfigureAwait(false))
             .ConfigureAwait(false);
     }
@@ -172,7 +172,7 @@ public class KcRealmAdminTokenHandlerTests : KcTestingModule
         Assert.IsNotNull(_tokenHandler);
 
         // Verify that a KcException is thrown due to the invalid configuration.
-        _ = await Assert.ThrowsExceptionAsync<KcException>(async () => await _tokenHandler
+        _ = await Assert.ThrowsExactlyAsync<KcException>(async () => await _tokenHandler
             .TryGetAdminTokenAsync(TestEnvironment.TestingRealm.Name).ConfigureAwait(false)).ConfigureAwait(false);
     }
 

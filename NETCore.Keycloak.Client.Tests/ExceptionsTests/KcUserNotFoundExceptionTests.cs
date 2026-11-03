@@ -14,7 +14,7 @@ public class KcUserNotFoundExceptionTests
     /// </summary>
     [TestMethod]
     public void ShouldThrowKcUserNotFoundException() =>
-        Assert.ThrowsException<KcUserNotFoundException>(() => throw new KcUserNotFoundException());
+        _ = Assert.ThrowsExactly<KcUserNotFoundException>(() => throw new KcUserNotFoundException());
 
     /// <summary>
     /// Tests that a <see cref="KcUserNotFoundException"/> with a specified message retains the message correctly.
@@ -44,6 +44,6 @@ public class KcUserNotFoundExceptionTests
 
         // Verify the inner exception
         Assert.IsNotNull(exception.InnerException);
-        Assert.IsInstanceOfType<ArgumentNullException>(exception.InnerException);
+        _ = Assert.IsInstanceOfType<ArgumentNullException>(exception.InnerException);
     }
 }
