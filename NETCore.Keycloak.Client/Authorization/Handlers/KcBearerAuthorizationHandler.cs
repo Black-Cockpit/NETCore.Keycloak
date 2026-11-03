@@ -31,6 +31,7 @@ public class KcBearerAuthorizationHandler : AuthorizationHandler<KcAuthorization
     /// Realm admin token handler responsible for retrieving admin tokens for validating user sessions.
     /// </summary>
     private readonly IKcRealmAdminTokenHandler _realmAdminTokenHandler;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="KcBearerAuthorizationHandler"/> class.
@@ -49,6 +50,7 @@ public class KcBearerAuthorizationHandler : AuthorizationHandler<KcAuthorization
 
         // Resolve the realm admin token handler for retrieving admin tokens.
         _realmAdminTokenHandler = scope.ServiceProvider.GetRequiredService<IKcRealmAdminTokenHandler>();
+        _httpClientFactory = scope.ServiceProvider.GetService<IHttpClientFactory>();
     }
 
     /// <summary>
@@ -105,7 +107,7 @@ public class KcBearerAuthorizationHandler : AuthorizationHandler<KcAuthorization
             if ( protectedResource != null )
             {
                 // Initialize the Keycloak client
-                var keycloakClient = new KeycloakClient(baseUrl, _logger);
+                var keycloakClient = new KeycloakClient(baseUrl, _logger, _httpClientFactory);
 
                 // Validate the user session
                 await ValidateUserSession(context, keycloakClient, realm).ConfigureAwait(false);
@@ -227,7 +229,7 @@ public class KcBearerAuthorizationHandler : AuthorizationHandler<KcAuthorization
         if ( sessionsResponse.IsError )
         {
             throw new KcSessionClosedException($"No active session found for user {userId}.",
-                userResponse.Exception);
+                sessionsResponse.Exception);
         }
 
         // Ensure the session ID exists among active sessions

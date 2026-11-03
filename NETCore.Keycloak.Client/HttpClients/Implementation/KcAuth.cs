@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using NETCore.Keycloak.Client.Constants;
 using NETCore.Keycloak.Client.HttpClients.Abstraction;
@@ -43,16 +44,16 @@ internal sealed class KcAuth(
                 var client = CreateHttpClient();
 
                 // Create the form content with the client credentials grant type.
-                using var form = new FormUrlEncodedContent(
-                    new Dictionary<string, string>
+                var formData = new Dictionary<string, string>
                     {
                         { "client_id", clientCredentials.ClientId },
                         { "client_secret", clientCredentials.Secret },
                         { "grant_type", "client_credentials" }
-                    });
+                    };
 
                 // Send the POST request to the token endpoint with the form content.
-                return await client.PostAsync(new Uri(tokenEndpoint), form, cancellationToken)
+                using var request = CreateAuthenticatedRequest(tokenEndpoint, clientCredentials, formData);
+                return await client.SendAsync(request, cancellationToken)
                     .ConfigureAwait(false);
             }, new KcHttpMonitoringFallbackModel
             {
@@ -145,11 +146,9 @@ internal sealed class KcAuth(
                     formData.Add("resource", resource);
                 }
 
-                // Create the form content with the prepared data.
-                using var form = new FormUrlEncodedContent(formData);
-
                 // Send the POST request to the token endpoint with the form content.
-                return await client.PostAsync(new Uri(tokenEndpoint), form, cancellationToken)
+                using var request = CreateAuthenticatedRequest(tokenEndpoint, clientCredentials, formData);
+                return await client.SendAsync(request, cancellationToken)
                     .ConfigureAwait(false);
             }, new KcHttpMonitoringFallbackModel
             {
@@ -274,17 +273,17 @@ internal sealed class KcAuth(
                 var client = CreateHttpClient();
 
                 // Prepare the form data for the refresh token request.
-                using var form = new FormUrlEncodedContent(
-                    new Dictionary<string, string>
+                var formData = new Dictionary<string, string>
                     {
                         { "client_id", clientCredentials.ClientId },
                         { "client_secret", clientCredentials.Secret },
                         { "grant_type", "refresh_token" },
                         { "refresh_token", refreshToken }
-                    });
+                    };
 
                 // Send the POST request to the token endpoint with the form content.
-                return await client.PostAsync(new Uri(tokenEndpoint), form, cancellationToken)
+                using var request = CreateAuthenticatedRequest(tokenEndpoint, clientCredentials, formData);
+                return await client.SendAsync(request, cancellationToken)
                     .ConfigureAwait(false);
             }, new KcHttpMonitoringFallbackModel
             {
@@ -352,17 +351,17 @@ internal sealed class KcAuth(
                 var client = CreateHttpClient();
 
                 // Prepare the form data for the token revocation request.
-                using var form = new FormUrlEncodedContent(
-                    new Dictionary<string, string>
+                var formData = new Dictionary<string, string>
                     {
                         { "client_id", clientCredentials.ClientId },
                         { "client_secret", clientCredentials.Secret },
                         { "token", accessToken },
                         { "token_type_hint", "access_token" }
-                    });
+                    };
 
                 // Send the POST request to the token revocation endpoint with the form content.
-                return await client.PostAsync(new Uri(tokenRevocationEndpoint), form, cancellationToken)
+                using var request = CreateAuthenticatedRequest(tokenRevocationEndpoint, clientCredentials, formData);
+                return await client.SendAsync(request, cancellationToken)
                     .ConfigureAwait(false);
             }, new KcHttpMonitoringFallbackModel
             {
@@ -375,10 +374,11 @@ internal sealed class KcAuth(
             {
                 Response = tokenRevocationResponse?.ResponseMessage?.IsSuccessStatusCode == true,
                 IsError = tokenRevocationResponse?.ResponseMessage?.IsSuccessStatusCode != true,
+                Exception = tokenRevocationResponse?.Exception,
                 ErrorMessage = tokenRevocationResponse?.ResponseMessage != null
                     ? await tokenRevocationResponse.ResponseMessage.Content.ReadAsStringAsync(cancellationToken)
                         .ConfigureAwait(false)
-                    : null,
+                    : tokenRevocationResponse?.Exception?.Message,
                 MonitoringMetrics = await KcHttpApiMonitoringMetrics
                     .MapFromHttpRequestExecutionResult(tokenRevocationResponse, cancellationToken)
                     .ConfigureAwait(false)
@@ -440,17 +440,17 @@ internal sealed class KcAuth(
                 var client = CreateHttpClient();
 
                 // Prepare the form data for the token revocation request.
-                using var form = new FormUrlEncodedContent(
-                    new Dictionary<string, string>
+                var formData = new Dictionary<string, string>
                     {
                         { "client_id", clientCredentials.ClientId },
                         { "client_secret", clientCredentials.Secret },
                         { "token", refreshToken },
                         { "token_type_hint", "refresh_token" }
-                    });
+                    };
 
                 // Send the POST request to the token revocation endpoint with the form content.
-                return await client.PostAsync(new Uri(tokenRevocationEndpoint), form, cancellationToken)
+                using var request = CreateAuthenticatedRequest(tokenRevocationEndpoint, clientCredentials, formData);
+                return await client.SendAsync(request, cancellationToken)
                     .ConfigureAwait(false);
             }, new KcHttpMonitoringFallbackModel
             {
@@ -463,10 +463,11 @@ internal sealed class KcAuth(
             {
                 Response = tokenRevocationResponse?.ResponseMessage?.IsSuccessStatusCode == true,
                 IsError = tokenRevocationResponse?.ResponseMessage?.IsSuccessStatusCode != true,
+                Exception = tokenRevocationResponse?.Exception,
                 ErrorMessage = tokenRevocationResponse?.ResponseMessage != null
                     ? await tokenRevocationResponse.ResponseMessage.Content.ReadAsStringAsync(cancellationToken)
                         .ConfigureAwait(false)
-                    : null,
+                    : tokenRevocationResponse?.Exception?.Message,
                 MonitoringMetrics = await KcHttpApiMonitoringMetrics
                     .MapFromHttpRequestExecutionResult(tokenRevocationResponse, cancellationToken)
                     .ConfigureAwait(false)
@@ -523,10 +524,10 @@ internal sealed class KcAuth(
                 var client = CreateHttpClient();
 
                 // Prepare the form data for the RPT request.
-                var formData = new Dictionary<string, string>
+                var formData = new List<KeyValuePair<string, string>>
                 {
-                    { "grant_type", "urn:ietf:params:oauth:grant-type:uma-ticket" }, // Specify the UMA grant type.
-                    { "audience", audience } // Specify the audience.
+                    new("grant_type", "urn:ietf:params:oauth:grant-type:uma-ticket"), // Specify the UMA grant type.
+                    new("audience", audience) // Specify the audience.
                 };
 
                 // Convert the permissions collection to a list, if provided.
@@ -537,7 +538,7 @@ internal sealed class KcAuth(
                 {
                     foreach ( var permission in permissionList )
                     {
-                        formData.Add("permission", permission);
+                        formData.Add(new KeyValuePair<string, string>("permission", permission));
                     }
                 }
 
@@ -581,5 +582,26 @@ internal sealed class KcAuth(
                 }
             };
         }
+    }
+
+    // Client authentication belongs to this request, never to shared HttpClient headers.
+    private static HttpRequestMessage CreateAuthenticatedRequest(string endpoint,
+        KcClientCredentials credentials, Dictionary<string, string> formData)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+        if ( credentials.AuthenticationMethod == KcClientAuthenticationMethod.ClientSecretBasic )
+        {
+            _ = formData.Remove("client_id");
+            _ = formData.Remove("client_secret");
+            // RFC 6749 section 2.3.1 requires form encoding each credential before Base64 encoding.
+            var clientId = Uri.EscapeDataString(credentials.ClientId).Replace("%20", "+", StringComparison.Ordinal);
+            var secret = Uri.EscapeDataString(credentials.Secret ?? string.Empty)
+                .Replace("%20", "+", StringComparison.Ordinal);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Basic",
+                Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clientId}:{secret}")));
+        }
+
+        request.Content = new FormUrlEncodedContent(formData);
+        return request;
     }
 }

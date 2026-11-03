@@ -50,6 +50,11 @@
 | 25.x             | ✅       |
 | 24.x             | ✅       |
 
+Keycloak **26.8.1** is the pinned integration target for the .NET 10 client.
+The [compatibility test matrix](NETCore.Keycloak.Client.Tests/README.md#keycloak-2681-compatibility--兼容性验证)
+covers the existing API surface with a full FGAP v1 run and separate FGAP v2 security regressions.
+Keycloak 26.8.1 为当前固定测试版本；验证范围为已有客户端 API，详见测试矩阵。
+
 > **Note:** Keycloak versions 20.x through 23.x and .NET 6.0/7.0 were supported in previous releases (v1.x). If you need support for these older versions, please use [v1.0.2](https://www.nuget.org/packages/Keycloak.NETCore.Client/1.0.2).
 
 ## 🌟 Key Features

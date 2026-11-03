@@ -631,7 +631,8 @@ public interface IKcRoles
         string clientId, string name, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Removes composite roles associated with a specific client role.
+    /// Removes all currently assigned composite roles associated with a specific client role.
+    /// Reads the current composites first, then supplies them in the DELETE request body required by Keycloak.
     ///
     /// DELETE /{realm}/clients/{client-uuid}/roles/{role-name}/composites
     /// </summary>

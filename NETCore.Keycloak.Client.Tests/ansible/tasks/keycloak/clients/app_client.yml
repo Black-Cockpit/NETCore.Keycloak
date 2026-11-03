@@ -6,7 +6,6 @@
         - "attributes"
         - "audiences"
         - "email"
-        - "offline_access"
         - "profile"
         - "roles"
         - "web-origins"
@@ -21,7 +20,6 @@
         - "attributes"
         - "audiences"
         - "email"
-        - "offline_access"
         - "profile"
         - "roles"
         - "web-origins"
@@ -54,7 +52,9 @@
     always_display_in_console: false
     standard_flow_enabled: false
     default_client_scopes: "{{ app__client_default_client_scopes }}"
+    # Offline tokens must be explicitly requested so ordinary logins retain online sessions.
     optional_client_scopes:
+      - "offline_access"
       - "address"
       - "microprofile-jwt"
       - "phone"

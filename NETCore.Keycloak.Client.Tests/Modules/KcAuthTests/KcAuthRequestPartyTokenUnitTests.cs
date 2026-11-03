@@ -12,6 +12,26 @@ namespace NETCore.Keycloak.Client.Tests.Modules.KcAuthTests;
 public class KcAuthRequestPartyTokenUnitTests
 {
     /// <summary>
+    /// Sends every requested resource/scope pair as a separate form field.
+    /// </summary>
+    [TestMethod]
+    public async Task ShouldSendMultiplePermissionsWithoutMergingOrLosingScopes()
+    {
+        using var handler = new RecordingHandler();
+        using var httpClient = new HttpClient(handler);
+        var factory = new Mock<IHttpClientFactory>();
+        _ = factory.Setup(value => value.CreateClient(It.IsAny<string>())).Returns(httpClient);
+        var client = new KeycloakClient("https://keycloak.test", null, factory.Object);
+
+        var response = await client.Auth.GetRequestPartyTokenAsync("test-realm", "user-token", "auth_client",
+            ["first#read", "second#read", "first#write"]).ConfigureAwait(false);
+
+        Assert.IsFalse(response.IsError, response.ErrorMessage);
+        Assert.AreEqual("grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Auma-ticket&audience=auth_client" +
+            "&permission=first%23read&permission=second%23read&permission=first%23write", handler.Bodies.Single());
+    }
+
+    /// <summary>
     /// Uses the current caller's token without changing shared client defaults.
     /// </summary>
     [TestMethod]
@@ -39,16 +59,18 @@ public class KcAuthRequestPartyTokenUnitTests
     private sealed class RecordingHandler : HttpMessageHandler
     {
         public List<string[]> AuthorizationHeaders { get; } = [];
+        public List<string> Bodies { get; } = [];
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
             AuthorizationHeaders.Add(request.Headers.GetValues("Authorization").ToArray());
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            Bodies.Add(await request.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
+            return new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent("{\"access_token\":\"rpt-token\",\"token_type\":\"Bearer\"}"),
                 RequestMessage = request
-            });
+            };
         }
     }
 }

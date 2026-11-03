@@ -45,8 +45,12 @@ public class KcTestEnvironment
     /// Gets or sets the administrative credentials for the master realm.
     /// Includes login details required for administrative operations.
     /// </summary>
-    [JsonProperty("user")]
+    [JsonProperty("admin")]
     public KcUserLogin Admin { get; set; }
+
+    // Accept configurations generated before the template used the admin key.
+    [JsonProperty("user")]
+    private KcUserLogin LegacyAdmin { set => Admin ??= value; }
 
     /// <summary>
     /// Gets or sets the configuration for the testing realm in Keycloak.

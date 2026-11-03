@@ -13,4 +13,5 @@
   template:
     src: "templates/testing_environment.json.j2"
     dest: "{{ current_dir }}/Assets/testing_environment.json"
-    mode: "0644"
+    mode: "0600"
+  no_log: true

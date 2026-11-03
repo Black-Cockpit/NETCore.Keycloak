@@ -32,6 +32,7 @@ public abstract class KcJsonEnumConverter<TEnum> : JsonConverter
 
         if ( value == null )
         {
+            writer.WriteNull();
             return;
         }
 
@@ -60,5 +61,6 @@ public abstract class KcJsonEnumConverter<TEnum> : JsonConverter
     }
 
     /// <inheritdoc/>>
-    public override bool CanConvert(Type objectType) => objectType == typeof(string);
+    public override bool CanConvert(Type objectType) =>
+        objectType == typeof(TEnum) || objectType == typeof(TEnum?);
 }

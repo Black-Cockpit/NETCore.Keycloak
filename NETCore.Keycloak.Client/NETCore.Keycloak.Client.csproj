@@ -10,10 +10,10 @@
     <PackageTags>keycloak;oauth2;authentication;authorization;openid-connect;oidc;oidc-provider;fapi;fapi-client;user-managed-access;financial-security</PackageTags>
     <PackageIcon>black_cockpit.png</PackageIcon>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/Black-Cockpit/NETCore.Keycloak.git</RepositoryUrl>
+    <RepositoryUrl>https://github.com/sugarst/NETCore.Keycloak.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageProjectUrl>https://github.com/Black-Cockpit/NETCore.Keycloak</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/sugarst/NETCore.Keycloak</PackageProjectUrl>
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>

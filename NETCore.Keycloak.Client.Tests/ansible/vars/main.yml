@@ -34,6 +34,10 @@ keycloak: {}
 # Example values: "18.0.0", "latest".
 kc_version: ""
 
+# Keep legacy management-permission endpoints available for the complete suite.
+# The dedicated v2 regression profile validates the supported FGAP v2 authorization model.
+kc_fgap_version: "v1"
+
 # Target platform
 # Specifies the operating system platform for playbook execution.
 # This variable is set during pre-audit tasks and is used for platform-specific configurations.
@@ -61,3 +65,4 @@ supported_keycloak_version:
 - "24.0.5-0"
 - "25.0.6"
 - "26.5.6"
+- "26.8.1"

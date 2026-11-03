@@ -14,6 +14,12 @@
   tags:
   - always
 
+- name: "Validate the fine-grained admin permission profile"
+  assert:
+    that: kc_fgap_version | default('v1') in ['v1', 'v2']
+    fail_msg: "kc_fgap_version must be v1 or v2"
+  changed_when: false
+
 # Check keycloak version
 - name: "Check keycloak version"
   assert:

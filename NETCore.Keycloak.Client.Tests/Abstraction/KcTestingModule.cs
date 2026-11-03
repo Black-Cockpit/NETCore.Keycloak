@@ -564,6 +564,13 @@ public abstract class KcTestingModule
         TestEnvironment = JsonConvert.DeserializeObject<KcTestEnvironment>(sr.ReadToEnd());
 
         Assert.IsNotNull(TestEnvironment, "The test environment configuration must not be null.");
+
+        // Allows the same isolated regressions to run against separate FGAP v1 and v2 servers.
+        var baseUrl = Environment.GetEnvironmentVariable("KC_TEST_BASE_URL");
+        if ( !string.IsNullOrWhiteSpace(baseUrl) )
+        {
+            TestEnvironment.BaseUrl = baseUrl;
+        }
     }
 
     /// <summary>

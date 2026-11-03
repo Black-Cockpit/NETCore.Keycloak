@@ -1,0 +1,86 @@
+name: Keycloak 26.8.1 compatibility
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Run independent coverage unit tests
+        run: |
+          dotnet test NETCore.Keycloak.Client.Tests/NETCore.Keycloak.Client.Tests.csproj \
+            --configuration Release --filter 'TestCategory=CoverageUnit' --collect 'XPlat Code Coverage' \
+            --logger 'trx;LogFileName=unit.trx' --results-directory NETCore.Keycloak.Client.Tests/obj/unit-verification
+          python3 NETCore.Keycloak.Client.Tests/verify_test_results.py NETCore.Keycloak.Client.Tests/obj/unit-verification
+      - name: Upload unit test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: independent-unit-tests
+          path: |
+            NETCore.Keycloak.Client.Tests/obj/unit-verification/**/*.trx
+            NETCore.Keycloak.Client.Tests/obj/unit-verification/**/coverage.cobertura.xml
+  compatibility:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        fgap: [v1, v2]
+    defaults:
+      run:
+        working-directory: NETCore.Keycloak.Client.Tests
+        shell: bash
+    env:
+      KC_VERSION: 26.8.1
+      KC_FGAP_VERSION: ${{ matrix.fgap }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Prepare isolated Keycloak 26.8.1 environment
+        run: make prepare_keycloak_26_environment
+      - name: Run complete suite or FGAP v2 regressions
+        run: |
+          filter=()
+          if [[ "$KC_FGAP_VERSION" == "v2" ]]; then
+            # Legacy /management/permissions APIs require FGAP v1 and are covered by the full v1 job.
+            filter=(--filter 'TestCategory=Keycloak2681&TestCategory!=LegacyAdminPermissions')
+          fi
+          dotnet test NETCore.Keycloak.Client.Tests.csproj --framework net10.0 --configuration Release \
+            "${filter[@]}" --logger 'trx;LogFileName=keycloak-26.8.1.trx' \
+            --results-directory "obj/keycloak-26.8.1/$KC_FGAP_VERSION" --collect 'XPlat Code Coverage'
+          coverage_check=()
+          if [[ "$KC_FGAP_VERSION" == "v1" ]]; then
+            coverage_check=(--require-http-method-coverage)
+          fi
+          python verify_test_results.py "obj/keycloak-26.8.1/$KC_FGAP_VERSION" "${coverage_check[@]}"
+      - name: Upload test and coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: keycloak-26.8.1-fgap-${{ matrix.fgap }}
+          path: |
+            NETCore.Keycloak.Client.Tests/obj/keycloak-26.8.1/**/*.trx
+            NETCore.Keycloak.Client.Tests/obj/keycloak-26.8.1/**/coverage.cobertura.xml
+          if-no-files-found: warn
+      - name: Stop the test environment
+        if: always()
+        run: make stop

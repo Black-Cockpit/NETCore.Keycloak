@@ -35,7 +35,7 @@ Examples:
 
 ### Pull Request Process
 
-1. Fork the repo and create your branch from `main` following the branch naming convention
+1. Fork the repo and create your branch from `master` following the branch naming convention
 2. Ensure your code follows the existing code style and formatting rules defined in `.editorconfig`
 3. Update the documentation if needed
 4. Ensure all tests pass
