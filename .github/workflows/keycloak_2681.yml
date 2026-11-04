@@ -27,6 +27,9 @@ jobs:
           python -m venv NETCore.Keycloak.Client.Tests/obj/audited-tools
           NETCore.Keycloak.Client.Tests/obj/audited-tools/bin/python -m pip install \
             --require-hashes -r NETCore.Keycloak.Client.Tests/requirements.txt
+          NETCore.Keycloak.Client.Tests/obj/audited-tools/bin/python -m pip check
+          NETCore.Keycloak.Client.Tests/obj/audited-tools/bin/python -m unittest discover \
+            -s NETCore.Keycloak.Client.Tests -p test_verify_test_results.py
           python -m pip install pip-audit==2.10.1
           mkdir -p NETCore.Keycloak.Client.Tests/obj/dependency-audit
           # Hashes were verified above. Manifest mode also audits bootstrap pins such as packaging.

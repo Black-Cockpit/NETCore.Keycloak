@@ -7,6 +7,7 @@ on:
     types:
       - opened
       - reopened
+      - synchronize
 jobs:
   branch-naming-policy:
     runs-on: ubuntu-24.04
