@@ -88,8 +88,6 @@ Keycloak 26.8.1 为当前固定测试版本；验证范围为已有客户端 API
   - [📖 Basic Usage](#-basic-usage)
   - [📚 Documentation](#-documentation)
   - [🧪 Testing](#-testing)
-    - [📋 Test Documentation](#-test-documentation)
-    - [🔬 Key Testing Features](#-key-testing-features)
     - [⚡ Running Tests](#-running-tests)
   - [🤝 Contributing](#-contributing)
   - [📄 License](#-license)
@@ -191,51 +189,32 @@ Explore our comprehensive documentation for each module:
 
 ## 🧪 Testing
 
-Our library includes an extensive test suite ensuring reliability across multiple Keycloak versions (20.x through 26.x). The testing infrastructure leverages Docker and Ansible for automated setup and execution.
+The .NET 10/MSTest suite validates the existing client API against Keycloak 26.8.1, with a full
+FGAP v1 run and separate FGAP v2 security regressions. Native .NET 10 file-based applications
+prepare isolated Docker Compose services and verify TRX/Cobertura reports. Python, Ansible
+and Make are no longer required.
 
-### 📋 Test Documentation
-
-- 📘 [Test Suite Guide](NETCore.Keycloak.Client.Tests/README.md)
-  - Test patterns
-  - Setup instructions
-  - Mock data structure
-
-- 🔧 [Ansible Setup Guide](NETCore.Keycloak.Client.Tests/ansible/README.md)
-  - Environment setup
-  - Configuration management
-  - Container orchestration
-
-### 🔬 Key Testing Features
-
-1. **Version Coverage**:
-   - Supports Keycloak 20.x through 26.x
-   - Automated environment setup per version
-   - Parallel version testing
-
-2. **Test Categories**:
-   - Authentication flows
-   - Authorization mechanisms
-   - Client operations
-   - Group management
-   - User operations
-
-3. **Infrastructure**:
-   - Docker-based environments
-   - Ansible automation
-   - Continuous Integration ready
-   - Comprehensive mock data
+See the [Test Suite Guide](NETCore.Keycloak.Client.Tests/README.md) for configuration,
+coverage, all 178 declared client methods, dependency audits and the FGAP compatibility matrix.
 
 ### ⚡ Running Tests
 
-```bash
-# Install test environment dependencies
-cd NETCore.Keycloak.Client.Tests
-make install_virtual_env
+Run from the repository root with the .NET 10 SDK and Docker Compose v2:
 
-# Run tests for all supported versions
-dotnet cake e2e_test.cake
+```bash
+dotnet run --file tools/KeycloakTestEnvironment.cs -- up
+dotnet test NETCore.Keycloak.Client.Tests/NETCore.Keycloak.Client.Tests.csproj --configuration Release \
+  --collect 'XPlat Code Coverage' --logger trx --results-directory NETCore.Keycloak.Client.Tests/obj/verification
+dotnet run --file tools/VerifyTestResults.cs -- NETCore.Keycloak.Client.Tests/obj/verification --require-http-method-coverage
+dotnet run --file tools/KeycloakTestEnvironment.cs -- down
 ```
 
+For the 54 independent tests without Docker or integration credentials:
+
+```bash
+dotnet test NETCore.Keycloak.Client.Tests/NETCore.Keycloak.Client.Tests.csproj --filter 'TestCategory=CoverageUnit'
+dotnet run --file tools/VerifyTestResults.cs -- --self-test
+```
 ## 👥 Contributors
 
 Thanks to all the people who contribute to this project!

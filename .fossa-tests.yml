@@ -1,11 +1,9 @@
 version: 3
 
 # Use a separate FOSSA test-infrastructure project/revision with this config.
-# Keep Ansible/PostgreSQL tooling visible for license review instead of
-# ignoring its GPL/LGPL licenses in the published-library policy.
+# Test tooling uses .NET 10 file-based applications with BCL-only dependencies.
+# Inventory restored test NuGet dependencies, including transitives.
 targets:
   only:
     - type: nuget
       path: NETCore.Keycloak.Client.Tests/obj
-    - type: setuptools
-      path: NETCore.Keycloak.Client.Tests

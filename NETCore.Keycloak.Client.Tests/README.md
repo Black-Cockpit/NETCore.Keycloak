@@ -1,105 +1,82 @@
 # NETCore.Keycloak.Client Tests
 
-This directory contains the comprehensive test suite for the NETCore.Keycloak.Client library. The test suite is designed to validate the library's functionality across multiple versions of Keycloak (20.x through 26.x) using automated test environments and continuous integration.
-
-The test suite implements:
-- End-to-end testing of all Keycloak client features
-- Authentication flows (Client Credentials, Resource Owner Password)
-- Authorization mechanisms (Bearer tokens, RPT tokens)
-- Client and realm management operations
-- Group and role management
-- User operations and session handling
-
-Key features of the test infrastructure:
-- Automated Keycloak environment setup using Ansible
-- Docker-based test environments for each Keycloak version
-- Parallel test execution capabilities
-- Comprehensive mock data fixtures
-- Detailed test reporting
+The .NET 10/MSTest suite validates the existing client API against Keycloak **26.8.1**.
+All test tooling uses C#: native .NET 10 file-based applications provision Docker Compose
+services and verify TRX/Cobertura reports. No Python, pip, Ansible, Make or additional
+NuGet packages are needed by these tools. Existing client and MSTest functionality is unchanged.
+测试、环境搭建和报告校验统一使用 .NET 10；保留现有测试场景及客户端功能。
 
 ## Test Environment Setup
 
-### Prerequisites
-
-1. **Python Environment**:
-   - Python 3.12 or 3.14 on Linux/WSL (the CI validation matrix)
-   - pip (Python package installer)
-   - virtualenv
-
-2. **Docker**:
-   - Docker Engine
-   - Docker Compose v2
-
-3. **.NET SDK**:
-   - .NET 10.0 SDK
-
-4. **Build Tools**:
-   - Cake (C# Make)
-   - Make
-
-### Setting Up Python Environment
-
-The project uses a Makefile to automate the Python environment setup. The following commands are available:
+Prerequisites: **.NET 10 SDK**, **Docker Engine/Desktop** and **Docker Compose v2**.
+Run the commands below from the repository root, on Windows, Linux or macOS with Docker configured.
+Use `--file` explicitly so the SDK selects the file-based application instead of a nearby project.
 
 ```bash
-# Install virtual environment and dependencies
-make install_virtual_env
-
-# This will:
-# 1. Create a Python virtual environment (keycloak.venv)
-# 2. Install required Python packages from requirements.txt
-# 3. Install necessary Ansible collections:
-#    - community.general
-#    - community.postgresql
-#    - community.crypto
-#    - community.docker
+dotnet run --file tools/KeycloakTestEnvironment.cs -- up
 ```
 
-Only `ansible-core`, the four direct collections and Docker's inventory-filtering helper pinned
-in `ansible/requirements.yml` are installed;
-the full Ansible distribution and the unused python-jose/ecdsa/rsa stack are not required.
-The fixture scripts still require `python-keycloak`. They use the same Python interpreter as Ansible.
-`requirements.in` lists direct dependencies; `requirements.txt` locks the resolved Python 3.12/Linux
-dependencies and their hashes. The same lock is also validated on Python 3.14.
-Regenerate it from the repository root after reviewing an update:
+The tool creates an isolated Compose project (`netcore-keycloak-tests`) with Keycloak 26.8.1,
+PostgreSQL 16 and an nginx invalid-response fixture. It imports `tools/test-environment/realm-fixture.json`,
+packages the existing JavaScript authorization policies, and assigns the fixture administrator's roles.
+The test realm deliberately uses a low password hash iteration count for test speed; this fixture is
+for local/CI tests only. Published service ports bind to loopback. Credentials are generated with
+`RandomNumberGenerator`, are never printed, and are written only to ignored local configuration.
+On Unix, generated secret files have mode 600 and the state directory has mode 700.
+The generated provider JAR remains readable by Keycloak's non-root container user.
+
+The default output is `NETCore.Keycloak.Client.Tests/Assets/testing_environment.json`.
+Generate it before building so the test project copies it to the test output directory.
+Do not commit this file. To keep an existing local environment/configuration intact, choose a
+separate project, ports and configuration path:
 
 ```bash
-uv pip compile NETCore.Keycloak.Client.Tests/requirements.in --upgrade --python-version 3.12 \
-  --python-platform x86_64-manylinux_2_28 --generate-hashes --index-url https://pypi.org/simple \
-  --no-emit-index-url --output-file NETCore.Keycloak.Client.Tests/requirements.txt
-python -m pip install --require-hashes -r NETCore.Keycloak.Client.Tests/requirements.txt
-pip-audit --strict --disable-pip --require-hashes -r NETCore.Keycloak.Client.Tests/requirements.txt
+dotnet run --file tools/KeycloakTestEnvironment.cs -- up --project netcore-keycloak-review \
+  --port 18181 --invalid-port 18898 --config NETCore.Keycloak.Client.Tests/obj/review/testing_environment.json
 ```
 
-CI first installs with hash verification, then audits every manifest pin without vulnerability
-exceptions. Manifest mode avoids omitting bootstrap dependencies such as `packaging` during
-temporary-environment resolution. The TRX/Cobertura verifier rejects DTDs,
-entities, missing reports and skipped tests. Its independent security tests need only the small
-`requirements-report.txt` lock:
+A custom configuration path must be copied into the test output's `Assets/testing_environment.json`
+before running tests with `--no-build`. Only one run may use a shared configuration/output directory.
+The tool refuses to overwrite an existing managed environment. Clean up that same project before
+recreating it or switching between `--fgap v1` (default) and `--fgap v2`:
 
 ```bash
-python -m pip install --require-hashes -r NETCore.Keycloak.Client.Tests/requirements-report.txt
-python -m unittest discover -s NETCore.Keycloak.Client.Tests -p test_verify_test_results.py
+dotnet run --file tools/KeycloakTestEnvironment.cs -- down --project netcore-keycloak-review
 ```
 
-The FOSSA CLI library profile `.fossa.yml` reads the restored library's `obj/project.assets.json`,
-including transitive dependencies. Restore the solution before scanning; excluding all `obj` paths
-would discard that dependency graph. `.fossa-tests.yml` separately inventories test NuGet packages
-and Python tools. Validate both profiles locally without uploading:
+Cleanup checks the generated ownership marker and removes only that Compose project's containers,
+network and database volume. It leaves test reports/configuration available for inspection.
+State is stored under `NETCore.Keycloak.Client.Tests/obj/native-environment/<project>`.
+If provisioning fails, run `down` for the same project before retrying.
+
+### Native report and dependency checks
 
 ```bash
+dotnet run --file tools/VerifyTestResults.cs -- --self-test
 dotnet restore NETCore.Keycloak.slnx
+dotnet list NETCore.Keycloak.slnx package --vulnerable --include-transitive --format json > nuget-audit.json
+dotnet run --file tools/VerifyTestResults.cs -- --audit-json nuget-audit.json
+```
+
+The report verifier rejects missing/empty/incomplete runs, failed or skipped outcomes, DTDs and
+XML entities. Its native self-tests also protect async state-machine coverage mapping and NuGet
+audit rejection. The audit covers both direct and transitive NuGet dependencies; the file-based
+tools themselves use only the .NET base class library.
+
+The FOSSA CLI profiles inventory restored production (`.fossa.yml`) and test (`.fossa-tests.yml`)
+NuGet graphs separately. Restore before scanning; excluding every `obj` path would discard the
+dependency graph. Validate both profiles locally without uploading:
+
+```bash
 fossa analyze --config .fossa.yml --output > library-dependencies.json
 fossa analyze --config .fossa-tests.yml --output > test-dependencies.json
 ```
 
-Both outputs must contain their expected targets and nonempty dependency graphs. A FOSSA maintainer
-must apply equivalent scopes to OAuth/Quick Import projects if that integration does not consume CLI
-configuration. Scope changes and a new scan do not approve licenses or change existing FOSSA policy.
-Ansible-core/collections and the PostgreSQL driver retain their own GPL/LGPL or other notices;
-they are test infrastructure and are not included in the published client NuGet package. Review
-their use/distribution separately from the library's MIT license. Do not blanket-ignore their findings.
-生产包与测试工具分别审计；测试依赖仍检查漏洞和许可证，不通过整体忽略来消除告警。
+A FOSSA maintainer must apply equivalent scopes to OAuth/Quick Import projects if that integration
+does not consume CLI configuration. Removing unused dependencies does not approve licenses or
+change policy. Container images have their own third-party software and distribution obligations;
+they are test infrastructure and are not embedded in the published client NuGet package.
+生产包、测试 NuGet 依赖与容器镜像分别审计，不通过整体忽略依赖或许可证来消除告警。
 
 ## Running Tests
 
@@ -141,15 +118,11 @@ Local verification on 2026-11-03, .NET 10 Release and Keycloak 26.8.1:
 | Branch coverage | 70.59% | 83.72% |
 | Unexecuted source lines | 255 | 12 |
 
-Revalidated on 2026-11-04 with Linux .NET 10 and Keycloak 26.8.1 backed by PostgreSQL 16:
-fixtures provisioned with Python 3.12.16 and Python 3.14.10 each passed all 434 tests, with no
-failures/skips and all 178 declared client methods executed. FGAP v2 passed its 31 applicable
-regressions. Each Python version passed the five XML verifier security tests; the locked
-26-package toolchain had no known matches in the independent OSV check. The production FOSSA
-profile includes 7 direct and 25 total NuGet dependencies; the test profile retains both test
-NuGet and Python inventories. Local Docker orchestration used the existing Windows Docker
-host because that WSL distribution has no Docker integration. GitHub's Ubuntu 24.04 jobs still
-require upstream approval and must pass before merge.
+Revalidated on 2026-11-04 using native .NET 10 provisioning, Keycloak 26.8.1 and PostgreSQL 16:
+all 434 FGAP v1 tests passed without failures or skips, and all 178 declared client methods
+executed. The same native tool provisions FGAP v2 for its separate 31 applicable regressions.
+The report verifier has 22 native self-tests. GitHub's Ubuntu 24.04 jobs still require upstream
+approval and must pass before merge.
 
 The 12 remaining lines are internal argument/null guards, the defensive null token-response
 return, repeated-disposal handling and the finalizer path. No reflection into private methods,
@@ -159,7 +132,7 @@ forced garbage collection or coverage exclusions were added to inflate the resul
 ### Run the complete .NET 10 test suite
 
 The complete suite includes integration tests that create, update, and delete Keycloak resources.
-Use a dedicated test environment prepared with the Ansible/Cake setup described below.
+Use a dedicated test environment prepared with the native .NET tool described above.
 The generated `Assets/testing_environment.json` must exist in this test project before building;
 the project copies it to the test output directory. This file contains local credentials and is
 intentionally excluded from Git. A missing file causes integration test classes to fail during
@@ -204,24 +177,26 @@ the operation under test uses the intended user or delegated administrator token
 Original `A_`–`Z_` tests still use the dedicated shared integration realm.
 Do not run either suite against production.
 
-From this test directory on a dedicated Linux test host (or WSL with Docker configured):
+From the repository root on a dedicated Docker test host:
 
 ```bash
-make prepare_keycloak_26_environment KC_VERSION=26.8.1 KC_FGAP_VERSION=v1
-dotnet test NETCore.Keycloak.Client.Tests.csproj --configuration Release \
-  --logger 'trx;LogFileName=full.trx' --results-directory obj/verification/v1 \
+dotnet run --file tools/KeycloakTestEnvironment.cs -- up --fgap v1
+dotnet test NETCore.Keycloak.Client.Tests/NETCore.Keycloak.Client.Tests.csproj --configuration Release \
+  --logger 'trx;LogFileName=full.trx' --results-directory NETCore.Keycloak.Client.Tests/obj/verification/v1 \
   --collect 'XPlat Code Coverage'
-python verify_test_results.py obj/verification/v1 --require-http-method-coverage
-make stop
+dotnet run --file tools/VerifyTestResults.cs -- NETCore.Keycloak.Client.Tests/obj/verification/v1 --require-http-method-coverage
+dotnet run --file tools/KeycloakTestEnvironment.cs -- down
 
-make prepare_keycloak_26_environment KC_VERSION=26.8.1 KC_FGAP_VERSION=v2
-dotnet test NETCore.Keycloak.Client.Tests.csproj --configuration Release \
+dotnet run --file tools/KeycloakTestEnvironment.cs -- up --fgap v2
+dotnet test NETCore.Keycloak.Client.Tests/NETCore.Keycloak.Client.Tests.csproj --configuration Release \
   --filter 'TestCategory=Keycloak2681&TestCategory!=LegacyAdminPermissions' --logger 'trx;LogFileName=fgap-v2.trx' \
-  --results-directory obj/verification/v2
-python verify_test_results.py obj/verification/v2
-make stop
+  --results-directory NETCore.Keycloak.Client.Tests/obj/verification/v2
+dotnet run --file tools/VerifyTestResults.cs -- NETCore.Keycloak.Client.Tests/obj/verification/v2
+dotnet run --file tools/KeycloakTestEnvironment.cs -- down
 ```
 
+Use a fresh results directory for each run. The verifier rejects any stale failed/skipped TRX files
+in that directory. In automated jobs, always run `down` in a cleanup/finally step, including after failure.
 The full v1 profile also exercises the client scope-mapping aliases, role-container evaluation,
 node registration/deletion, empty adapter topology checks, revocation propagation, composite-role
 removal and legacy `/management/permissions` APIs. The coverage gate requires execution of every
@@ -236,7 +211,7 @@ allowing profile management while explicitly denying password reset. Only the ex
 完整 v1 测试与 v2 安全回归互为补充；CI 要求两者都通过，且不允许失败或跳过。
 
 `.github/workflows/keycloak_2681.yml` runs both profiles independently of Sonar credentials,
-uses PostgreSQL through the standard Ansible setup, and publishes TRX/Cobertura artifacts.
+uses PostgreSQL through the native .NET setup, and publishes TRX/Cobertura artifacts.
 Local dev-mode/H2 runs do not establish PostgreSQL or cluster compatibility by themselves.
 
 For an already prepared second server, `KC_TEST_BASE_URL` overrides only the server URL loaded
@@ -735,26 +710,7 @@ NETCore.Keycloak.Client.Tests/
 │   └── KcGroupTests/          # Group management tests
 │       ├── KcGroupFilterTests.cs
 │       └── KcGroupsHappyPathTests.cs
-├── ansible/                    # Environment automation
+├── ../tools/                  # Native environment/report tools and declarative fixtures
 ├── cakeScripts/               # Build automation scripts
 ├── e2e_test.cake             # E2E test orchestration
-```
-
-## Makefile Details
-
-The Makefile automates several key aspects of the test environment:
-
-### Virtual Environment Setup
-```makefile
-install_virtual_env:
-    # Creates/recreates Python virtual environment
-    # Installs Python dependencies
-    # Installs required Ansible collections
-```
-
-### Environment Cleanup
-```makefile
-stop:
-    # Stops and removes the current Keycloak environment
-    # Cleans up containers and volumes
 ```

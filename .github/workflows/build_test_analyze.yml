@@ -33,12 +33,6 @@ jobs:
           distribution: "temurin"
           java-version: ${{ matrix.java-version }}
 
-      # Setup Python
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
       # Install the supported .NET SDK
       - name: Install .NET 10 SDK
         uses: actions/setup-dotnet@v4
@@ -70,7 +64,6 @@ jobs:
       - name: Install dependencies
         if: steps.sonar.outputs.available == 'true'
         run: |
-          sudo apt install -y make
           dotnet tool install --global dotnet-sonarscanner
           dotnet tool install --global Cake.Tool
           dotnet tool install --global JetBrains.dotCover.CommandLineTools
@@ -80,7 +73,6 @@ jobs:
         if: steps.sonar.outputs.available == 'true'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          VIRTUAL_ENV_DIR: keycloak.venv
         run: |
           # Copy Licence
           cp LICENSE NETCore.Keycloak.Client/
@@ -88,3 +80,7 @@ jobs:
           # Build, test and analyze project with keycloak version 26
           cd NETCore.Keycloak.Client.Tests
           dotnet cake build_test_analyse.cake --kc_major_version=26 --sonar_token="${SONAR_TOKEN}"
+
+      - name: Stop the managed Sonar test environment
+        if: always() && steps.sonar.outputs.available == 'true'
+        run: dotnet run --file tools/KeycloakTestEnvironment.cs -- down

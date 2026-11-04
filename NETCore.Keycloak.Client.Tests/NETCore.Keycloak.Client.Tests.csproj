@@ -30,10 +30,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="**/*.venv/**/*.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="Assets/testing_environment.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
