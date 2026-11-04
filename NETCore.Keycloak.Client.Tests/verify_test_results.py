@@ -2,8 +2,9 @@
 
 import argparse
 import re
-import xml.etree.ElementTree as ET
 from pathlib import Path
+
+from defusedxml import ElementTree as ET
 
 
 def main():
@@ -16,7 +17,7 @@ def main():
         raise SystemExit("No TRX reports found.")
     total = 0
     for report in reports:
-        root = ET.parse(report).getroot()
+        root = ET.parse(report, forbid_dtd=True).getroot()
         counters = root.find("{*}ResultSummary/{*}Counters")
         results = root.findall("{*}Results/{*}UnitTestResult")
         if counters is None:
@@ -46,7 +47,7 @@ def verify_http_method_coverage(directory):
     modules = {implementation for implementation, _ in expected}
     covered = set()
     for report in directory.rglob("coverage.cobertura.xml"):
-        root = ET.parse(report).getroot()
+        root = ET.parse(report, forbid_dtd=True).getroot()
         for implementation in root.findall(".//class"):
             name = implementation.get("name", "")
             module = name.split("/", 1)[0]

@@ -5,6 +5,9 @@ on:
       - closed
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   # Deploy nuget package when a branch is labeled with `release` and the merge is done to master, or when triggered manually.
   Deploy:
@@ -19,7 +22,7 @@ jobs:
 
       # Setup .NET SDK
       - name: Set up .NET SDK ${{ matrix.dotnet-version }}
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
 

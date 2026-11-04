@@ -90,6 +90,7 @@
 # Obtain admin access token for enabling organizations
 # Retrieves an admin token from the master realm for API calls that are not supported by the Ansible Keycloak modules.
 - name: "Obtain admin access token for {{ realm }} realm configuration"
+  no_log: true
   uri:
     url: "{{ keycloak.auth_url }}/realms/{{ keycloak.auth_realm }}/protocol/openid-connect/token"
     method: POST
@@ -107,6 +108,7 @@
 # Enable organizations for the realm
 # Organizations are available starting from Keycloak 26 and must be enabled at the realm level.
 - name: "Enable organizations for {{ realm }} realm"
+  no_log: true
   uri:
     url: "{{ keycloak.auth_url }}/admin/realms/{{ realm }}"
     method: PUT

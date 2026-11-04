@@ -1,0 +1,11 @@
+version: 3
+
+# Use a separate FOSSA test-infrastructure project/revision with this config.
+# Keep Ansible/PostgreSQL tooling visible for license review instead of
+# ignoring its GPL/LGPL licenses in the published-library policy.
+targets:
+  only:
+    - type: nuget
+      path: NETCore.Keycloak.Client.Tests/obj
+    - type: setuptools
+      path: NETCore.Keycloak.Client.Tests

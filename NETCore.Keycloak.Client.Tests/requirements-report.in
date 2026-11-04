@@ -1,0 +1,2 @@
+# The report verifier and its security regression tests need no Ansible stack.
+defusedxml==0.7.1

@@ -1,0 +1,8 @@
+# Direct dependencies for the Python 3.12 Linux integration-test environment.
+# Collections are pinned separately in ansible/requirements.yml.
+ansible-core==2.20.11
+cryptography==50.0.2
+defusedxml==0.7.1
+psycopg2-binary==2.9.13
+python-keycloak==7.0.2
+requests==2.34.2

@@ -244,9 +244,10 @@
 
 # Delete auth_client client default authz
 - name: "Delete realm {{ realm }} auth_client client default authz"
+  no_log: true
   command:
     argv:
-    - "python3"
+    - "{{ ansible_playbook_python }}"
     - "scripts/delete_client_default_authz.py"
     - "{{ keycloak.auth_url }}"
     - "-a"

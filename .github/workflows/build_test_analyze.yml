@@ -12,6 +12,9 @@ on:
       - edited
       - synchronize
 
+permissions:
+  contents: read
+
 jobs:
   # Build test and analyze source code
   build_test_analyze:
@@ -25,9 +28,9 @@ jobs:
 
       # Setup OpenJDK
       - name: Setup OpenJDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
-          distribution: "adopt"
+          distribution: "temurin"
           java-version: ${{ matrix.java-version }}
 
       # Setup Python
@@ -38,21 +41,43 @@ jobs:
 
       # Install the supported .NET SDK
       - name: Install .NET 10 SDK
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
 
-      # Install dependencies
-      - name: Install dependencies
+      - name: Build and test without repository secrets
         run: |
-          sudo apt install -y make python3-rpm
+          cp LICENSE NETCore.Keycloak.Client/
+          dotnet build NETCore.Keycloak.slnx --configuration Release
+          dotnet test NETCore.Keycloak.slnx --configuration Release --no-build \
+            --filter 'TestCategory=CoverageUnit' --logger 'trx;LogFileName=unit.trx' \
+            --results-directory NETCore.Keycloak.Client.Tests/obj/build-verification
+
+      - name: Detect Sonar analysis availability
+        id: sonar
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        shell: bash
+        run: |
+          if [[ -n "$SONAR_TOKEN" ]]; then
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'available=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::Sonar analysis requires an upstream secret. Build/unit tests and the independent compatibility workflow still run.'
+          fi
+
+      # Sonar credentials are unavailable to fork pull requests.
+      - name: Install dependencies
+        if: steps.sonar.outputs.available == 'true'
+        run: |
+          sudo apt install -y make
           dotnet tool install --global dotnet-sonarscanner
           dotnet tool install --global Cake.Tool
           dotnet tool install --global JetBrains.dotCover.CommandLineTools
 
       # Build test and analyze the project
       - name: Build test and analyze the project
-        if: success()
+        if: steps.sonar.outputs.available == 'true'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           VIRTUAL_ENV_DIR: keycloak.venv
@@ -62,4 +87,4 @@ jobs:
 
           # Build, test and analyze project with keycloak version 26
           cd NETCore.Keycloak.Client.Tests
-          dotnet cake build_test_analyse.cake --kc_major_version=26 --sonar_token=${SONAR_TOKEN}
+          dotnet cake build_test_analyse.cake --kc_major_version=26 --sonar_token="${SONAR_TOKEN}"

@@ -1,9 +1,3 @@
-# Gathering facts
-- name: Gathering package fact
-  package_facts:
-    manager: auto
-  changed_when: false
-
 # Check target platforms 
 - name: "Check OS version and family"
   assert:

@@ -13,11 +13,12 @@
   template:
     src: "templates/{{ item }}.j2"
     dest: "{{ containers_dir }}/{{ item }}"
-    mode: "0644"
+    mode: "0600"
   loop:
     - compose.yml
     - keycloak.env
     - postgres.env
+  no_log: true
 
 # Build JS policies JAR
 # Packages JavaScript authorization policies into a JAR for deployment to Keycloak providers.

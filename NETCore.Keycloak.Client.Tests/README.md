@@ -22,7 +22,7 @@ Key features of the test infrastructure:
 ### Prerequisites
 
 1. **Python Environment**:
-   - Python 3.12 or higher (for the current Ansible requirements)
+   - Python 3.12 or 3.14 on Linux/WSL (the CI validation matrix)
    - pip (Python package installer)
    - virtualenv
 
@@ -54,6 +54,52 @@ make install_virtual_env
 #    - community.crypto
 #    - community.docker
 ```
+
+Only `ansible-core`, the four direct collections and Docker's inventory-filtering helper pinned
+in `ansible/requirements.yml` are installed;
+the full Ansible distribution and the unused python-jose/ecdsa/rsa stack are not required.
+The fixture scripts still require `python-keycloak`. They use the same Python interpreter as Ansible.
+`requirements.in` lists direct dependencies; `requirements.txt` locks the resolved Python 3.12/Linux
+dependencies and their hashes. The same lock is also validated on Python 3.14.
+Regenerate it from the repository root after reviewing an update:
+
+```bash
+uv pip compile NETCore.Keycloak.Client.Tests/requirements.in --upgrade --python-version 3.12 \
+  --python-platform x86_64-manylinux_2_28 --generate-hashes --index-url https://pypi.org/simple \
+  --no-emit-index-url --output-file NETCore.Keycloak.Client.Tests/requirements.txt
+python -m pip install --require-hashes -r NETCore.Keycloak.Client.Tests/requirements.txt
+pip-audit --strict --disable-pip --require-hashes -r NETCore.Keycloak.Client.Tests/requirements.txt
+```
+
+CI first installs with hash verification, then audits every manifest pin without vulnerability
+exceptions. Manifest mode avoids omitting bootstrap dependencies such as `packaging` during
+temporary-environment resolution. The TRX/Cobertura verifier rejects DTDs,
+entities, missing reports and skipped tests. Its independent security tests need only the small
+`requirements-report.txt` lock:
+
+```bash
+python -m pip install --require-hashes -r NETCore.Keycloak.Client.Tests/requirements-report.txt
+python -m unittest discover -s NETCore.Keycloak.Client.Tests -p test_verify_test_results.py
+```
+
+The FOSSA CLI library profile `.fossa.yml` reads the restored library's `obj/project.assets.json`,
+including transitive dependencies. Restore the solution before scanning; excluding all `obj` paths
+would discard that dependency graph. `.fossa-tests.yml` separately inventories test NuGet packages
+and Python tools. Validate both profiles locally without uploading:
+
+```bash
+dotnet restore NETCore.Keycloak.slnx
+fossa analyze --config .fossa.yml --output > library-dependencies.json
+fossa analyze --config .fossa-tests.yml --output > test-dependencies.json
+```
+
+Both outputs must contain their expected targets and nonempty dependency graphs. A FOSSA maintainer
+must apply equivalent scopes to OAuth/Quick Import projects if that integration does not consume CLI
+configuration. Scope changes and a new scan do not approve licenses or change existing FOSSA policy.
+Ansible-core/collections and the PostgreSQL driver retain their own GPL/LGPL or other notices;
+they are test infrastructure and are not included in the published client NuGet package. Review
+their use/distribution separately from the library's MIT license. Do not blanket-ignore their findings.
+生产包与测试工具分别审计；测试依赖仍检查漏洞和许可证，不通过整体忽略来消除告警。
 
 ## Running Tests
 
@@ -94,6 +140,16 @@ Local verification on 2026-11-03, .NET 10 Release and Keycloak 26.8.1:
 | Line coverage, Cobertura rate | 92.75% | 99.65% |
 | Branch coverage | 70.59% | 83.72% |
 | Unexecuted source lines | 255 | 12 |
+
+Revalidated on 2026-11-04 with Linux .NET 10 and Keycloak 26.8.1 backed by PostgreSQL 16:
+fixtures provisioned with Python 3.12.16 and Python 3.14.10 each passed all 434 tests, with no
+failures/skips and all 178 declared client methods executed. FGAP v2 passed its 31 applicable
+regressions. Each Python version passed the five XML verifier security tests; the locked
+26-package toolchain had no known matches in the independent OSV check. The production FOSSA
+profile includes 7 direct and 25 total NuGet dependencies; the test profile retains both test
+NuGet and Python inventories. Local Docker orchestration used the existing Windows Docker
+host because that WSL distribution has no Docker integration. GitHub's Ubuntu 24.04 jobs still
+require upstream approval and must pass before merge.
 
 The 12 remaining lines are internal argument/null guards, the defensive null token-response
 return, repeated-disposal handling and the finalizer path. No reflection into private methods,

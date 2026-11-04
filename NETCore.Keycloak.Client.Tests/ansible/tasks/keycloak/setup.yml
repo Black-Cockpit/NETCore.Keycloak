@@ -1,8 +1,13 @@
-# Wait for Keycloak to start
-# Ensures that the Keycloak service is up and running before proceeding with further tasks.
+# Wait for a working discovery endpoint rather than assuming startup takes 30 seconds.
 - name: Wait for keycloak to start
-  pause:
-    seconds: 30
+  uri:
+    url: "{{ keycloak.auth_url }}/realms/{{ keycloak.auth_realm }}/.well-known/openid-configuration"
+    status_code: 200
+    timeout: 5
+  register: keycloak_discovery
+  until: keycloak_discovery.status | default(0) == 200
+  retries: 60
+  delay: 2
 
 # Create realm
 # Includes the task file to create a Keycloak realm.
@@ -44,9 +49,10 @@
 # Assign roles to realm admin user
 # Assigns default roles to the admin user in the specified realm using a Python script.
 - name: "Assign realm {{ realm }} admin roles"
+  no_log: true
   command:
     argv:
-    - "python3"
+    - "{{ ansible_playbook_python }}"
     - "scripts/assign_admin_roles.py"
     - "{{ keycloak.auth_url }}"
     - "-a"

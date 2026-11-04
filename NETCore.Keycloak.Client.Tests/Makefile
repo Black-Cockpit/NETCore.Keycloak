@@ -44,12 +44,9 @@ install_virtual_env:
 	# Create a new virtual environment
 	@python3 -m venv ${CONF_DIR_CONTEXT}/${VIRTUAL_ENV_DIR}
 	# Activate the virtual environment and install dependencies
-	@pushd ${CONF_DIR_CONTEXT}/ && source ${VIRTUAL_ENV_DIR}/bin/activate && pip install -r requirements.txt
+	@pushd ${CONF_DIR_CONTEXT}/ && source ${VIRTUAL_ENV_DIR}/bin/activate && python -m pip install --require-hashes -r requirements.txt
 	# Install required Ansible collections
-	@pushd ${CONF_DIR_CONTEXT}/ && source ${VIRTUAL_ENV_DIR}/bin/activate && ansible-galaxy collection install community.general --force
-	@pushd ${CONF_DIR_CONTEXT}/ && source ${VIRTUAL_ENV_DIR}/bin/activate && ansible-galaxy collection install community.postgresql --force
-	@pushd ${CONF_DIR_CONTEXT}/ && source ${VIRTUAL_ENV_DIR}/bin/activate && ansible-galaxy collection install community.crypto --force
-	@pushd ${CONF_DIR_CONTEXT}/ && source ${VIRTUAL_ENV_DIR}/bin/activate && ansible-galaxy collection install community.docker --force
+	@pushd ${CONF_DIR_CONTEXT}/ && source ${VIRTUAL_ENV_DIR}/bin/activate && ansible-galaxy collection install --no-cache -r ansible/requirements.yml
 
 # -----------------------------------
 # Target: check_virtual_env
