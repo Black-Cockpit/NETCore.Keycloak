@@ -140,6 +140,17 @@ internal static class ReportVerifier
 
     internal static void VerifyAudit(string path)
     {
+        var document = ReadAudit(path);
+        if ( document["projects"] is not JsonArray projects || projects.Count == 0 )
+            throw new InvalidDataException("No projects in NuGet audit.");
+        if ( document["problems"] is JsonArray problems && problems.Count > 0 )
+            throw new InvalidDataException("NuGet audit reported problems.");
+        foreach ( var project in projects ) VerifyProject(project);
+        Console.WriteLine($"Verified NuGet audit: {projects.Count} projects, no reported vulnerabilities.");
+    }
+
+    private static JsonNode ReadAudit(string path)
+    {
         var document = JsonNode.Parse(File.ReadAllText(path)) ??
             throw new InvalidDataException("Missing NuGet audit document.");
         var parameters = (( string? ) document["parameters"] ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -148,29 +159,28 @@ internal static class ReportVerifier
             || document["sources"] is not JsonArray sources || sources.Count == 0 )
             throw new InvalidDataException("Expected a version 1 NuGet vulnerability audit " +
                 "including transitive packages and sources.");
-        if ( document["projects"] is not JsonArray projects || projects.Count == 0 )
-            throw new InvalidDataException("No projects in NuGet audit.");
-        if ( document["problems"] is JsonArray problems && problems.Count > 0 )
-            throw new InvalidDataException("NuGet audit reported problems.");
-        foreach ( var project in projects )
-        {
-            if ( string.IsNullOrWhiteSpace(( string? ) project?["path"]) )
-                throw new InvalidDataException("Missing project path in NuGet audit.");
-            // --vulnerable omits frameworks entirely when a project has no findings.
-            if ( project?["frameworks"] is not JsonArray targets ) continue;
-            foreach ( var framework in targets )
-            {
-                foreach ( var group in new[] { "topLevelPackages", "transitivePackages" } )
-                {
-                    if ( framework?[group] is not JsonArray packages ) continue;
-                    foreach ( var package in packages )
-                        if ( package?["vulnerabilities"] is JsonArray vulnerabilities && vulnerabilities.Count > 0 )
-                            throw new InvalidDataException($"Vulnerable NuGet dependency: {package["id"]}.");
-                }
-            }
-        }
+        return document;
+    }
 
-        Console.WriteLine($"Verified NuGet audit: {projects.Count} projects, no reported vulnerabilities.");
+    private static void VerifyProject(JsonNode? project)
+    {
+        if ( string.IsNullOrWhiteSpace(( string? ) project?["path"]) )
+            throw new InvalidDataException("Missing project path in NuGet audit.");
+        // --vulnerable omits frameworks entirely when a project has no findings.
+        if ( project?["frameworks"] is not JsonArray targets ) return;
+        foreach ( var framework in targets )
+        {
+            VerifyPackages(framework?["topLevelPackages"]);
+            VerifyPackages(framework?["transitivePackages"]);
+        }
+    }
+
+    private static void VerifyPackages(JsonNode? node)
+    {
+        if ( node is not JsonArray packages ) return;
+        foreach ( var package in packages )
+            if ( package?["vulnerabilities"] is JsonArray vulnerabilities && vulnerabilities.Count > 0 )
+                throw new InvalidDataException($"Vulnerable NuGet dependency: {package["id"]}.");
     }
 
     internal static void SelfTest()

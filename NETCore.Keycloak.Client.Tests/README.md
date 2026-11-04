@@ -114,7 +114,7 @@ Local verification on 2026-11-03, .NET 10 Release and Keycloak 26.8.1:
 | Full v1 run | 380 passed, no skips | 434 passed, no skips |
 | Additional independent tests | — | 54 passed without integration credentials |
 | Applicable v2 regressions | 31 passed | 31 passed |
-| Line coverage, Cobertura rate | 92.75% | 99.65% |
+| Line coverage, Cobertura rate | 92.75% | 99.66% |
 | Branch coverage | 70.59% | 83.72% |
 | Unexecuted source lines | 255 | 12 |
 
@@ -123,6 +123,13 @@ all 434 FGAP v1 tests passed without failures or skips, and all 178 declared cli
 executed. The same native tool provisions FGAP v2 for its separate 31 applicable regressions.
 The report verifier has 22 native self-tests. GitHub's Ubuntu 24.04 jobs still require upstream
 approval and must pass before merge.
+
+The native-tool migration removed the 26-package Python inventory. FOSSA scan 128535862
+reported `License scan passed` with 15 direct dependencies, replacing the previous seven flagged
+license issues. This public scan is limited to one dependency level; the CLI profiles and CI NuGet
+audit continue to include transitive dependencies. Existing user-query construction was split into
+private helpers for CodeFactor review, preserving parameter order, formatting and public behavior.
+The final library report covers 3519 of 3531 source lines and 494 of 590 branches.
 
 The 12 remaining lines are internal argument/null guards, the defensive null token-response
 return, repeated-disposal handling and the finalizer path. No reflection into private methods,

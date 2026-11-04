@@ -121,6 +121,19 @@ public class KcUserFilter : KcFilter
                 $"&first={string.Create(CultureInfo.CurrentCulture, $"{First}").ToLower(CultureInfo.CurrentCulture)}");
         }
 
+        AppendSearchFilters(builder);
+
+        // Add username filter and return the final query
+        return string.IsNullOrWhiteSpace(Username)
+            ? builder.ToString()
+            : builder.Append(CultureInfo.CurrentCulture, $"&username={Username}").ToString();
+    }
+
+    /// <summary>
+    /// Appends the optional name, identity provider and search filters in their existing order.
+    /// </summary>
+    private void AppendSearchFilters(StringBuilder builder)
+    {
         // Add first name filter
         if ( !string.IsNullOrWhiteSpace(FirstName) )
         {
@@ -156,10 +169,5 @@ public class KcUserFilter : KcFilter
         {
             _ = builder.Append(CultureInfo.CurrentCulture, $"&search={Search}");
         }
-
-        // Add username filter and return the final query
-        return string.IsNullOrWhiteSpace(Username)
-            ? builder.ToString()
-            : builder.Append(CultureInfo.CurrentCulture, $"&username={Username}").ToString();
     }
 }
