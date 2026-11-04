@@ -31,7 +31,7 @@ Task("Test")
         }
 
         // Resolve solution path to absolute for dotCover compatibility
-        var slnPath = MakeAbsolute(new FilePath($"{slnContext}/NETCore.Keycloak.sln"));
+        var slnPath = MakeAbsolute(new FilePath($"{slnContext}/NETCore.Keycloak.slnx"));
 
         // Define the dotCover cover command with XML report output
         var testCommand = $"cover --xml-report-output=dotCover.Output.xml -- test {slnPath} --configuration {configuration} -l:\"console;verbosity=normal\" --no-restore --no-build";

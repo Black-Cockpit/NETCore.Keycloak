@@ -20,7 +20,7 @@ Task("Test")
     .Does(() =>
     {
         Information("Running unit tests...");
-        DotNetTest($"{slnContext}/NETCore.Keycloak.sln", new DotNetTestSettings
+        DotNetTest($"{slnContext}/NETCore.Keycloak.slnx", new DotNetTestSettings
         {
             Configuration = configuration,
             NoBuild = true,

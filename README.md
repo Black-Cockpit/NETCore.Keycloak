@@ -42,6 +42,12 @@
 | .NET         | 10.0                                                                    |
 | Dependencies | ASP.NET Core, Microsoft.Extensions.DependencyInjection, Newtonsoft.Json |
 
+Use `NETCore.Keycloak.slnx` to open or build the solution with the .NET 10 SDK:
+
+```bash
+dotnet build NETCore.Keycloak.slnx --configuration Release
+```
+
 ## ✅ Version Compatibility
 
 | Keycloak Version | Support |
