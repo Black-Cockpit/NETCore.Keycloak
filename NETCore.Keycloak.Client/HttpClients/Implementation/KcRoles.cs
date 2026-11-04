@@ -1017,7 +1017,7 @@ internal sealed class KcRoles(string baseUrl,
     }
 
     /// <inheritdoc cref="IKcRoles.RemoveClientRoleFromCompositeAsync"/>
-    public Task<KcResponse<object>> RemoveClientRoleFromCompositeAsync(
+    public async Task<KcResponse<object>> RemoveClientRoleFromCompositeAsync(
         string realm,
         string accessToken,
         string clientId,
@@ -1033,17 +1033,32 @@ internal sealed class KcRoles(string baseUrl,
         // Validate that the name parameter is not null, empty, or whitespace.
         ValidateRequiredString(nameof(name), name);
 
+        // Keycloak requires the roles being removed in the DELETE body. The existing API removes all composites.
+        var composites = await GetClientCompositeRolesAsync(realm, accessToken, clientId, name, cancellationToken)
+            .ConfigureAwait(false);
+        if ( composites.IsError )
+        {
+            return new KcResponse<object>
+            {
+                IsError = true,
+                ErrorMessage = composites.ErrorMessage,
+                Exception = composites.Exception,
+                MonitoringMetrics = composites.MonitoringMetrics
+            };
+        }
+
         // Construct the URL for removing composite roles.
         var url = $"{BaseUrl}/{realm}/clients/{clientId}/roles/{name}/composites";
 
         // Process the request to remove the composite roles.
-        return ProcessRequestAsync<object>(
+        return await ProcessRequestAsync<object>(
             url,
             HttpMethod.Delete,
             accessToken,
             "Unable to remove composite from the client roles",
+            composites.Response ?? [],
             cancellationToken: cancellationToken
-        );
+        ).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IKcRoles.GetGroupsInClientRoleAsync"/>

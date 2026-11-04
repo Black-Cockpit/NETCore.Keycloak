@@ -88,7 +88,7 @@ public class KcAuthorizationExtensionTests : KcTestingModule
 
         // Verify that the authorization handler is registered and of the expected type.
         Assert.IsNotNull(authorizationHandler, "IAuthorizationHandler should be registered.");
-        Assert.IsInstanceOfType<KcBearerAuthorizationHandler>(authorizationHandler);
+        _ = Assert.IsInstanceOfType<KcBearerAuthorizationHandler>(authorizationHandler);
 
         // Verify that the HTTP context accessor is registered.
         Assert.IsNotNull(httpContextAccessor, "IHttpContextAccessor should be registered.");
@@ -151,6 +151,6 @@ public class KcAuthorizationExtensionTests : KcTestingModule
         Assert.IsNotNull(policyProvider, "IAuthorizationPolicyProvider should be registered.");
 
         // Verify that the IAuthorizationPolicyProvider is of the expected type.
-        Assert.IsInstanceOfType<KcProtectedResourcePolicyProvider>(policyProvider);
+        _ = Assert.IsInstanceOfType<KcProtectedResourcePolicyProvider>(policyProvider);
     }
 }

@@ -37,7 +37,6 @@ public class KcRolesClaimsTransformerTests
     /// throws an <see cref="ArgumentNullException"/> when the provided principal is null.
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(ArgumentNullException))]
     public async Task ShouldThrowExceptionWhenPrincipalIsNull()
     {
         // Arrange
@@ -47,7 +46,8 @@ public class KcRolesClaimsTransformerTests
         // Act
         // Attempt to transform a null ClaimsPrincipal, which should throw an exception.
         // ReSharper disable once AssignNullToNotNullAttribute
-        _ = await transformer.TransformAsync(null).ConfigureAwait(false);
+        _ = await Assert.ThrowsExactlyAsync<ArgumentNullException>(() => transformer.TransformAsync(null))
+            .ConfigureAwait(false);
     }
 
     /// <summary>

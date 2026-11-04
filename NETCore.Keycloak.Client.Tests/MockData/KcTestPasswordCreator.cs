@@ -20,15 +20,15 @@ public static class KcTestPasswordCreator
         bool digits = true, bool specialAscii = true)
     {
         // Configure password generation settings based on provided parameters.
-        var pwd = new Password
+        using var pwd = new Password
         {
-            Settings = new PasswordGeneratorSettings(
+            Settings = new PasswordSettings(
                 lowerCase,
                 upperCase,
                 digits,
                 specialAscii,
                 passwordLength,
-                8, // Minimum number of character types to include.
+                8, // Maximum number of generation attempts.
                 false)
         };
 

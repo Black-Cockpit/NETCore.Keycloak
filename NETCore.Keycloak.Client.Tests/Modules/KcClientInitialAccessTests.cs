@@ -76,11 +76,11 @@ public class KcClientInitialAccessTests : KcTestingModule
         Assert.IsNotNull(createClientInitialAccessResponse.Response);
 
         // Ensure the response is of the expected type.
-        Assert.IsInstanceOfType<KcClientInitialAccessModel>(createClientInitialAccessResponse.Response);
+        _ = Assert.IsInstanceOfType<KcClientInitialAccessModel>(createClientInitialAccessResponse.Response);
 
         // Validate the monitoring metrics for the successful token creation request.
         KcCommonAssertion.AssertResponseMonitoringMetrics(createClientInitialAccessResponse.MonitoringMetrics,
-            HttpStatusCode.OK, HttpMethod.Post);
+            HttpStatusCode.Created, HttpMethod.Post);
 
         // Update the test client initial access with the created token.
         TestClientInitialAccess = createClientInitialAccessResponse.Response;

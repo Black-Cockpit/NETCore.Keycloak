@@ -20,7 +20,7 @@ Task("Test")
     .Does(() =>
     {
         Information("Running unit tests...");
-        DotNetTest($"{slnContext}/NETCore.Keycloak.sln", new DotNetTestSettings
+        DotNetTest($"{slnContext}/NETCore.Keycloak.slnx", new DotNetTestSettings
         {
             Configuration = configuration,
             NoBuild = true,
@@ -37,42 +37,26 @@ Task("E2E-Tests")
     {
         Information("Executing Keycloak client E2E tests...");
 
-        // Generate a list of supported Keycloak versions from 20 to 26
-        var versions = Enumerable.Range(20, 26 - 20 + 1).ToList();
-
-        // Get the major version argument if provided
-        var kcMajorVersion = Argument<int?>("kc_major_version", null);
-
-        // Check if a specific version is provided
-        if (kcMajorVersion.HasValue)
+        var kcMajorVersion = Argument<int>("kc_major_version", 26);
+        if (kcMajorVersion != 26)
         {
-            // Validate the version
-            if (!versions.Contains(kcMajorVersion.Value))
-            {
-                Error($"Invalid Keycloak version: {kcMajorVersion.Value}. Supported versions: {string.Join(", ", versions)}");
-                Environment.Exit(255);
-            }
+            throw new Exception("The managed integration fixture targets Keycloak 26.8.1; use --kc_major_version=26.");
+        }
 
-            // Process the specific version
-            Information($"Processing specific Keycloak Version: {kcMajorVersion.Value}");
-
-            Environment.SetEnvironmentVariable("KC_TEST_VERSION", $"prepare_keycloak_{kcMajorVersion.Value}_environment");
-
-            RunTarget("Setup-Testing-Environment");
+        RunTarget("Setup-Testing-Environment");
+        try
+        {
             RunTarget("Test");
         }
-        else
+        finally
         {
-            // Process all supported versions
-            foreach (var version in versions)
+            var result = StartProcess("dotnet", new ProcessSettings
             {
-                Information($"Processing Keycloak Version: {version}");
-
-                Environment.SetEnvironmentVariable("KC_TEST_VERSION", $"prepare_keycloak_{version}_environment");
-
-                RunTarget("Setup-Testing-Environment");
-                RunTarget("Test");
-            }
+                Arguments = new ProcessArgumentBuilder().Append("run --file")
+                    .AppendQuoted(MakeAbsolute(File("../tools/KeycloakTestEnvironment.cs")).FullPath)
+                    .Append("-- down")
+            });
+            if (result != 0) throw new Exception("Cannot stop the managed test environment.");
         }
     });
 

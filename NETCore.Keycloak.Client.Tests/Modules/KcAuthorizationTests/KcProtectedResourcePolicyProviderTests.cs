@@ -87,9 +87,11 @@ public class KcProtectedResourcePolicyProviderTests
         string policyName = null;
 
         // Act & Assert
-        _ = await Assert.ThrowsExceptionAsync<ArgumentNullException>(async () =>
+        _ = await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () =>
+        {
             // ReSharper disable once AssignNullToNotNullAttribute
-            await _policyProvider.GetPolicyAsync(policyName).ConfigureAwait(false)).ConfigureAwait(false);
+            _ = await _policyProvider.GetPolicyAsync(policyName).ConfigureAwait(false);
+        }).ConfigureAwait(false);
     }
 
     /// <summary>

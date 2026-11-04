@@ -32,13 +32,13 @@ public static class KcCommonAssertion
 
         // Validate the HTTP method is not null and matches the expected method.
         Assert.IsNotNull(monitoringMetrics.HttpMethod);
-        Assert.AreEqual(monitoringMetrics.HttpMethod, expectedMethod);
+        Assert.AreEqual(expectedMethod, monitoringMetrics.HttpMethod);
 
         // Validate the error state matches the isError flag.
-        Assert.IsTrue(string.IsNullOrWhiteSpace(monitoringMetrics.Error) == !isError);
+        Assert.IsTrue(string.IsNullOrWhiteSpace(monitoringMetrics.Error) == !isError, monitoringMetrics.Error);
 
         // Validate the status code matches the expected status code.
-        Assert.AreEqual(monitoringMetrics.StatusCode, expectedStatusCode);
+        Assert.AreEqual(expectedStatusCode, monitoringMetrics.StatusCode);
 
         // Ensure the URL is not null.
         Assert.IsNotNull(monitoringMetrics.Url);

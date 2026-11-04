@@ -55,9 +55,8 @@ public class KcAuthenticationExtensionTests : KcTestingModule
     /// throws a <see cref="KcException"/> when the Keycloak configuration delegate is null.
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(KcException))]
     public void ShouldThrowExceptionWhenKeycloakConfigIsNull() =>
-        _services.AddKeycloakAuthentication("test-scheme", null);
+        _ = Assert.ThrowsExactly<KcException>(() => _services.AddKeycloakAuthentication("test-scheme", null));
 
     /// <summary>
     /// Verifies that the <see cref="KcAuthenticationExtension.AddKeycloakAuthentication"/> method
@@ -88,7 +87,7 @@ public class KcAuthenticationExtensionTests : KcTestingModule
         Assert.IsNotNull(claimsTransformer, "IClaimsTransformation should be registered.");
 
         // Verify that the registered IClaimsTransformation is of type KcRolesClaimsTransformer.
-        Assert.IsInstanceOfType<KcRolesClaimsTransformer>(claimsTransformer,
+        _ = Assert.IsInstanceOfType<KcRolesClaimsTransformer>(claimsTransformer,
             "Claims transformer should be of type KcRolesClaimsTransformer.");
     }
 

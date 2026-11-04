@@ -16,7 +16,7 @@ Task("Clean")
     .Does(() =>
     {
         Information("Cleaning build output directories...");
-        DotNetClean($"{slnContext}/NETCore.Keycloak.sln");
+        DotNetClean($"{slnContext}/NETCore.Keycloak.slnx");
     });
 
 /// <summary>
@@ -28,7 +28,7 @@ Task("Restore")
     .Does(() =>
     {
         Information("Restoring NuGet packages...");
-        DotNetRestore($"{slnContext}/NETCore.Keycloak.sln");
+        DotNetRestore($"{slnContext}/NETCore.Keycloak.slnx");
     });
 
 /// <summary>
@@ -40,7 +40,7 @@ Task("Build")
     .Does(() =>
     {
         Information("Building the solution...");
-        DotNetBuild($"{slnContext}/NETCore.Keycloak.sln", new DotNetBuildSettings
+        DotNetBuild($"{slnContext}/NETCore.Keycloak.slnx", new DotNetBuildSettings
         {
             Configuration = configuration
         });

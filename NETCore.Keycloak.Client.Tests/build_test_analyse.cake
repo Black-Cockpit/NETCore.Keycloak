@@ -22,16 +22,8 @@ Task("Test")
     {
         Information("Running tests with dotCover...");
 
-        // Ensure dotCover is installed
-        var dotCoverPath = Context.Tools.Resolve("dotCover");
-        if (dotCoverPath == null)
-        {
-            Error("dotCover is not installed or cannot be found.");
-            Environment.Exit(255);
-        }
-
         // Resolve solution path to absolute for dotCover compatibility
-        var slnPath = MakeAbsolute(new FilePath($"{slnContext}/NETCore.Keycloak.sln"));
+        var slnPath = MakeAbsolute(new FilePath($"{slnContext}/NETCore.Keycloak.slnx"));
 
         // Define the dotCover cover command with XML report output
         var testCommand = $"cover --xml-report-output=dotCover.Output.xml -- test {slnPath} --configuration {configuration} -l:\"console;verbosity=normal\" --no-restore --no-build";
@@ -46,13 +38,12 @@ Task("Test")
         };
 
         // Run tests with dotCover
-        var result = StartProcess(dotCoverPath, processSettings, out var output, out var error);
+        var result = StartProcess("dotCover", processSettings, out var output, out var error);
 
         // Evaluate the result of the process execution
         if (result != 0)
         {
-            Error("Unit tests failed with dotCover. Error:\n{0}", string.Join(Environment.NewLine, error));
-            Environment.Exit(255);
+            throw new Exception("Unit tests failed with dotCover. Error:\n" + string.Join(Environment.NewLine, error));
         }
 
         Information("Unit tests executed successfully with dotCover.");
@@ -69,11 +60,11 @@ Task("BuildTestAnalyse")
     {
         Information("Executing Keycloak client build, test, and analysis...");
 
-        // Generate a list of supported Keycloak versions from 20 to 26
-        var versions = Enumerable.Range(20, 26 - 20 + 1).ToList();
+        // The managed integration fixture targets the pinned Keycloak 26 release.
+        var versions = new List<int> { 26 };
 
         // Get the major version argument if provided
-        var kcMajorVersion = Argument<int?>("kc_major_version", null);
+        var kcMajorVersion = Argument<int?>("kc_major_version", 26);
 
         // Validate the provided version
         if (!kcMajorVersion.HasValue || !versions.Contains(kcMajorVersion.Value))
@@ -96,14 +87,25 @@ Task("BuildTestAnalyse")
         Information($"Processing Keycloak Version: {kcMajorVersion.Value}");
 
         // Set environment variables for Keycloak and SonarQube
-        Environment.SetEnvironmentVariable("KC_TEST_VERSION", $"prepare_keycloak_{kcMajorVersion.Value}_environment");
         Environment.SetEnvironmentVariable("KC_SONAR_TOKEN", sonarToken);
 
-        // Execute the required setup, testing, and analysis tasks
         RunTarget("Setup-Testing-Environment");
-        RunTarget("SonarBegin");
-        RunTarget("Test");
-        RunTarget("SonarEnd");
+        try
+        {
+            RunTarget("SonarBegin");
+            RunTarget("Test");
+            RunTarget("SonarEnd");
+        }
+        finally
+        {
+            var result = StartProcess("dotnet", new ProcessSettings
+            {
+                Arguments = new ProcessArgumentBuilder().Append("run --file")
+                    .AppendQuoted(MakeAbsolute(File("../tools/KeycloakTestEnvironment.cs")).FullPath)
+                    .Append("-- down")
+            });
+            if (result != 0) throw new Exception("Cannot stop the managed test environment.");
+        }
     });
 
 // Execute the BuildTestAnalyse task

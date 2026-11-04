@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="NETCore.Keycloak.Client.Tests/NETCore.Keycloak.Client.Tests.csproj" />
+  <Project Path="NETCore.Keycloak.Client/NETCore.Keycloak.Client.csproj" />
+</Solution>

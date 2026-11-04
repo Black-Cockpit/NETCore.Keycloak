@@ -174,7 +174,7 @@ public class KcUserHappyPathTests : KcTestingModule
         Assert.IsNotNull(getUserResponse.Response);
 
         // Ensure that the response is of the expected user type.
-        Assert.IsInstanceOfType<KcUser>(getUserResponse.Response);
+        _ = Assert.IsInstanceOfType<KcUser>(getUserResponse.Response);
 
         // Validate the monitoring metrics for the successful user retrieval request.
         KcCommonAssertion.AssertResponseMonitoringMetrics(getUserResponse.MonitoringMetrics, HttpStatusCode.OK,

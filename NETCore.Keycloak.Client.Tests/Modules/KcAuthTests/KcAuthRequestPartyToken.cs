@@ -279,6 +279,7 @@ public class KcAuthRequestPartyToken : KcTestingModule
 
         // Assert that the RPT response is valid.
         Assert.IsNotNull(rptResponse);
+        Assert.IsFalse(rptResponse.IsError, rptResponse.ErrorMessage);
 
         // Validate monitoring metrics for the RPT request.
         KcCommonAssertion.AssertResponseMonitoringMetrics(

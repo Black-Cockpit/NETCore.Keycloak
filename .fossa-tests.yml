@@ -1,0 +1,9 @@
+version: 3
+
+# Use a separate FOSSA test-infrastructure project/revision with this config.
+# Test tooling uses .NET 10 file-based applications with BCL-only dependencies.
+# Inventory restored test NuGet dependencies, including transitives.
+targets:
+  only:
+    - type: nuget
+      path: NETCore.Keycloak.Client.Tests/obj

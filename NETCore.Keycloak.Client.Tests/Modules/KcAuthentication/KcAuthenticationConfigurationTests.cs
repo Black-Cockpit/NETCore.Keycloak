@@ -172,7 +172,6 @@ public class KcAuthenticationConfigurationTests
     /// is not set (null, empty, or whitespace).
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(KcException))]
     public void ShouldValidateBaseUrl()
     {
         // Arrange
@@ -185,7 +184,7 @@ public class KcAuthenticationConfigurationTests
 
         // Act
         // Call the Validate method, which should throw an exception due to the missing Url.
-        config.Validate();
+        _ = Assert.ThrowsExactly<KcException>(config.Validate);
     }
 
     /// <summary>
@@ -194,7 +193,6 @@ public class KcAuthenticationConfigurationTests
     /// is not set (null, empty, or whitespace).
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(KcException))]
     public void ShouldValidateRealm()
     {
         // Arrange
@@ -207,7 +205,7 @@ public class KcAuthenticationConfigurationTests
 
         // Act
         // Call the Validate method, which should throw an exception due to the missing Realm.
-        config.Validate();
+        _ = Assert.ThrowsExactly<KcException>(config.Validate);
     }
 
     /// <summary>
@@ -216,7 +214,6 @@ public class KcAuthenticationConfigurationTests
     /// is not set (null, empty, or whitespace).
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(KcException))]
     public void ShouldValidateIssuer()
     {
         // Arrange
@@ -229,7 +226,7 @@ public class KcAuthenticationConfigurationTests
 
         // Act
         // Call the Validate method, which should throw an exception due to the missing Issuer.
-        config.Validate();
+        _ = Assert.ThrowsExactly<KcException>(config.Validate);
     }
 
     /// <summary>

@@ -1,0 +1,3 @@
+[*.cs]
+# These command-line file-based applications do not have a synchronization context.
+dotnet_diagnostic.CA2007.severity = none

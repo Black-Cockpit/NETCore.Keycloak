@@ -191,7 +191,7 @@ public class KcBearerAuthorizationHandlerTests : KcTestingModule
         Assert.IsNotNull(_handler);
 
         // Verify that TestHandleRequirementAsync throws ArgumentNullException for null arguments
-        _ = await Assert.ThrowsExceptionAsync<ArgumentNullException>(async () =>
+        _ = await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () =>
                 await _handler.TestHandleRequirementAsync(null, null).ConfigureAwait(false))
             .ConfigureAwait(false);
     }
@@ -219,7 +219,7 @@ public class KcBearerAuthorizationHandlerTests : KcTestingModule
         );
 
         // Verify that TestHandleRequirementAsync throws ArgumentNullException when the requirement is null
-        _ = await Assert.ThrowsExceptionAsync<ArgumentNullException>(async () =>
+        _ = await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () =>
                 await _handler.TestHandleRequirementAsync(mockAuthorizationHandlerContext, null).ConfigureAwait(false))
             .ConfigureAwait(false);
     }
@@ -344,7 +344,7 @@ public class KcBearerAuthorizationHandlerTests : KcTestingModule
         _handler = new KcTestableBearerAuthorizationHandler(_mockProvider.Object);
 
         // Verify that TestHandleRequirementAsync throws KcUserNotFoundException for the given context and requirement
-        _ = await Assert.ThrowsExceptionAsync<KcUserNotFoundException>(async () =>
+        _ = await Assert.ThrowsExactlyAsync<KcUserNotFoundException>(async () =>
                 await _handler.TestHandleRequirementAsync(context, requirement).ConfigureAwait(false))
             .ConfigureAwait(false);
     }
@@ -388,7 +388,7 @@ public class KcBearerAuthorizationHandlerTests : KcTestingModule
         _handler = new KcTestableBearerAuthorizationHandler(_mockProvider.Object);
 
         // Verify that TestHandleRequirementAsync throws KcUserNotFoundException for the given context and requirement
-        _ = await Assert.ThrowsExceptionAsync<KcUserNotFoundException>(async () =>
+        _ = await Assert.ThrowsExactlyAsync<KcUserNotFoundException>(async () =>
                 await _handler.TestHandleRequirementAsync(context, requirement).ConfigureAwait(false))
             .ConfigureAwait(false);
     }
@@ -431,7 +431,7 @@ public class KcBearerAuthorizationHandlerTests : KcTestingModule
         _handler = new KcTestableBearerAuthorizationHandler(_mockProvider.Object);
 
         // Verify that TestHandleRequirementAsync throws KcSessionClosedException for the given context and requirement
-        _ = await Assert.ThrowsExceptionAsync<KcSessionClosedException>(async () =>
+        _ = await Assert.ThrowsExactlyAsync<KcSessionClosedException>(async () =>
                 await _handler.TestHandleRequirementAsync(context, requirement).ConfigureAwait(false))
             .ConfigureAwait(false);
     }
@@ -476,7 +476,7 @@ public class KcBearerAuthorizationHandlerTests : KcTestingModule
         _handler = new KcTestableBearerAuthorizationHandler(_mockProvider.Object);
 
         // Verify that TestHandleRequirementAsync throws KcSessionClosedException for the given context and requirement
-        _ = await Assert.ThrowsExceptionAsync<KcSessionClosedException>(async () =>
+        _ = await Assert.ThrowsExactlyAsync<KcSessionClosedException>(async () =>
                 await _handler.TestHandleRequirementAsync(context, requirement).ConfigureAwait(false))
             .ConfigureAwait(false);
     }
@@ -487,12 +487,6 @@ public class KcBearerAuthorizationHandlerTests : KcTestingModule
     [TestMethod]
     public async Task H_ShouldDenyAccessForUnAuthorizedUser()
     {
-        // Skip on KC 26+ — session validation fails because password grant creates transient sessions
-        if ( GetKcMajorVersion() >= 26 )
-        {
-            Assert.Inconclusive("Skipped on Keycloak 26+ — transient sessions are not visible via admin API.");
-        }
-
         // Retrieve an access token using resource owner password credentials for an unauthorized user
         var tokenResponse = await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(
             TestEnvironment.TestingRealm.Name,
@@ -534,12 +528,6 @@ public class KcBearerAuthorizationHandlerTests : KcTestingModule
     [TestMethod]
     public async Task I_ShouldAllowAccessForAuthorizedUser()
     {
-        // Skip on KC 26+ — session validation fails because password grant creates transient sessions
-        if ( GetKcMajorVersion() >= 26 )
-        {
-            Assert.Inconclusive("Skipped on Keycloak 26+ — transient sessions are not visible via admin API.");
-        }
-
         // Retrieve an access token using resource owner password credentials for an authorized user
         var tokenResponse = await KeycloakRestClient.Auth.GetResourceOwnerPasswordTokenAsync(
             TestEnvironment.TestingRealm.Name,

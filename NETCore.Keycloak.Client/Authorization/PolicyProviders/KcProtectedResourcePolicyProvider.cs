@@ -24,8 +24,7 @@ public class KcProtectedResourcePolicyProvider : DefaultAuthorizationPolicyProvi
     /// <summary>
     /// Cache authorization policies
     /// </summary>
-    private readonly IDictionary<string, AuthorizationPolicy> _cachedPolices =
-        new ConcurrentDictionary<string, AuthorizationPolicy>();
+    private readonly ConcurrentDictionary<string, AuthorizationPolicy> _cachedPolices = new();
 
     /// <summary>
     /// Construct provider
@@ -84,8 +83,6 @@ public class KcProtectedResourcePolicyProvider : DefaultAuthorizationPolicyProvi
         var policy = builder.Build();
 
         // Cache built policy
-        _cachedPolices.Add(policyName, policy);
-
-        return policy;
+        return _cachedPolices.GetOrAdd(policyName, policy);
     }
 }

@@ -12,19 +12,15 @@ Task("SonarBegin")
         if (string.IsNullOrWhiteSpace(sonarToken))
         {
             // Ensure the token is provided before proceeding
-            Error("Sonar token is required.");
-            Environment.Exit(255);
+            throw new Exception("Sonar token is required.");
         }
-
-        // Resolve the path to the `dotnet` executable
-        FilePath dotnetPath = Context.Tools.Resolve("dotnet");
 
         // Configure process settings for executing the SonarScanner command
         var processSettings = new ProcessSettings
         {
             Arguments = new ProcessArgumentBuilder()
                 .Append("sonarscanner begin")
-                .Append($"/d:sonar.token={sonarToken}")
+                .AppendSecret($"/d:sonar.token={sonarToken}")
                 .Append("/k:Black-Cockpit_NETCore.Keycloak")
                 .Append("/o:black-cockpit")
                 .Append("/d:sonar.host.url=\"https://sonarcloud.io\"")
@@ -37,7 +33,11 @@ Task("SonarBegin")
         };
 
         // Execute the SonarScanner command
-        StartProcess(dotnetPath, processSettings);
+        var result = StartProcess("dotnet", processSettings, out var output, out var error);
+        if (result != 0)
+        {
+            throw new Exception("Sonar analysis initialization failed. Error:\n" + string.Join(Environment.NewLine, error));
+        }
     });
 
 /// <summary>
@@ -55,31 +55,26 @@ Task("SonarEnd")
         if (string.IsNullOrWhiteSpace(sonarToken))
         {
             // Ensure the token is provided before proceeding
-            Error("Sonar token is required.");
-            Environment.Exit(255);
+            throw new Exception("Sonar token is required.");
         }
-
-        // Resolve the path to the `dotnet` executable
-        FilePath dotnetPath = Context.Tools.Resolve("dotnet");
 
         // Configure process settings for executing the SonarScanner command
         var processSettings = new ProcessSettings
         {
             Arguments = new ProcessArgumentBuilder()
                 .Append("sonarscanner end")
-                .Append($"/d:sonar.token={sonarToken}"),
+                .AppendSecret($"/d:sonar.token={sonarToken}"),
             RedirectStandardOutput = true,
             RedirectStandardError = true
         };
 
         // Execute the SonarScanner command and capture output/error streams
-        var result = StartProcess(dotnetPath, processSettings, out var output, out var error);
+        var result = StartProcess("dotnet", processSettings, out var output, out var error);
 
         // Evaluate the result of the process execution
         if (result != 0)
         {
             // Log the error message and exit if the command failed
-            Error("Sonar analysis finalization failed. Error:\n{0}", string.Join(Environment.NewLine, error));
-            Environment.Exit(255);
+            throw new Exception("Sonar analysis finalization failed. Error:\n" + string.Join(Environment.NewLine, error));
         }
     });

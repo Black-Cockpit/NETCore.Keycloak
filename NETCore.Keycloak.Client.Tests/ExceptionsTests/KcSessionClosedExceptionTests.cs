@@ -14,7 +14,7 @@ public class KcSessionClosedExceptionTests
     /// </summary>
     [TestMethod]
     public void ShouldThrowKcSessionClosedException() =>
-        Assert.ThrowsException<KcSessionClosedException>(() => throw new KcSessionClosedException());
+        _ = Assert.ThrowsExactly<KcSessionClosedException>(() => throw new KcSessionClosedException());
 
     /// <summary>
     /// Tests that a <see cref="KcSessionClosedException"/> with a specified message retains the message correctly.
@@ -44,6 +44,6 @@ public class KcSessionClosedExceptionTests
 
         // Verify the inner exception
         Assert.IsNotNull(exception.InnerException);
-        Assert.IsInstanceOfType<ArgumentNullException>(exception.InnerException);
+        _ = Assert.IsInstanceOfType<ArgumentNullException>(exception.InnerException);
     }
 }

@@ -22,7 +22,11 @@ public sealed class KcRealmAdminTokenHandler : IKcRealmAdminTokenHandler
     /// <summary>
     /// Stores cached access and refresh tokens to avoid unnecessary API calls.
     /// </summary>
-    private readonly ConcurrentDictionary<string, KcCachedToken> _tokensCache;
+    private readonly ConcurrentDictionary<string, (string Value, DateTimeOffset ExpiresAt)> _tokensCache;
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _tokenLocks = new();
+
+    private readonly TimeProvider _timeProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     /// <summary>
     /// Provides the Keycloak realm admin configurations.
@@ -64,9 +68,11 @@ public sealed class KcRealmAdminTokenHandler : IKcRealmAdminTokenHandler
         using var scope = provider.CreateScope();
         _logger = scope.ServiceProvider
             .GetRequiredService<ILogger<IKcRealmAdminTokenHandler>>();
+        _timeProvider = scope.ServiceProvider.GetService<TimeProvider>() ?? TimeProvider.System;
+        _httpClientFactory = scope.ServiceProvider.GetService<IHttpClientFactory>();
 
         // Initialize the token cache to store access and refresh tokens for different realms.
-        _tokensCache = new ConcurrentDictionary<string, KcCachedToken>();
+        _tokensCache = new ConcurrentDictionary<string, (string Value, DateTimeOffset ExpiresAt)>();
     }
 
     /// <summary>
@@ -77,22 +83,54 @@ public sealed class KcRealmAdminTokenHandler : IKcRealmAdminTokenHandler
     /// <returns>A task representing the asynchronous operation. The task result contains the admin access token.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="realm"/> is null or empty.</exception>
     /// <exception cref="KcException">Thrown if the token retrieval process fails.</exception>
-    public async Task<string> TryGetAdminTokenAsync(string realm, CancellationToken cancellationToken = default) =>
-        string.IsNullOrWhiteSpace(realm)
-            ? throw new ArgumentNullException(nameof(realm), $"{nameof(realm)} is required")
-            : TryGetToken(AccessTokenCachingKey(realm)) is var cachedAccessToken &&
-              !string.IsNullOrWhiteSpace(cachedAccessToken)
-                ? cachedAccessToken
-                : TryGetToken(RefreshTokenCachingKey(realm)) is var cachedRefreshToken &&
-                  string.IsNullOrWhiteSpace(cachedRefreshToken) &&
-                  await RefreshTokenAsync(realm, cachedAccessToken, cancellationToken)
-                      .ConfigureAwait(false) is var token &&
-                  !string.IsNullOrWhiteSpace(token)
-                    ? token
-                    : await GetAccessTokenAsync(realm, cancellationToken).ConfigureAwait(false) is var accessToken &&
-                      !string.IsNullOrWhiteSpace(accessToken)
-                        ? accessToken
-                        : throw new KcException($"Failed to retrieve Keycloak realm {realm} admin token.");
+    /// <exception cref="OperationCanceledException">Thrown when waiting for renewal is canceled.</exception>
+    public async Task<string> TryGetAdminTokenAsync(string realm, CancellationToken cancellationToken = default)
+    {
+        if ( string.IsNullOrWhiteSpace(realm) )
+        {
+            throw new ArgumentNullException(nameof(realm), $"{nameof(realm)} is required");
+        }
+
+        var cachedAccessToken = TryGetToken(AccessTokenCachingKey(realm));
+        if ( !string.IsNullOrWhiteSpace(cachedAccessToken) )
+        {
+            return cachedAccessToken;
+        }
+
+        // Serialize renewal within this handler/realm so rotating refresh tokens are submitted only once.
+        var tokenLock = _tokenLocks.GetOrAdd(realm, _ => new SemaphoreSlim(1, 1));
+        await tokenLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            cachedAccessToken = TryGetToken(AccessTokenCachingKey(realm));
+            if ( !string.IsNullOrWhiteSpace(cachedAccessToken) )
+            {
+                return cachedAccessToken;
+            }
+
+            var cachedRefreshToken = TryGetToken(RefreshTokenCachingKey(realm));
+            if ( !string.IsNullOrWhiteSpace(cachedRefreshToken) )
+            {
+                var refreshed = await RefreshTokenAsync(realm, cachedRefreshToken, cancellationToken)
+                    .ConfigureAwait(false);
+                if ( !string.IsNullOrWhiteSpace(refreshed) )
+                {
+                    return refreshed;
+                }
+            }
+
+            var accessToken = await GetAccessTokenAsync(realm, cancellationToken).ConfigureAwait(false);
+            if ( !string.IsNullOrWhiteSpace(accessToken) )
+            {
+                return accessToken;
+            }
+            throw new KcException($"Failed to retrieve Keycloak realm {realm} admin token.");
+        }
+        finally
+        {
+            _ = tokenLock.Release();
+        }
+    }
 
     /// <summary>
     /// Retrieves an access token for the specified Keycloak realm using the configured client credentials and admin credentials.
@@ -139,11 +177,11 @@ public sealed class KcRealmAdminTokenHandler : IKcRealmAdminTokenHandler
 
         // Cache the access token with a reduced expiry time to ensure early refresh.
         CacheToken(AccessTokenCachingKey(realm), adminTokenResponse.Response.AccessToken,
-            adminTokenResponse.Response.ExpiresIn - 120);
+            CacheLifetime(adminTokenResponse.Response.ExpiresIn, 120));
 
         // Cache the refresh token with a different expiry time to support token refresh operations.
         CacheToken(RefreshTokenCachingKey(realm), adminTokenResponse.Response.RefreshToken,
-            adminTokenResponse.Response.ExpiresIn - 5 * 60);
+            CacheLifetime(adminTokenResponse.Response.RefreshExpiresIn, 5 * 60));
 
         // Return the access token.
         return adminTokenResponse.Response.AccessToken;
@@ -198,11 +236,11 @@ public sealed class KcRealmAdminTokenHandler : IKcRealmAdminTokenHandler
 
         // Cache the refreshed access token with a reduced expiry time for early refresh.
         CacheToken(AccessTokenCachingKey(realm), adminTokenResponse.Response.AccessToken,
-            adminTokenResponse.Response.ExpiresIn - 120);
+            CacheLifetime(adminTokenResponse.Response.ExpiresIn, 120));
 
         // Cache the refreshed refresh token with a margin to support future refresh operations.
         CacheToken(RefreshTokenCachingKey(realm), adminTokenResponse.Response.RefreshToken,
-            adminTokenResponse.Response.ExpiresIn - 5 * 60);
+            CacheLifetime(adminTokenResponse.Response.RefreshExpiresIn, 5 * 60));
 
         // Return the refreshed access token.
         return adminTokenResponse.Response.AccessToken;
@@ -214,7 +252,7 @@ public sealed class KcRealmAdminTokenHandler : IKcRealmAdminTokenHandler
     /// <param name="cachingKey">The caching key associated with the token.</param>
     /// <returns>The cached token value, or <c>null</c> if the token is expired or not present.</returns>
     private string TryGetToken(string cachingKey) =>
-        _tokensCache.TryGetValue(cachingKey, out var token) && !token.IsExpired &&
+        _tokensCache.TryGetValue(cachingKey, out var token) && token.ExpiresAt > _timeProvider.GetUtcNow() &&
         !string.IsNullOrWhiteSpace(token.Value)
             ? token.Value
             : null;
@@ -224,7 +262,7 @@ public sealed class KcRealmAdminTokenHandler : IKcRealmAdminTokenHandler
     /// </summary>
     /// <param name="cachingKey">The key used to store the token in the cache.</param>
     /// <param name="token">The token value to be cached.</param>
-    /// <param name="expiryInSeconds">The expiry time for the cached token in seconds. Defaults to 60 seconds if not specified or less than or equal to zero.</param>
+    /// <param name="expiryInSeconds">The cache lifetime in seconds. Nonpositive values remove the entry.</param>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="cachingKey"/> or <paramref name="token"/> is null, empty, or consists only of whitespace.
     /// </exception>
@@ -242,24 +280,25 @@ public sealed class KcRealmAdminTokenHandler : IKcRealmAdminTokenHandler
             throw new ArgumentNullException(nameof(token), $"{nameof(token)} is required");
         }
 
-        // If the expiry time is zero or negative, set it to the default of 60 seconds.
+        // An expired or unspecified token must not acquire an artificial cache lifetime.
         if ( expiryInSeconds <= 0 )
         {
-            expiryInSeconds = 60;
+            _ = _tokensCache.TryRemove(cachingKey, out _);
+            return;
         }
 
         // Cache the token with the specified key and expiry time.
-        _tokensCache[cachingKey] = new KcCachedToken
-        {
-            Value = token,
-            Expiry = expiryInSeconds
-        };
+        _tokensCache[cachingKey] = (token, _timeProvider.GetUtcNow().AddSeconds(expiryInSeconds));
     }
 
     /// <summary>
     /// Retrieves the Keycloak client instance for the specified base URL.
     /// </summary>
-    private KeycloakClient KeycloakClient(string keycloakBaseUrl) => new(keycloakBaseUrl, _logger);
+    private KeycloakClient KeycloakClient(string keycloakBaseUrl) => new(keycloakBaseUrl, _logger, _httpClientFactory);
+
+    // A safety margin must never extend a short-lived token beyond its actual lifetime.
+    private static long CacheLifetime(int lifetime, int margin) =>
+        lifetime > 0 ? lifetime - Math.Min(margin, lifetime / 2) : 0;
 
     /// <summary>
     /// Builds the caching key for the access token.

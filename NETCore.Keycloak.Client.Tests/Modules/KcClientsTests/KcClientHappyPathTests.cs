@@ -483,17 +483,11 @@ public class KcClientHappyPathTests : KcTestingModule
     }
 
     /// <summary>
-    /// Validates the scenario where setting authorization management permissions for a public client is not allowed in the Keycloak system.
+    /// Validates public-client management permissions according to the server version.
     /// </summary>
     [TestMethod]
-    public async Task N_ShouldNotSetAuthorizationManagementPermissions()
+    public async Task N_ShouldSetAuthorizationManagementPermissionsAccordingToServerVersion()
     {
-        // Skip on KC 26+ — behavior changed, public clients can now have management permissions enabled
-        if ( GetKcMajorVersion() >= 26 )
-        {
-            Assert.Inconclusive("Skipped on Keycloak 26+ — management permissions behavior changed for public clients.");
-        }
-
         // Ensure the test client is initialized before proceeding.
         Assert.IsNotNull(TestClient);
 
@@ -511,8 +505,19 @@ public class KcClientHappyPathTests : KcTestingModule
                 })
             .ConfigureAwait(false);
 
-        // Validate the response for the scenario where the setting of permissions fails for a public client.
+        // Validate the version-specific public-client management permission response.
         Assert.IsNotNull(setClientAuthorizationPermissionManagementResponse);
+
+        // Keycloak 26 supports management permissions on public clients.
+        if ( GetKcMajorVersion() >= 26 )
+        {
+            Assert.IsFalse(setClientAuthorizationPermissionManagementResponse.IsError);
+            Assert.IsTrue(setClientAuthorizationPermissionManagementResponse.Response.Enabled);
+            KcCommonAssertion.AssertResponseMonitoringMetrics(
+                setClientAuthorizationPermissionManagementResponse.MonitoringMetrics,
+                HttpStatusCode.OK, HttpMethod.Put);
+            return;
+        }
 
         // Ensure the response indicates an error.
         Assert.IsTrue(setClientAuthorizationPermissionManagementResponse.IsError);
@@ -734,7 +739,7 @@ public class KcClientHappyPathTests : KcTestingModule
         Assert.IsNotNull(registrationAccessTokenResponse.Response);
 
         // Ensure the response is of the expected type.
-        Assert.IsInstanceOfType<KcClient>(registrationAccessTokenResponse.Response);
+        _ = Assert.IsInstanceOfType<KcClient>(registrationAccessTokenResponse.Response);
 
         // Validate the monitoring metrics for the successful registration access token retrieval request.
         KcCommonAssertion.AssertResponseMonitoringMetrics(registrationAccessTokenResponse.MonitoringMetrics,

@@ -14,8 +14,12 @@ public class KcClientResource
     /// <value>
     /// A string representing the resource ID.
     /// </value>
-    [JsonProperty("id")]
+    [JsonProperty("_id")]
     public string Id { get; set; }
+
+    // Accept the older library representation while emitting Keycloak's resource identifier name.
+    [JsonProperty("id")]
+    private string LegacyId { set => Id ??= value; }
 
     /// <summary>
     /// Gets or sets the attributes associated with the resource.

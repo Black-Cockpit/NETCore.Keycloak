@@ -27,13 +27,26 @@ public class KcClientCredentials
     public string Secret { get; set; }
 
     /// <summary>
+    /// Gets or sets client authentication for token and revocation requests.
+    /// Defaults to form authentication to preserve existing confidential and public client behavior.
+    /// </summary>
+    [JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
+    public KcClientAuthenticationMethod AuthenticationMethod { get; set; }
+
+    /// <summary>
     /// Validates the Keycloak client credentials.
     /// </summary>
     /// <exception cref="KcException">
-    /// Thrown when the <see cref="ClientId"/> is null, empty, or consists only of whitespace.
+    /// Thrown when <see cref="ClientId"/> is blank or <see cref="AuthenticationMethod"/> is unknown.
     /// </exception>
     public void Validate()
     {
+        if ( !Enum.IsDefined(AuthenticationMethod) )
+        {
+            throw new KcException($"{nameof(AuthenticationMethod)} is invalid");
+        }
+
         if ( string.IsNullOrWhiteSpace(ClientId) )
         {
             throw new KcException($"{nameof(ClientId)} is required");

@@ -57,7 +57,7 @@ public class KcRealmAdminConfigurationTests
         };
 
         // Act & Assert
-        var exception = Assert.ThrowsException<KcException>(configuration.Validate);
+        var exception = Assert.ThrowsExactly<KcException>(configuration.Validate);
         Assert.AreEqual("KeycloakBaseUrl is required", exception.Message);
     }
 
@@ -77,7 +77,7 @@ public class KcRealmAdminConfigurationTests
         };
 
         // Act & Assert
-        var exception = Assert.ThrowsException<KcException>(configuration.Validate);
+        var exception = Assert.ThrowsExactly<KcException>(configuration.Validate);
         Assert.AreEqual("RealmAdminCredentials is required", exception.Message);
     }
 
